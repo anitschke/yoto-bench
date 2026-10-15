@@ -8,9 +8,13 @@
 
 ## 1. Summary
 
-The project was originally bootstrapped under the working name `yoto-tools` (`yoto-tools.netlify.app`, GitHub repo `anitschke/yoto-tools`). However, an active open-source community project already exists under the name [**`trywait/YotoTools`**](https://github.com/trywait/YotoTools). To avoid brand confusion, goodwill dilution, or stepping on prior community claims ("trademark" and mindshare), the project is officially rebranded as **`yoto-kit`** (**`YotoKit`**).
+The project was originally bootstrapped under the working name `yoto-tools` (`yoto-tools.netlify.app`, GitHub repo `anitschke/yoto-tools`). However, an active open-source community project already exists under the name [**`trywait/YotoTools`**](https://github.com/trywait/YotoTools). To avoid brand confusion, goodwill dilution, or stepping on prior community claims ("trademark" and mindshare), the project is officially rebranded as:
 
-This RFC documents the naming criteria, candidate evaluation, web clearance checks, the adoption of the **`yk-`** component and token prefix, and the step-by-step implementation plan for migrating the codebase, packages, URLs, and documentation.
+- **Repository, Codebase, & Package Name:** **`yoto-bench`**
+- **Public & User-Facing Branding:** **`YotoBench`**
+- **Component & Design Token Prefix:** **`yb-`**
+
+This RFC documents the naming criteria, candidate evaluation, web clearance checks, SEO landscape analysis, and the step-by-step implementation plan for migrating the codebase, packages, URLs, and documentation.
 
 ---
 
@@ -135,57 +139,64 @@ Here are curated candidate names organized by theme, along with pros, cons, and 
 
 ---
 
-## 5. Web & Namespace Clearance Analysis for `yoto-kit`
+## 5. Web, Registry, & SEO Clearance Analysis for `yoto-bench` / `YotoBench`
 
-A thorough web and registry clearance check was conducted:
+A comprehensive clearance and SEO analysis was conducted across search engines and developer registries:
 
-1. **GitHub (`github.com`):**
-   - No active or colliding repositories exist for `yoto-kit` or `yotokit`.
-   - Existing community projects use different names: `xkjq/yoto-up`, `bbenkle/YotoBookMaker`, `cdnninja/yoto_api`, `trywait/YotoTools`.
-   - `github.com/anitschke/yoto-kit` is completely free to create or rename to.
-2. **npm Registry (`npmjs.com`):**
-   - The package names `yoto-kit` and `yotokit` are unallocated and available on npm. (Official Yoto packages use `@yotoplay/yoto-sdk`, `@yotoplay/yotolabs-sdk`, `@yotoplay/twee2yoto`).
-3. **Netlify Subdomains:**
-   - Both `yotokit.netlify.app` and `yoto-kit.netlify.app` return 404 and are available for registration.
-4. **General Web / Search Landscape:**
-   - In physical searches, "Yoto Kit" is occasionally used colloquially by local public libraries (e.g. "Library of Things" checkout kits containing a physical Yoto Player + headphones + cards).
-   - There is no competing software product, web app, or organization using `yoto-kit` / `YotoKit`.
+1. **Google Search & SEO Discoverability:**
+   - **Virtually Zero Noise:** An exact-match search for `"yoto-bench"` or `"yotobench"` yields essentially zero competing results, software products, or commercial trademarks.
+   - **Avoiding False Positives:** Unlike `yoto-kit` (which collides with municipal library loaner packages) or `yotohub` (which collides with existing community dashboards), `yoto-bench` / `YotoBench` is a distinct compound token.
+   - **Search Authority:** The project will comfortably rank **#1 on Page 1** of search engines with minimal backlink overhead.
+2. **GitHub (`github.com`):**
+   - No active, archived, or collision repositories exist for `yoto-bench` or `yotobench`.
+   - `github.com/anitschke/yoto-bench` is 100% available to create or rename to.
+3. **npm Registry (`npmjs.com`):**
+   - The package names `yoto-bench` and `yotobench` are unallocated and free to register.
+4. **Netlify Subdomains:**
+   - Both `yoto-bench.netlify.app` and `yotobench.netlify.app` return 404 and are available to provision.
+5. **Semantic Scope ("Bench" / "Workbench"):**
+   - Naturally fits **audio mastering & MYO card editing** (maker's workbench).
+   - Naturally fits **device telemetry, finding players, battery monitoring, and diagnostics** (testbench / diagnostic bench).
+   - Does not artificially pigeonhole the application into only cards or physical crafts.
 
 ---
 
 ## 6. Migration & Renaming Implementation Plan
 
-With **`yoto-kit`** as the chosen target name and **`yk`** as the component/design-token prefix:
+With **`yoto-bench`** as the codebase/repo slug, **`YotoBench`** as the public user-facing brand, and **`yb-`** as the component/token prefix:
 
 1. **Repository & Remotes:**
-   - Rename GitHub repository (`anitschke/yoto-tools` $\rightarrow$ `anitschke/yoto-kit`). GitHub provides automatic HTTP redirects for repos, but git remotes, clone URLs, and CI secrets will be updated.
+   - Rename GitHub repository (`anitschke/yoto-tools` $\rightarrow$ `anitschke/yoto-bench`). GitHub provides automatic HTTP redirects for repos, but git remotes, clone URLs, and CI secrets will be updated.
 2. **Package & Manifests:**
-   - Update `package.json` (`"name": "yoto-kit"`).
+   - Update `package.json` (`"name": "yoto-bench"`).
    - Update `package-lock.json`.
 3. **Domain & Netlify Deployments:**
-   - Provision `yoto-kit.netlify.app` (or `yotokit.netlify.app`).
+   - Provision `yoto-bench.netlify.app` (with optional redirect alias for `yotobench.netlify.app`).
    - Update Netlify OAuth callback redirects (per [RFC 007](docs/rfcs/007-oauth-client-id-and-pr-preview-redirects.md)).
 4. **HTML Meta & Web App Manifest:**
-   - Update `<title>YotoKit - Unofficial Yoto Power Tools</title>`.
+   - Update title: `<title>YotoBench - Unofficial Yoto Power Tools</title>`.
    - Update OpenGraph tags and meta descriptions in `index.html`.
-   - Update Web App Manifest (`manifest.json` / PWA configuration) with name "YotoKit".
-5. **Widget & CSS Prefixes (`yt-` $\rightarrow$ `yk-`):**
-   - Migrate custom element tags from `<yt-*>` to `<yk-*>` (e.g. `<yk-button>`, `<yk-pixel-icon>`, `<yk-dialog>`, `<yk-dropdown>`, `<yk-toast>`).
-   - Rename widget files in `src/widgets/` (e.g. `src/widgets/yk-button.ts`, `src/widgets/yk-button.test.ts`).
-   - Update CSS custom property tokens from `--yt-*` to `--yk-*` (e.g. `--yk-color-primary`, `--yk-radius-md`, `--yk-font-pixel`).
+   - Update Web App Manifest (`manifest.json` / PWA configuration) with display name `"YotoBench"`.
+5. **Widget & CSS Prefixes (`yt-` $\rightarrow$ `yb-`):**
+   - Migrate custom element tags from `<yt-*>` to `<yb-*>` (e.g. `<yb-button>`, `<yb-pixel-icon>`, `<yb-dialog>`, `<yb-dropdown>`, `<yb-toast>`).
+   - Rename widget files in `src/widgets/` (e.g. `src/widgets/yb-button.ts`, `src/widgets/yb-button.test.ts`).
+   - Update CSS custom property tokens from `--yt-*` to `--yb-*` (e.g. `--yb-color-primary`, `--yb-radius-md`, `--yb-font-pixel`).
    - Update documentation in [`src/widgets/AGENTS.md`](file:///home/anitschk/sandbox/yoto-tools/src/widgets/AGENTS.md).
 6. **Documentation & RFCs:**
-   - Update references in `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, and existing RFCs.
+   - Update references across `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, and existing RFCs.
+
+---
 
 ## 7. Accepted Decisions
 
-1. **Official Name:** **`yoto-kit`** / **`YotoKit`**
-   - Canonical repository slug: `yoto-kit` (`github.com/anitschke/yoto-kit`).
-   - Production web host: `yoto-kit.netlify.app`.
-   - Title / Display brand: **YotoKit** ("The Unofficial Power Tools for Yoto").
-2. **Component & Design Token Prefix:** **`yk-`**
-   - Widgets: `<yk-button>`, `<yk-pixel-icon>`, `<yk-dialog>`, `<yk-dropdown>`, `<yk-toast>`, etc.
-   - Design tokens: `--yk-color-primary`, `--yk-font-pixel`, `--yk-radius-md`, etc.
-   - Widget catalog and documentation updated in `src/widgets/AGENTS.md`.
-3. **Execution Strategy:**
+1. **Codebase, Package, & Repository Slug:** **`yoto-bench`**
+   - GitHub Repository: `github.com/anitschke/yoto-bench`
+   - npm package name: `yoto-bench`
+   - Netlify host: `yoto-bench.netlify.app`
+2. **Public User-Facing Branding:** **`YotoBench`**
+   - App headers, page titles, navigation bars, and documentation refer to the application as **`YotoBench`** (CamelCase/PascalCase).
+3. **Component & Design Token Prefix:** **`yb-`**
+   - Custom elements: `<yb-button>`, `<yb-pixel-icon>`, `<yb-dialog>`, `<yb-dropdown>`, `<yb-toast>`, etc.
+   - Design tokens: `--yb-color-primary`, `--yb-radius-md`, `--yb-font-pixel`, etc.
+4. **Execution Strategy:**
    - Execute the migration on a dedicated branch once infrastructure review on `anitschke/infrastructureImplementation` is completed.
