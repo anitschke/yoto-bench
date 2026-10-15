@@ -1,16 +1,16 @@
 # RFC 021: Project Rebranding & Naming Strategy
 
 - **Date:** 2026-10-15
-- **Status:** Proposed
+- **Status:** Accepted
 - **Author:** Antigravity Agent & Andrew Nitschke
 
 ---
 
 ## 1. Summary
 
-The project was originally bootstrapped under the working name `yoto-tools` (`yoto-tools.netlify.app`, GitHub repo `anitschke/yoto-tools`). However, an active open-source community project already exists under the name [**`trywait/YotoTools`**](https://github.com/trywait/YotoTools). To avoid brand confusion, goodwill dilution, or stepping on prior community claims ("trademark" and mindshare), we need to select a distinct, memorable, and short new name that retains clear association with the Yoto ecosystem while standing out on its own.
+The project was originally bootstrapped under the working name `yoto-tools` (`yoto-tools.netlify.app`, GitHub repo `anitschke/yoto-tools`). However, an active open-source community project already exists under the name [**`trywait/YotoTools`**](https://github.com/trywait/YotoTools). To avoid brand confusion, goodwill dilution, or stepping on prior community claims ("trademark" and mindshare), the project is officially rebranded as **`yoto-kit`** (**`YotoKit`**).
 
-This RFC outlines naming criteria, evaluates a curated list of candidate names, explores potential prefix/suffix variations, and provides an implementation checklist for renaming the codebase, packages, URLs, and documentation.
+This RFC documents the naming criteria, candidate evaluation, web clearance checks, the adoption of the **`yk-`** component and token prefix, and the step-by-step implementation plan for migrating the codebase, packages, URLs, and documentation.
 
 ---
 
@@ -177,12 +177,15 @@ With **`yoto-kit`** as the chosen target name and **`yk`** as the component/desi
 6. **Documentation & RFCs:**
    - Update references in `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, and existing RFCs.
 
----
+## 7. Accepted Decisions
 
-## 7. Open Decisions
-
-1. **Slug Style:**
-   - Option A: Hyphenated repo & URL: `yoto-kit` (`github.com/anitschke/yoto-kit`, `yoto-kit.netlify.app`).
-   - Option B: Joined repo & URL: `yotokit` (`github.com/anitschke/yotokit`, `yotokit.netlify.app`).
-2. **Display Name:**
-   - Recommended: **YotoKit** (or **Yoto Kit**).
+1. **Official Name:** **`yoto-kit`** / **`YotoKit`**
+   - Canonical repository slug: `yoto-kit` (`github.com/anitschke/yoto-kit`).
+   - Production web host: `yoto-kit.netlify.app`.
+   - Title / Display brand: **YotoKit** ("The Unofficial Power Tools for Yoto").
+2. **Component & Design Token Prefix:** **`yk-`**
+   - Widgets: `<yk-button>`, `<yk-pixel-icon>`, `<yk-dialog>`, `<yk-dropdown>`, `<yk-toast>`, etc.
+   - Design tokens: `--yk-color-primary`, `--yk-font-pixel`, `--yk-radius-md`, etc.
+   - Widget catalog and documentation updated in `src/widgets/AGENTS.md`.
+3. **Execution Strategy:**
+   - Execute the migration on a dedicated branch once infrastructure review on `anitschke/infrastructureImplementation` is completed.
