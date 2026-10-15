@@ -135,42 +135,54 @@ Here are curated candidate names organized by theme, along with pros, cons, and 
 
 ---
 
-## 5. Top Recommendations & Comparison Matrix
+## 5. Web & Namespace Clearance Analysis for `yoto-kit`
 
-| Candidate | Length / Brevity | Evocative / Meaning | Collision Risk | Recommendation |
-| :--- | :--- | :--- | :--- | :--- |
-| **`yoto-craft`** | Short (9 chars) | High (MYO crafting, hands-on) | Low | **Top Pick (Playful & Maker-oriented)** |
-| **`yoto-kit`** | Very Short (7 chars)| High (toolkit, utilities) | Low | **Top Pick (Clean & Developer-friendly)** |
-| **`yoto-deck`** | Very Short (8 chars)| High (deck of cards + audio deck) | Low | **Top Pick (Clever double entendre)** |
-| **`yoto-studio`**| Moderate (10 chars)| High (all-in-one creation suite) | Medium | Strong contender if not official |
-| **`yoto-works`** | Short (9 chars) | Moderate (workshop) | Low | Solid runner-up |
+A thorough web and registry clearance check was conducted:
+
+1. **GitHub (`github.com`):**
+   - No active or colliding repositories exist for `yoto-kit` or `yotokit`.
+   - Existing community projects use different names: `xkjq/yoto-up`, `bbenkle/YotoBookMaker`, `cdnninja/yoto_api`, `trywait/YotoTools`.
+   - `github.com/anitschke/yoto-kit` is completely free to create or rename to.
+2. **npm Registry (`npmjs.com`):**
+   - The package names `yoto-kit` and `yotokit` are unallocated and available on npm. (Official Yoto packages use `@yotoplay/yoto-sdk`, `@yotoplay/yotolabs-sdk`, `@yotoplay/twee2yoto`).
+3. **Netlify Subdomains:**
+   - Both `yotokit.netlify.app` and `yoto-kit.netlify.app` return 404 and are available for registration.
+4. **General Web / Search Landscape:**
+   - In physical searches, "Yoto Kit" is occasionally used colloquially by local public libraries (e.g. "Library of Things" checkout kits containing a physical Yoto Player + headphones + cards).
+   - There is no competing software product, web app, or organization using `yoto-kit` / `YotoKit`.
 
 ---
 
 ## 6. Migration & Renaming Implementation Plan
 
-Once the final name is chosen, the rename requires touching the following surfaces:
+With **`yoto-kit`** as the chosen target name and **`yk`** as the component/design-token prefix:
 
 1. **Repository & Remotes:**
-   - Rename GitHub repository (`anitschke/yoto-tools` $\rightarrow$ `anitschke/<new-name>`). GitHub sets up automatic HTTP redirects for repos, but remotes and CI secrets should be updated.
+   - Rename GitHub repository (`anitschke/yoto-tools` $\rightarrow$ `anitschke/yoto-kit`). GitHub provides automatic HTTP redirects for repos, but git remotes, clone URLs, and CI secrets will be updated.
 2. **Package & Manifests:**
-   - Update `package.json` (`"name": "<new-name>"`).
+   - Update `package.json` (`"name": "yoto-kit"`).
    - Update `package-lock.json`.
 3. **Domain & Netlify Deployments:**
-   - Update Netlify site name / subdomain (`<new-name>.netlify.app`).
+   - Provision `yoto-kit.netlify.app` (or `yotokit.netlify.app`).
    - Update Netlify OAuth callback redirects (per [RFC 007](docs/rfcs/007-oauth-client-id-and-pr-preview-redirects.md)).
-4. **HTML Meta & Manifest:**
-   - Update `<title>`, OpenGraph tags, and meta description in `index.html`.
-   - Update Web App Manifest (`manifest.json` / PWA configuration).
-5. **Widget & CSS Prefixes:**
-   - *Decision:* Keep `--yt-` and `yt-*` widget prefixes intact! `yt` stands for "Yoto", which remains accurate regardless of the suffix name (e.g., `<yt-button>`, `<yt-pixel-icon>` still make 100% sense).
+4. **HTML Meta & Web App Manifest:**
+   - Update `<title>YotoKit - Unofficial Yoto Power Tools</title>`.
+   - Update OpenGraph tags and meta descriptions in `index.html`.
+   - Update Web App Manifest (`manifest.json` / PWA configuration) with name "YotoKit".
+5. **Widget & CSS Prefixes (`yt-` $\rightarrow$ `yk-`):**
+   - Migrate custom element tags from `<yt-*>` to `<yk-*>` (e.g. `<yk-button>`, `<yk-pixel-icon>`, `<yk-dialog>`, `<yk-dropdown>`, `<yk-toast>`).
+   - Rename widget files in `src/widgets/` (e.g. `src/widgets/yk-button.ts`, `src/widgets/yk-button.test.ts`).
+   - Update CSS custom property tokens from `--yt-*` to `--yk-*` (e.g. `--yk-color-primary`, `--yk-radius-md`, `--yk-font-pixel`).
+   - Update documentation in [`src/widgets/AGENTS.md`](file:///home/anitschk/sandbox/yoto-tools/src/widgets/AGENTS.md).
 6. **Documentation & RFCs:**
-   - Update references in `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, and existing RFCs via a focused cleanup commit.
+   - Update references in `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, and existing RFCs.
 
 ---
 
-## 7. Open Questions for Discussion
+## 7. Open Decisions
 
-1. Do you prefer a functional/developer vibe (e.g., **`yoto-kit`**), a maker/crafting vibe (e.g., **`yoto-craft`**), or a card/audio-specific pun (e.g., **`yoto-deck`**)?
-2. Would you prefer hyphenated (`yoto-craft`) or single-word (`yotocraft`) as the canonical repository/URL slug?
-3. Are there any other specific keywords or metaphors (e.g. tape, cassette, player, track) you would like considered?
+1. **Slug Style:**
+   - Option A: Hyphenated repo & URL: `yoto-kit` (`github.com/anitschke/yoto-kit`, `yoto-kit.netlify.app`).
+   - Option B: Joined repo & URL: `yotokit` (`github.com/anitschke/yotokit`, `yotokit.netlify.app`).
+2. **Display Name:**
+   - Recommended: **YotoKit** (or **Yoto Kit**).
