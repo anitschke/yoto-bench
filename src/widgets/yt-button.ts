@@ -1,15 +1,15 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-export type ButtonVariant = 'primary' | 'secondary' | 'subtle' | 'danger';
-export type ButtonSize = 'small' | 'medium' | 'large';
+export type ButtonVariant = "primary" | "secondary" | "subtle" | "danger";
+export type ButtonSize = "small" | "medium" | "large";
 
 /**
  * <yt-button>
  * Interactive button primitive with variants, sizes, loading spinners, and icon slots.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-button')
+@customElement("yt-button")
 export class YtButton extends LitElement {
   static override styles = css`
     :host {
@@ -27,9 +27,10 @@ export class YtButton extends LitElement {
       border-radius: var(--yt-radius-md, 10px);
       border: 1px solid transparent;
       cursor: pointer;
-      transition: background-color var(--yt-transition-fast, 150ms),
-                  border-color var(--yt-transition-fast, 150ms),
-                  box-shadow var(--yt-transition-fast, 150ms);
+      transition:
+        background-color var(--yt-transition-fast, 150ms),
+        border-color var(--yt-transition-fast, 150ms),
+        box-shadow var(--yt-transition-fast, 150ms);
       user-select: none;
       white-space: nowrap;
       width: 100%;
@@ -111,16 +112,20 @@ export class YtButton extends LitElement {
     }
 
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
   `;
 
-  @property({ type: String }) variant: ButtonVariant = 'secondary';
-  @property({ type: String }) size: ButtonSize = 'medium';
+  @property({ type: String }) variant: ButtonVariant = "secondary";
+  @property({ type: String }) size: ButtonSize = "medium";
   @property({ type: Boolean, reflect: true }) disabled = false;
   @property({ type: Boolean, reflect: true }) loading = false;
-  @property({ type: String }) type: 'button' | 'submit' | 'reset' = 'button';
+  @property({ type: String }) type: "button" | "submit" | "reset" = "button";
 
   override render() {
     return html`
@@ -128,7 +133,7 @@ export class YtButton extends LitElement {
         type=${this.type}
         class="variant-${this.variant} size-${this.size}"
         ?disabled=${this.disabled || this.loading}
-        aria-busy=${this.loading ? 'true' : 'false'}
+        aria-busy=${this.loading ? "true" : "false"}
       >
         ${this.loading ? html`<span class="spinner" aria-hidden="true"></span>` : html`<slot name="leading"></slot>`}
         <slot></slot>
@@ -140,6 +145,6 @@ export class YtButton extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-button': YtButton;
+    "yt-button": YtButton;
   }
 }

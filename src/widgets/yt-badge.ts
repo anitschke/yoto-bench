@@ -1,14 +1,14 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-export type BadgeVariant = 'neutral' | 'success' | 'warning' | 'danger';
+export type BadgeVariant = "neutral" | "success" | "warning" | "danger";
 
 /**
  * <yt-badge>
  * Status pill or tag component for device states, tags, and counts.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-badge')
+@customElement("yt-badge")
 export class YtBadge extends LitElement {
   static override styles = css`
     :host {
@@ -54,7 +54,7 @@ export class YtBadge extends LitElement {
     }
   `;
 
-  @property({ type: String }) variant: BadgeVariant = 'neutral';
+  @property({ type: String }) variant: BadgeVariant = "neutral";
 
   override render() {
     return html`
@@ -68,6 +68,6 @@ export class YtBadge extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-badge': YtBadge;
+    "yt-badge": YtBadge;
   }
 }

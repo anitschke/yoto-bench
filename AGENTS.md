@@ -47,6 +47,10 @@ Welcome to `yoto-tools`! This document serves as the central guide for human con
    - **Page Mandate:** The `/privacy` route must list every single metric collected, explain the technical and product rationale for why it is collected, explicitly reassure what is never collected (no PII, credentials, card IDs, or raw filenames), and provide a prominent one-click toggle to disable all telemetry across the application.
 9. **No Clutter in Markdown Documentation:**
    - Keep high-level documentation concise. Prefer rich, in-code TypeScript docstrings and comments for implementation specifics rather than maintaining dozens of small markdown documents that risk becoming stale.
+10. **Unified API Client Pipeline:**
+    - All HTTP requests to Yoto REST APIs and Auth services must flow strictly through `YotoApiClient` (and its internal `request()` pipeline).
+    - **Never invoke raw ad-hoc `fetch()` calls** to Yoto APIs from views, widgets, or business logic services.
+    - **Rationale:** The centralized `YotoApiClient` guarantees automatic Authorization header injection, seamless 401 silent token refreshes via `authService.refreshToken()`, structured error parsing, and consistent user-facing error toast dispatching per RFC 006.
 
 ---
 

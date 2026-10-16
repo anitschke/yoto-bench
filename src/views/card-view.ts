@@ -1,14 +1,14 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { yotoApi } from '../api/client.js';
-import { Card } from '../models/index.js';
-import { dispatchToast } from '../widgets/events.js';
-import '../widgets/yt-button.js';
-import '../widgets/yt-badge.js';
-import '../widgets/yt-pixel-icon.js';
-import '../widgets/yt-text-input.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { yotoApi } from "../api/client.js";
+import { Card } from "../models/index.js";
+import { dispatchToast } from "../widgets/events.js";
+import "../widgets/yt-button.js";
+import "../widgets/yt-badge.js";
+import "../widgets/yt-pixel-icon.js";
+import "../widgets/yt-text-input.js";
 
-@customElement('yt-card-view')
+@customElement("yt-card-view")
 export class YtCardView extends LitElement {
   static override styles = css`
     :host {
@@ -65,7 +65,7 @@ export class YtCardView extends LitElement {
     }
   `;
 
-  @property({ type: String }) cardId = '';
+  @property({ type: String }) cardId = "";
   @state() private card: Card | null = null;
   @state() private loading = true;
 
@@ -81,8 +81,8 @@ export class YtCardView extends LitElement {
       this.card = await yotoApi.getCard(this.cardId);
     } catch (err) {
       dispatchToast(this, {
-        type: 'error',
-        message: 'Failed to load card details.',
+        type: "error",
+        message: "Failed to load card details.",
         errorDetail: err,
       });
     } finally {
@@ -106,13 +106,15 @@ export class YtCardView extends LitElement {
         <div class="header-row">
           <div>
             <h2>${this.card.title}</h2>
-            <small style="color: var(--yt-color-text-muted, #718096);">ID: ${this.card.cardId}</small>
+            <small style="color: var(--yt-color-text-muted, #718096);"
+              >ID: ${this.card.cardId}</small
+            >
           </div>
           <yt-button
             variant="secondary"
             @click=${() => {
-              window.history.pushState(null, '', '/');
-              window.dispatchEvent(new PopStateEvent('popstate'));
+              window.history.pushState(null, "", "/");
+              window.dispatchEvent(new PopStateEvent("popstate"));
             }}
           >
             ← Back to Library
@@ -124,12 +126,18 @@ export class YtCardView extends LitElement {
           ${chapters.map(
             (chap, index) => html`
               <div class="track-item">
-                <span style="font-weight: 600; min-width: 24px;">${index + 1}</span>
-                <yt-pixel-icon src=${chap.display?.icon16x16 || ''} alt=${chap.title} size="sm"></yt-pixel-icon>
+                <span style="font-weight: 600; min-width: 24px;"
+                  >${index + 1}</span
+                >
+                <yt-pixel-icon
+                  src=${chap.display?.icon16x16 || ""}
+                  alt=${chap.title}
+                  size="sm"
+                ></yt-pixel-icon>
                 <div class="track-title">${chap.title}</div>
-                ${chap.duration ? html`<small>${Math.floor(chap.duration)}s</small>` : ''}
+                ${chap.duration ? html`<small>${Math.floor(chap.duration)}s</small>` : ""}
               </div>
-            `
+            `,
           )}
         </div>
       </div>
@@ -139,6 +147,6 @@ export class YtCardView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-card-view': YtCardView;
+    "yt-card-view": YtCardView;
   }
 }

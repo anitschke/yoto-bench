@@ -1,7 +1,7 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
-export type ToastType = 'info' | 'success' | 'warning' | 'error';
+export type ToastType = "info" | "success" | "warning" | "error";
 
 /**
  * <yt-toast>
@@ -9,7 +9,7 @@ export type ToastType = 'info' | 'success' | 'warning' | 'error';
  * See: docs/rfcs/005-widgets-and-component-library.md
  *      docs/rfcs/006-error-handling-and-toast-notifications.md
  */
-@customElement('yt-toast')
+@customElement("yt-toast")
 export class YtToast extends LitElement {
   static override styles = css`
     :host {
@@ -104,16 +104,20 @@ export class YtToast extends LitElement {
     }
   `;
 
-  @property({ type: String }) message = '';
-  @property({ type: String }) type: ToastType = 'info';
-  @property({ type: String }) actionLabel = '';
+  @property({ type: String }) message = "";
+  @property({ type: String }) type: ToastType = "info";
+  @property({ type: String }) actionLabel = "";
 
   private onClose() {
-    this.dispatchEvent(new CustomEvent('dismiss', { bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent("dismiss", { bubbles: true, composed: true }),
+    );
   }
 
   private onAction() {
-    this.dispatchEvent(new CustomEvent('action', { bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent("action", { bubbles: true, composed: true }),
+    );
   }
 
   override render() {
@@ -123,10 +127,25 @@ export class YtToast extends LitElement {
           <span>${this.message}</span>
         </div>
         <div class="actions">
-          ${this.actionLabel
-            ? html`<button type="button" class="action-btn" @click=${this.onAction}>${this.actionLabel}</button>`
-            : ''}
-          <button type="button" class="close-btn" @click=${this.onClose} aria-label="Dismiss">✕</button>
+          ${
+            this.actionLabel
+              ? html`<button
+                  type="button"
+                  class="action-btn"
+                  @click=${this.onAction}
+                >
+                  ${this.actionLabel}
+                </button>`
+              : ""
+          }
+          <button
+            type="button"
+            class="close-btn"
+            @click=${this.onClose}
+            aria-label="Dismiss"
+          >
+            ✕
+          </button>
         </div>
       </div>
     `;
@@ -135,6 +154,6 @@ export class YtToast extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-toast': YtToast;
+    "yt-toast": YtToast;
   }
 }

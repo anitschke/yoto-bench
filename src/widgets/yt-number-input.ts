@@ -1,12 +1,12 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
 /**
  * <yt-number-input>
  * Numeric input with stepper buttons and min/max clamping.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-number-input')
+@customElement("yt-number-input")
 export class YtNumberInput extends LitElement {
   static override styles = css`
     :host {
@@ -85,13 +85,13 @@ export class YtNumberInput extends LitElement {
     }
   `;
 
-  @property({ type: String }) label = '';
+  @property({ type: String }) label = "";
   @property({ type: Number }) value = 0;
   @property({ type: Number }) min = 0;
   @property({ type: Number }) max = 100;
   @property({ type: Number }) step = 1;
   @property({ type: Boolean }) disabled = false;
-  @property({ type: String, attribute: 'aria-label' }) accessibleLabel = '';
+  @property({ type: String, attribute: "aria-label" }) accessibleLabel = "";
 
   private inputId = `yt-number-${Math.random().toString(36).substring(2, 9)}`;
 
@@ -99,7 +99,13 @@ export class YtNumberInput extends LitElement {
     const clamped = Math.max(this.min, Math.min(this.max, val));
     if (clamped !== this.value) {
       this.value = clamped;
-      this.dispatchEvent(new CustomEvent('change', { detail: { value: this.value }, bubbles: true, composed: true }));
+      this.dispatchEvent(
+        new CustomEvent("change", {
+          detail: { value: this.value },
+          bubbles: true,
+          composed: true,
+        }),
+      );
     }
   }
 
@@ -122,7 +128,7 @@ export class YtNumberInput extends LitElement {
   override render() {
     return html`
       <div class="wrapper">
-        ${this.label ? html`<label for=${this.inputId}>${this.label}</label>` : ''}
+        ${this.label ? html`<label for=${this.inputId}>${this.label}</label>` : ""}
         <div class="stepper-container">
           <button
             type="button"
@@ -139,7 +145,7 @@ export class YtNumberInput extends LitElement {
             min=${this.min}
             max=${this.max}
             step=${this.step}
-            aria-label=${this.accessibleLabel || this.label || 'Number input'}
+            aria-label=${this.accessibleLabel || this.label || "Number input"}
             ?disabled=${this.disabled}
             @change=${this.onInput}
           />
@@ -159,6 +165,6 @@ export class YtNumberInput extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-number-input': YtNumberInput;
+    "yt-number-input": YtNumberInput;
   }
 }

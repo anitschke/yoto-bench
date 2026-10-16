@@ -1,12 +1,12 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
 /**
  * <yt-progress-bar>
  * Progress indicator for audio uploads and indeterminate pending states.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-progress-bar')
+@customElement("yt-progress-bar")
 export class YtProgressBar extends LitElement {
   static override styles = css`
     :host {
@@ -47,7 +47,8 @@ export class YtProgressBar extends LitElement {
 
   @property({ type: Number }) value = 0; // 0 to 100
   @property({ type: Boolean }) indeterminate = false;
-  @property({ type: String, attribute: 'aria-label' }) accessibleLabel = 'Progress';
+  @property({ type: String, attribute: "aria-label" }) accessibleLabel =
+    "Progress";
 
   override render() {
     const clamped = Math.max(0, Math.min(100, this.value));
@@ -55,14 +56,14 @@ export class YtProgressBar extends LitElement {
       <div
         class="progress-container"
         role="progressbar"
-        aria-label=${this.accessibleLabel || 'Progress'}
-        aria-valuenow=${this.indeterminate ? '' : clamped}
+        aria-label=${this.accessibleLabel || "Progress"}
+        aria-valuenow=${this.indeterminate ? "" : clamped}
         aria-valuemin="0"
         aria-valuemax="100"
       >
         <div
-          class="bar ${this.indeterminate ? 'indeterminate' : ''}"
-          style=${this.indeterminate ? '' : `width: ${clamped}%`}
+          class="bar ${this.indeterminate ? "indeterminate" : ""}"
+          style=${this.indeterminate ? "" : `width: ${clamped}%`}
         ></div>
       </div>
     `;
@@ -71,6 +72,6 @@ export class YtProgressBar extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-progress-bar': YtProgressBar;
+    "yt-progress-bar": YtProgressBar;
   }
 }

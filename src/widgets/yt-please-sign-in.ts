@@ -1,14 +1,14 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { authService } from '../api/auth.js';
-import './yt-button.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
+import { authService } from "../api/auth.js";
+import "./yt-button.js";
 
 /**
  * <yt-please-sign-in>
  * Reusable full empty-state prompt displayed across pages when the user is unauthenticated.
  * Provides a standardized message, description, and "Sign In with Yoto" action button.
  */
-@customElement('yt-please-sign-in')
+@customElement("yt-please-sign-in")
 export class YtPleaseSignIn extends LitElement {
   static override styles = css`
     :host {
@@ -48,9 +48,9 @@ export class YtPleaseSignIn extends LitElement {
     }
   `;
 
-  @property({ type: String }) heading = 'Please Sign In';
+  @property({ type: String }) heading = "Please Sign In";
   @property({ type: String }) description =
-    'Sign in with your Yoto account to access this section.';
+    "Sign in with your Yoto account to access this section.";
 
   private handleSignIn() {
     authService.login();
@@ -73,6 +73,6 @@ export class YtPleaseSignIn extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-please-sign-in': YtPleaseSignIn;
+    "yt-please-sign-in": YtPleaseSignIn;
   }
 }

@@ -4,7 +4,6 @@
 //      docs/rfcs/003-client-spa-and-routing-strategy.md
 // ==============================================================================
 
-import './global.css';
-import './widgets/theme.css.js';
-import './app.js';
-
+import "./global.css";
+import "./widgets/theme.css.js";
+import "./app.js";

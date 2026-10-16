@@ -1,5 +1,5 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
 export interface DropdownOption {
   value: string;
@@ -14,7 +14,7 @@ export interface DropdownOption {
  * Accessible dropdown/select menu with keyboard navigation and custom option rendering.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-dropdown')
+@customElement("yt-dropdown")
 export class YtDropdown extends LitElement {
   static override styles = css`
     :host {
@@ -108,59 +108,178 @@ export class YtDropdown extends LitElement {
     }
   `;
 
-  @property({ type: String }) label = '';
-  @property({ type: String }) value = '';
+  @property({ type: String }) label = "";
+  @property({ type: String }) value = "";
   @property({ type: Array }) options: DropdownOption[] = [];
-  @property({ type: String }) placeholder = 'Select option...';
-  @property({ type: Boolean, state: true }) private isOpen = false;
+  @property({ type: String }) placeholder = "Select option...";
+
+  @state() private isOpen = false;
+  @state() private highlightedIndex = -1;
+
+  private menuId = `yt-dropdown-menu-${Math.random().toString(36).substring(2, 9)}`;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    window.addEventListener("click", this.onDocumentClick);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    window.removeEventListener("click", this.onDocumentClick);
+  }
+
+  private onDocumentClick = (e: MouseEvent) => {
+    if (!this.isOpen) return;
+    const path = e.composedPath();
+    if (!path.includes(this)) {
+      this.closeMenu();
+    }
+  };
 
   private toggleOpen() {
-    this.isOpen = !this.isOpen;
+    if (this.isOpen) {
+      this.closeMenu();
+    } else {
+      this.openMenu();
+    }
+  }
+
+  private openMenu() {
+    this.isOpen = true;
+    const selectedIdx = this.options.findIndex((o) => o.value === this.value);
+    this.highlightedIndex = selectedIdx >= 0 ? selectedIdx : 0;
+  }
+
+  private closeMenu() {
+    this.isOpen = false;
+    this.highlightedIndex = -1;
   }
 
   private selectOption(opt: DropdownOption) {
     this.value = opt.value;
-    this.isOpen = false;
-    this.dispatchEvent(new CustomEvent('change', { detail: { value: opt.value, option: opt }, bubbles: true, composed: true }));
+    this.closeMenu();
+    this.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { value: opt.value, option: opt },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
+  private onKeyDown(e: KeyboardEvent) {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        if (!this.isOpen) {
+          this.openMenu();
+        } else if (this.options.length > 0) {
+          this.highlightedIndex =
+            (this.highlightedIndex + 1) % this.options.length;
+        }
+        break;
+
+      case "ArrowUp":
+        e.preventDefault();
+        if (!this.isOpen) {
+          this.openMenu();
+        } else if (this.options.length > 0) {
+          this.highlightedIndex =
+            (this.highlightedIndex - 1 + this.options.length) %
+            this.options.length;
+        }
+        break;
+
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (!this.isOpen) {
+          this.openMenu();
+        } else if (
+          this.highlightedIndex >= 0 &&
+          this.highlightedIndex < this.options.length
+        ) {
+          const opt = this.options[this.highlightedIndex];
+          if (opt) {
+            this.selectOption(opt);
+          }
+        }
+        break;
+
+      case "Escape":
+        if (this.isOpen) {
+          e.preventDefault();
+          this.closeMenu();
+        }
+        break;
+
+      case "Home":
+        if (this.isOpen && this.options.length > 0) {
+          e.preventDefault();
+          this.highlightedIndex = 0;
+        }
+        break;
+
+      case "End":
+        if (this.isOpen && this.options.length > 0) {
+          e.preventDefault();
+          this.highlightedIndex = this.options.length - 1;
+        }
+        break;
+    }
   }
 
   override render() {
     const selected = this.options.find((o) => o.value === this.value);
+    const activeDescendant =
+      this.isOpen && this.highlightedIndex >= 0
+        ? `${this.menuId}-opt-${this.highlightedIndex}`
+        : undefined;
 
     return html`
       <div class="wrapper">
-        ${this.label ? html`<label>${this.label}</label>` : ''}
+        ${this.label ? html`<label id="${this.menuId}-label">${this.label}</label>` : ""}
         <div
-          class="trigger ${this.isOpen ? 'open' : ''}"
+          class="trigger ${this.isOpen ? "open" : ""}"
           tabindex="0"
-          role="button"
+          role="combobox"
           aria-haspopup="listbox"
           aria-expanded=${this.isOpen}
+          aria-controls=${this.menuId}
+          aria-labelledby=${this.label ? `${this.menuId}-label` : undefined}
+          aria-activedescendant=${activeDescendant || ""}
           @click=${this.toggleOpen}
+          @keydown=${this.onKeyDown}
         >
           <span>${selected ? selected.label : this.placeholder}</span>
-          <span class="arrow ${this.isOpen ? 'open' : ''}">▼</span>
+          <span class="arrow ${this.isOpen ? "open" : ""}">▼</span>
         </div>
 
-        ${this.isOpen
-          ? html`
-              <div class="menu" role="listbox">
-                ${this.options.map(
-                  (opt) => html`
-                    <div
-                      class="option ${opt.value === this.value ? 'selected' : ''}"
-                      role="option"
-                      aria-selected=${opt.value === this.value}
-                      @click=${() => this.selectOption(opt)}
-                    >
-                      <span>${opt.label}</span>
-                      ${opt.badge ? html`<small>${opt.badge}</small>` : ''}
-                    </div>
-                  `
-                )}
-              </div>
-            `
-          : ''}
+        ${
+          this.isOpen
+            ? html`
+                <div id=${this.menuId} class="menu" role="listbox">
+                  ${this.options.map(
+                    (opt, idx) => html`
+                      <div
+                        id="${this.menuId}-opt-${idx}"
+                        class="option ${opt.value === this.value ? "selected" : ""} ${idx === this.highlightedIndex ? "highlighted" : ""}"
+                        role="option"
+                        aria-selected=${opt.value === this.value}
+                        @mouseenter=${() => {
+                          this.highlightedIndex = idx;
+                        }}
+                        @click=${() => this.selectOption(opt)}
+                      >
+                        <span>${opt.label}</span>
+                        ${opt.badge ? html`<small>${opt.badge}</small>` : ""}
+                      </div>
+                    `,
+                  )}
+                </div>
+              `
+            : ""
+        }
       </div>
     `;
   }
@@ -168,6 +287,6 @@ export class YtDropdown extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-dropdown': YtDropdown;
+    "yt-dropdown": YtDropdown;
   }
 }

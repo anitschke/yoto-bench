@@ -32,6 +32,7 @@ jobs:
       - name: Code Quality & Type Check
         run: |
           npm run typecheck
+          npm run lint
 
       - name: Install Playwright Browsers for WTR
         run: npx playwright install --with-deps chromium
