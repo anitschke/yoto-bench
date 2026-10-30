@@ -48,13 +48,15 @@ jobs:
 
 
   # Deploy to preview/staging or production.
-  # For PRs, this job is gated behind a GitHub Environment ('staging-preview')
-  # requiring explicit manual review and approval by the maintainer.
+  # See: docs/rfcs/001-hosting-and-staging-strategy.md
+  # For external PRs, deployments target 'staging-preview' (requiring maintainer review to prevent secret abuse).
+  # For repo owner PRs, deployments target 'staging-preview-owner' (auto-approved without manual review).
+  # Pushes to main target 'production'.
   build-and-deploy:
     needs: [validate]
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.event_name == 'pull_request' && 'staging-preview' || 'production' }}
+      name: ${{ github.event_name != 'pull_request' && 'production' || (github.actor == github.repository_owner && 'staging-preview-owner' || 'staging-preview') }}
       url: ${{ steps.netlify-deploy.outputs.deploy-url }}
     steps:
       - name: Checkout repository
