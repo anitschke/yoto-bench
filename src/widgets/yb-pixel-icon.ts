@@ -4,12 +4,12 @@ import { customElement, property, state } from "lit/decorators.js";
 export type PixelIconSize = "sm" | "md" | "lg" | "xl";
 
 /**
- * <yt-pixel-icon>
+ * <yb-pixel-icon>
  * Standardizes 16x16 pixel icon rendering with crisp edges and contrast background canvas.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement("yt-pixel-icon")
-export class YtPixelIcon extends LitElement {
+@customElement("yb-pixel-icon")
+export class YbPixelIcon extends LitElement {
   static override styles = css`
     :host {
       display: inline-flex;
@@ -20,8 +20,8 @@ export class YtPixelIcon extends LitElement {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background-color: var(--yt-color-surface-dark, #12161a);
-      border-radius: var(--yt-radius-sm, 6px);
+      background-color: var(--yb-color-surface-dark, #12161a);
+      border-radius: var(--yb-radius-sm, 6px);
       overflow: hidden;
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
@@ -56,7 +56,7 @@ export class YtPixelIcon extends LitElement {
     }
 
     .fallback {
-      color: var(--yt-color-text-muted, #718096);
+      color: var(--yb-color-text-muted, #718096);
       font-size: 10px;
       user-select: none;
     }
@@ -99,6 +99,6 @@ export class YtPixelIcon extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-pixel-icon": YtPixelIcon;
+    "yb-pixel-icon": YbPixelIcon;
   }
 }

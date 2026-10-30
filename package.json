@@ -1,5 +1,5 @@
 {
-  "name": "yoto-tools",
+  "name": "yoto-bench",
   "version": "1.0.0",
   "description": "A modern, responsive, client-side web application built with Lit custom elements and @lit-labs/router for managing your Yoto Player library directly in the browser.",
   "type": "module",
@@ -15,7 +15,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/anitschke/yoto-tools.git"
+    "url": "git+https://github.com/anitschke/yoto-bench.git"
   },
   "keywords": [
     "yoto",
@@ -26,9 +26,9 @@
   "author": "Andrew Nitschke",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/anitschke/yoto-tools/issues"
+    "url": "https://github.com/anitschke/yoto-bench/issues"
   },
-  "homepage": "https://github.com/anitschke/yoto-tools#readme",
+  "homepage": "https://github.com/anitschke/yoto-bench#readme",
   "dependencies": {
     "@lit-labs/router": "^0.1.4",
     "@lit/context": "^1.1.6",

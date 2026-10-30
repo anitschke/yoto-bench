@@ -1,0 +1,10 @@
+{
+  "name": "YotoBench",
+  "short_name": "YotoBench",
+  "description": "Unofficial Yoto Power Tools & Workbench for cards, audio, icons, and devices.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff5c35",
+  "icons": []
+}

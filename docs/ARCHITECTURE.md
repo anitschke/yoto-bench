@@ -1,16 +1,16 @@
-# Architecture & System Design (`yoto-tools`)
+# Architecture & System Design (`yoto-bench`)
 
-This document details the high-level architecture of `yoto-tools`. To keep documentation accurate, granular implementation details are maintained in the codebase comments and type definitions, while this document focuses on architectural topology, security boundaries, hosting/staging patterns, and data flow patterns.
+This document details the high-level architecture of `yoto-bench` (publicly known as **YotoBench**). To keep documentation accurate, granular implementation details are maintained in the codebase comments and type definitions, while this document focuses on architectural topology, security boundaries, hosting/staging patterns, and data flow patterns.
 
 ---
 
 ## 1. System Topology Overview
 
-`yoto-tools` is an entirely client-side Single-Page Application (SPA) built with [Lit](https://lit.dev/) and hosted statically on **Netlify**. It communicates directly with Yoto cloud APIs and device brokers:
+`yoto-bench` is an entirely client-side Single-Page Application (SPA) built with [Lit](https://lit.dev/) and hosted statically on **Netlify**. It communicates directly with Yoto cloud APIs and device brokers:
 
 ```mermaid
 flowchart TD
-    subgraph Browser["User's Browser (yoto-tools SPA)"]
+    subgraph Browser["User's Browser (YotoBench SPA)"]
         Router["@lit-labs/router (Client Routing)"]
         UI["Lit Components & Widgets (/src/widgets)"]
         State["App State & Storage (localStorage & OPFS)"]
@@ -68,7 +68,7 @@ flowchart TD
 ### Platform: Netlify + GitHub Actions
 The project uses GitHub Actions for compilation and Netlify for static asset delivery as detailed in [RFC 001: Hosting Platform & Staging Strategy](rfcs/001-hosting-and-staging-strategy.md):
 - **Framework-Agnostic Static Pipeline:** Built with Vite inside GitHub Actions and published as static assets adhering to standard `[name]-[hash].[ext]` naming.
-- **Automated PR Deploy Previews:** Every pull request automatically generates an isolated, ephemeral preview environment (e.g. `https://deploy-preview-12--yoto-tools.netlify.app`), allowing team members to test features before merging.
+- **Automated PR Deploy Previews:** Every pull request automatically generates an isolated, ephemeral preview environment (e.g. `https://deploy-preview-12--yoto-bench.netlify.app`), allowing team members to test features before merging.
 - **Zero-Risk Billing:** Free tier includes hard-stop policies preventing unexpected overage charges.
 - **Custom Headers (`netlify.toml`):** Fingerprinted assets in `/assets/*` are marked immutable with 1-year cache headers (`Cache-Control: public, max-age=31536000, immutable`), while the HTML entrypoint is set to `Cache-Control: public, max-age=0, must-revalidate`.
 
@@ -85,7 +85,7 @@ The frontend is structured as a Single-Page Application using **`@lit-labs/route
   - Maintains persistent WebSocket connections to Yoto's AWS IoT MQTT broker for live player updates.
   - Allows background audio processing and uploads to proceed uninterrupted while navigating the UI.
   - Keeps pre-indexed icon catalogs and search indices loaded in memory.
-- **Reusable Widget System (`src/widgets/`):** All interactive primitives (buttons, inputs, modal dialogs, status badges, pixel displays) are standardized custom elements prefixed with `yt-` to maintain UI consistency across routes.
+- **Reusable Widget System (`src/widgets/`):** All interactive primitives (buttons, inputs, modal dialogs, status badges, pixel displays) are standardized custom elements prefixed with `yb-` to maintain UI consistency across routes per [RFC 021: Project Rebranding & Naming Strategy](rfcs/021-project-rebranding-and-naming-strategy.md).
 
 ---
 
@@ -173,6 +173,7 @@ Icon management uses a unified inverted indexing architecture detailed in:
 - [RFC 012: Google Noto Emoji Icon Provider Integration](rfcs/012-noto-emoji-icon-provider.md)
 - [RFC 013: Official Yoto Icon Provider Integration](rfcs/013-yoto-official-icon-provider.md)
 - [RFC 014: Community Icon Provider Integration (yotoicons.com)](rfcs/014-yotoicons-community-integration.md)
+- [RFC 021: Project Rebranding & Naming Strategy](rfcs/021-project-rebranding-and-naming-strategy.md)
 
 **Core Principles:**
 - Build-time generation builds a consolidated `icons-[hash].json` mapping keywords/stems to integer array offsets.

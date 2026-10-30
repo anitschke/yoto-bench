@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal outlines the integration of official Yoto display icons directly into `yoto-tools`. By querying Yoto's public display icon library API at build time, we pre-index official Yoto artwork and serve it statically from our CDN with content-addressable cache busting, delivering instantaneous offline search without requiring real-time roundtrips to Yoto's servers.
+This proposal outlines the integration of official Yoto display icons directly into `yoto-bench`. By querying Yoto's public display icon library API at build time, we pre-index official Yoto artwork and serve it statically from our CDN with content-addressable cache busting, delivering instantaneous offline search without requiring real-time roundtrips to Yoto's servers.
 
 ---
 

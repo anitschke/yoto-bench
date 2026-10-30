@@ -9,9 +9,9 @@
 
 ## 1. Summary
 
-Before application code implementation begins for `yoto-tools`, a small set of foundational third-party accounts, deployment targets, and repository security settings must be established manually by the repository owner/maintainer.
+Before application code implementation begins for `yoto-bench`, a small set of foundational third-party accounts, deployment targets, and repository security settings must be established manually by the repository owner/maintainer.
 
-Because `yoto-tools` is a 100% client-side application with zero custom server infrastructure, this external setup is minimal and requires **no credit card or paid services**.
+Because `yoto-bench` is a 100% client-side application with zero custom server infrastructure, this external setup is minimal and requires **no credit card or paid services**.
 
 This RFC serves as the step-by-step maintainer guide detailing the exact manual actions needed across:
 1. **Netlify** (Project Creation & Deploy Token)
@@ -24,17 +24,17 @@ This RFC serves as the step-by-step maintainer guide detailing the exact manual 
 
 ## 2. Step 1: Netlify Setup (Project Creation & CLI Token)
 
-`yoto-tools` is deployed as a static site to Netlify with ephemeral PR preview URLs.
+`yoto-bench` is deployed as a static site to Netlify with ephemeral PR preview URLs.
 
 ### A. Create and Name the Netlify Project:
 1. Log in to [https://app.netlify.com](https://app.netlify.com) (free tier is fully sufficient).
 2. On your Netlify team dashboard, under **"Projects"** / **"Sites"**, start an initial deployment:
-   - **Option 1 (Manual Drag-and-Drop):** On your machine create a temporary directory (`mkdir /tmp/dummy && echo "<h1>yoto-tools</h1>" > /tmp/dummy/index.html`) and drag-and-drop it into Netlify's drop zone.
-   - **Option 2 (Import Git Repo):** Click **"Import from Git"**, select GitHub repo `anitschke/yoto-tools`, set Publish directory to `dist`, and click deploy.
+   - **Option 1 (Manual Drag-and-Drop):** On your machine create a temporary directory (`mkdir /tmp/dummy && echo "<h1>yoto-bench</h1>" > /tmp/dummy/index.html`) and drag-and-drop it into Netlify's drop zone.
+   - **Option 2 (Import Git Repo):** Click **"Import from Git"**, select GitHub repo `anitschke/yoto-bench`, set Publish directory to `dist`, and click deploy.
 3. **Rename the Project:**
    - Go to **Project configuration** (or **Site configuration**) ➔ **General** ➔ **Project details**.
-   - Click **Change project name** (or **Change site name**), enter `yoto-tools`, and click **Save**.
-   - This sets your canonical domain to: `https://yoto-tools.netlify.app`.
+   - Click **Change project name** (or **Change site name**), enter `yoto-bench`, and click **Save**.
+   - This sets your canonical domain to: `https://yoto-bench.netlify.app`.
 
 ### B. Retrieve Project API ID (`NETLIFY_SITE_ID`):
 - In that same **Project details** section, locate **"API ID"** (a UUID like `12345678-abcd-ef01-2345-6789abcdef01`).
@@ -44,7 +44,7 @@ This RFC serves as the step-by-step maintainer guide detailing the exact manual 
 1. Click your user profile avatar (top-right corner) ➔ **User settings**.
 2. In the left navigation, click **Applications**.
 3. Under **Personal access tokens**, click **"New access token"**.
-4. Name it `yoto-tools-github-actions`, set an expiration (e.g. 180 days or 1 year), and click **Generate token**.
+4. Name it `yoto-bench-github-actions`, set an expiration (e.g. 180 days or 1 year), and click **Generate token**.
 5. Copy and store this token securely—it will be added to GitHub Secrets as `NETLIFY_AUTH_TOKEN`.
 
 ---
@@ -54,24 +54,24 @@ This RFC serves as the step-by-step maintainer guide detailing the exact manual 
 To avoid sharing the CLI tool's client credentials and to support browser-based PKCE authentication, register a dedicated application at [https://dashboard.yoto.dev/](https://dashboard.yoto.dev/):
 
 ### Form Fields to Fill:
-1. **Name:** `yoto-tools`
+1. **Name:** `yoto-bench`
 2. **Description:**
    `A free and open source web app for managing Yoto players, importing podcasts, adding track icons, and controlling playback.`
 3. **Application Type:** Select **Public Client** *(handles authentication on client side)*.
 4. **Allowed Callback URLs:**
    ```text
-   https://yoto-tools.netlify.app/callback, http://localhost:5173/callback, https://deploy-preview-*--yoto-tools.netlify.app/callback
+   https://yoto-bench.netlify.app/callback, http://localhost:5173/callback, https://deploy-preview-*--yoto-bench.netlify.app/callback
    ```
    > **Note on Staging / PR Preview URLs:**  
-   > The Yoto Developer Portal (backed by Auth0) supports wildcard subdomains. Registering `https://deploy-preview-*--yoto-tools.netlify.app/callback` allows every ephemeral pull request preview to authenticate directly with PKCE and receive CORS authorization headers without requiring production relay bounces.
+   > The Yoto Developer Portal (backed by Auth0) supports wildcard subdomains. Registering `https://deploy-preview-*--yoto-bench.netlify.app/callback` allows every ephemeral pull request preview to authenticate directly with PKCE and receive CORS authorization headers without requiring production relay bounces.
 5. **Allowed Logout URLs:**
    ```text
-   https://yoto-tools.netlify.app, http://localhost:5173
+   https://yoto-bench.netlify.app, http://localhost:5173
    ```
 6. **Application Logo URL:** *(Leave empty)*
 7. **Application Privacy Policy URL:**
    ```text
-   https://yoto-tools.netlify.app/privacy
+   https://yoto-bench.netlify.app/privacy
    ```
 8. **Required Scopes (Check the following):**
    - [x] `family:library:view` (View card library)
@@ -98,11 +98,11 @@ Per [RFC 015](015-privacy-first-telemetry-and-analytics.md), we collect cookiele
 
 ### Actions Required:
 1. Go to [https://analytics.google.com](https://analytics.google.com).
-2. Click the **Admin** gear icon (`⚙️`) in the bottom-left corner and create an Account / Property named `yoto-tools`.
+2. Click the **Admin** gear icon (`⚙️`) in the bottom-left corner and create an Account / Property named `yoto-bench`.
 3. Under **Property settings** ➔ **Data collection and modification** ➔ **Data streams**:
    - Click **Add stream** ➔ **Web**.
-   - **Website URL:** `https://yoto-tools.netlify.app`
-   - **Stream name:** `yoto-tools Production SPA`
+   - **Website URL:** `https://yoto-bench.netlify.app`
+   - **Stream name:** `yoto-bench Production SPA`
    - Click **Create stream**.
 4. Copy the **Measurement ID** (`G-XXXXXXXXXX`).
 5. *(Optional / Recommended)*: Under **Data collection and modification**:
@@ -140,7 +140,7 @@ Automated end-to-end tests run in CI against deploy previews to verify the OAuth
 
 ## 6. Step 5: GitHub Repository Configuration
 
-Configure the repository (`anitschke/yoto-tools`) with the required Environments, Secrets, and Code Hygiene.
+Configure the repository (`anitschke/yoto-bench`) with the required Environments, Secrets, and Code Hygiene.
 
 ### A. Create GitHub Environments
 Navigate to: **Settings** ➔ **Environments** ➔ **New environment**:
@@ -185,9 +185,9 @@ Navigate to: **Settings** ➔ **Code security and analysis**:
 
 Before giving the agent the green light to start implementing code (`package.json`, Vite configuration, and Lit elements), verify this checklist is complete:
 
-- [x] Netlify project `yoto-tools` created and canonical URL established (`https://yoto-tools.netlify.app`).
+- [x] Netlify project `yoto-bench` created and canonical URL established (`https://yoto-bench.netlify.app`).
 - [x] `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` generated.
-- [x] Dedicated Single-Page Application (SPA) created in Auth0 / Yoto Developer Portal with callback `https://yoto-tools.netlify.app/callback, http://localhost:5173/callback`.
+- [x] Dedicated Single-Page Application (SPA) created in Auth0 / Yoto Developer Portal with callback `https://yoto-bench.netlify.app/callback, http://localhost:5173/callback`.
 - [x] Public Auth0 Client ID copied.
 - [x] Google Analytics 4 property created and `G-XXXXXXXXXX` Measurement ID copied.
 - [x] Dedicated test Yoto account created and verified (`YOTO_TEST_ACCOUNT_EMAIL`).

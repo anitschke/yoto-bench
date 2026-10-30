@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal establishes the unified error handling, diagnostic logging, and user notification architecture for `yoto-tools`. It defines a decoupled DOM event-driven toast system (`<yt-toast-manager>`), structured console diagnostics, and automatic silent token refresh handling.
+This proposal establishes the unified error handling, diagnostic logging, and user notification architecture for `yoto-bench`. It defines a decoupled DOM event-driven toast system (`<yt-toast-manager>`), structured console diagnostics, and automatic silent token refresh handling.
 
 ---
 

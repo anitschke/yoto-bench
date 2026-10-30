@@ -181,7 +181,7 @@ With **`yoto-bench`** as the codebase/repo slug, **`YotoBench`** as the public u
    - Migrate custom element tags from `<yt-*>` to `<yb-*>` (e.g. `<yb-button>`, `<yb-pixel-icon>`, `<yb-dialog>`, `<yb-dropdown>`, `<yb-toast>`).
    - Rename widget files in `src/widgets/` (e.g. `src/widgets/yb-button.ts`, `src/widgets/yb-button.test.ts`).
    - Update CSS custom property tokens from `--yt-*` to `--yb-*` (e.g. `--yb-color-primary`, `--yb-radius-md`, `--yb-font-pixel`).
-   - Update documentation in [`src/widgets/AGENTS.md`](file:///home/anitschk/sandbox/yoto-tools/src/widgets/AGENTS.md).
+   - Update documentation in [`src/widgets/AGENTS.md`](file:///home/anitschk/sandbox/yoto-bench/src/widgets/AGENTS.md).
 6. **Documentation & RFCs:**
    - Update references across `README.md`, `ARCHITECTURE.md`, `AGENTS.md`, and existing RFCs.
 

@@ -64,7 +64,7 @@ export interface AuthChangedDetail {
 }
 
 export class AuthStateChangedEvent extends CustomEvent<AuthChangedDetail> {
-  static readonly EVENT_NAME = "yt-auth-changed";
+  static readonly EVENT_NAME = "yb-auth-changed";
   constructor(detail: AuthChangedDetail) {
     super(AuthStateChangedEvent.EVENT_NAME, {
       bubbles: true,

@@ -1,11 +1,11 @@
 import { html, fixture, expect, oneEvent } from "@open-wc/testing";
-import { YtToast } from "./yt-toast.js";
-import "./yt-toast.js";
+import { YbToast } from "./yb-toast.js";
+import "./yb-toast.js";
 
-describe("YtToast", () => {
+describe("YbToast", () => {
   it("renders message and variant class", async () => {
-    const el = await fixture<YtToast>(
-      html`<yt-toast message="Saved successfully!" type="success"></yt-toast>`,
+    const el = await fixture<YbToast>(
+      html`<yb-toast message="Saved successfully!" type="success"></yb-toast>`,
     );
     const toast = el.shadowRoot!.querySelector(".toast")!;
     expect(toast.classList.contains("type-success")).to.be.true;
@@ -13,8 +13,8 @@ describe("YtToast", () => {
   });
 
   it("emits dismiss event on close click", async () => {
-    const el = await fixture<YtToast>(
-      html`<yt-toast message="Notice"></yt-toast>`,
+    const el = await fixture<YbToast>(
+      html`<yb-toast message="Notice"></yb-toast>`,
     );
     const closeBtn = el.shadowRoot!.querySelector(
       ".close-btn",
@@ -25,8 +25,8 @@ describe("YtToast", () => {
   });
 
   it("emits action event when action button is clicked", async () => {
-    const el = await fixture<YtToast>(
-      html`<yt-toast message="Connection lost" actionLabel="Retry"></yt-toast>`,
+    const el = await fixture<YbToast>(
+      html`<yb-toast message="Connection lost" actionLabel="Retry"></yb-toast>`,
     );
     const actionBtn = el.shadowRoot!.querySelector(
       ".action-btn",

@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal establishes the universal indexing strategy, extensible provider architecture, and client-side search engine used to look up 16×16 pixel icons across multiple icon providers (Google Noto Emoji, official Yoto icons, and community icons) in `yoto-tools`. 
+This proposal establishes the universal indexing strategy, extensible provider architecture, and client-side search engine used to look up 16×16 pixel icons across multiple icon providers (Google Noto Emoji, official Yoto icons, and community icons) in `yoto-bench`. 
 
 To maximize CI/CD build speeds and ensure reliable offline development, **icon assets and indices are not fetched or scraped during ordinary application builds**. Instead:
 1. All resized 16×16 PNG assets (`public/assets/icons/[hash].png`) and the generated index (`src/data/icons.json`) are **checked directly into the Git repository**.

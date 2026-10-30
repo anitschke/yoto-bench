@@ -1,14 +1,14 @@
 import { html, fixture, expect } from "@open-wc/testing";
 import { ToastNotificationEvent } from "./events.js";
-import { YtToastManager } from "./yt-toast-manager.js";
-import { YtToast } from "./yt-toast.js";
-import "./yt-toast-manager.js";
-import "./yt-toast.js";
+import { YbToastManager } from "./yb-toast-manager.js";
+import { YbToast } from "./yb-toast.js";
+import "./yb-toast-manager.js";
+import "./yb-toast.js";
 
-describe("YtToastManager", () => {
+describe("YbToastManager", () => {
   it("enqueues toast when ToastNotificationEvent is dispatched", async () => {
-    const el = await fixture<YtToastManager>(
-      html`<yt-toast-manager></yt-toast-manager>`,
+    const el = await fixture<YbToastManager>(
+      html`<yb-toast-manager></yb-toast-manager>`,
     );
 
     window.dispatchEvent(
@@ -21,7 +21,7 @@ describe("YtToastManager", () => {
 
     await el.updateComplete;
 
-    const toast = el.shadowRoot!.querySelector("yt-toast") as YtToast;
+    const toast = el.shadowRoot!.querySelector("yb-toast") as YbToast;
     expect(toast).to.exist;
     expect(toast.message).to.equal("Notification arrived");
   });

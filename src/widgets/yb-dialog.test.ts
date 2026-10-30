@@ -1,13 +1,13 @@
 import { html, fixture, expect, oneEvent } from "@open-wc/testing";
-import { YtDialog } from "./yt-dialog.js";
-import "./yt-dialog.js";
+import { YbDialog } from "./yb-dialog.js";
+import "./yb-dialog.js";
 
-describe("YtDialog", () => {
+describe("YbDialog", () => {
   it("opens native dialog via showModal()", async () => {
-    const el = await fixture<YtDialog>(html`
-      <yt-dialog heading="Confirm Action">
+    const el = await fixture<YbDialog>(html`
+      <yb-dialog heading="Confirm Action">
         <p>Dialog body text</p>
-      </yt-dialog>
+      </yb-dialog>
     `);
     const dialog = el.shadowRoot!.querySelector("dialog")!;
     expect(dialog.open).to.be.false;
@@ -20,8 +20,8 @@ describe("YtDialog", () => {
   });
 
   it("emits close event when close button is clicked", async () => {
-    const el = await fixture<YtDialog>(
-      html`<yt-dialog heading="Test Dialog"></yt-dialog>`,
+    const el = await fixture<YbDialog>(
+      html`<yb-dialog heading="Test Dialog"></yb-dialog>`,
     );
     el.showModal();
     const closeBtn = el.shadowRoot!.querySelector(
@@ -35,10 +35,10 @@ describe("YtDialog", () => {
   });
 
   it("is accessible when displayed", async () => {
-    const el = await fixture<YtDialog>(html`
-      <yt-dialog heading="Accessible Modal">
+    const el = await fixture<YbDialog>(html`
+      <yb-dialog heading="Accessible Modal">
         <p>Testing accessibility.</p>
-      </yt-dialog>
+      </yb-dialog>
     `);
     await expect(el).to.be.accessible();
   });

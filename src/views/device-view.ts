@@ -6,12 +6,12 @@ import { yotoApi } from "../api/client.js";
 import { authContext } from "../context/index.js";
 import { AuthSession, Device } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
-import "../widgets/yt-button.js";
-import "../widgets/yt-badge.js";
-import "../widgets/yt-please-sign-in.js";
+import "../widgets/yb-button.js";
+import "../widgets/yb-badge.js";
+import "../widgets/yb-please-sign-in.js";
 
-@customElement("yt-device-view")
-export class YtDeviceView extends LitElement {
+@customElement("yb-device-view")
+export class YbDeviceView extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -23,7 +23,7 @@ export class YtDeviceView extends LitElement {
 
     h2 {
       margin: 0;
-      font-size: var(--yt-font-size-2xl, 1.5rem);
+      font-size: var(--yb-font-size-2xl, 1.5rem);
     }
 
     .device-grid {
@@ -33,11 +33,11 @@ export class YtDeviceView extends LitElement {
     }
 
     .device-card {
-      background: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-lg, 16px);
+      background: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-lg, 16px);
       padding: 1.5rem;
-      box-shadow: var(--yt-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+      box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
     }
 
     .device-top {
@@ -48,7 +48,7 @@ export class YtDeviceView extends LitElement {
     }
 
     .device-name {
-      font-size: var(--yt-font-size-lg, 1.125rem);
+      font-size: var(--yb-font-size-lg, 1.125rem);
       font-weight: 600;
       margin: 0;
     }
@@ -57,14 +57,14 @@ export class YtDeviceView extends LitElement {
       display: flex;
       flex-direction: column;
       gap: 0.4rem;
-      font-size: var(--yt-font-size-sm, 0.875rem);
-      color: var(--yt-color-text-muted, #718096);
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      color: var(--yb-color-text-muted, #718096);
     }
 
     .empty-state {
       text-align: center;
       padding: 4rem 1rem;
-      color: var(--yt-color-text-muted, #718096);
+      color: var(--yb-color-text-muted, #718096);
     }
   `;
 
@@ -112,10 +112,10 @@ export class YtDeviceView extends LitElement {
     const isAuthed = !!this.authSession && authService.isAuthenticated();
     if (!isAuthed) {
       return html`
-        <yt-please-sign-in
+        <yb-please-sign-in
           heading="Please Sign In"
           description="Sign in with your Yoto account to see and control your Yoto players."
-        ></yt-please-sign-in>
+        ></yb-please-sign-in>
       `;
     }
 
@@ -143,11 +143,11 @@ export class YtDeviceView extends LitElement {
                           <h3 class="device-name">
                             ${device.name || "Yoto Player"}
                           </h3>
-                          <yt-badge
+                          <yb-badge
                             variant=${device.online ? "success" : "neutral"}
                           >
                             ${device.online ? "Online" : "Offline"}
-                          </yt-badge>
+                          </yb-badge>
                         </div>
                         <div class="meta-row">
                           <span
@@ -169,6 +169,6 @@ export class YtDeviceView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-device-view": YtDeviceView;
+    "yb-device-view": YbDeviceView;
   }
 }

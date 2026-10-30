@@ -1,27 +1,27 @@
 import { html, fixture, expect, oneEvent } from "@open-wc/testing";
-import { YtDropdown } from "./yt-dropdown.js";
-import "./yt-dropdown.js";
+import { YbDropdown } from "./yb-dropdown.js";
+import "./yb-dropdown.js";
 
-describe("YtDropdown", () => {
+describe("YbDropdown", () => {
   const options = [
     { value: "opt1", label: "Option 1" },
     { value: "opt2", label: "Option 2" },
   ];
 
   it("renders trigger with placeholder when unselected", async () => {
-    const el = await fixture<YtDropdown>(
-      html`<yt-dropdown
+    const el = await fixture<YbDropdown>(
+      html`<yb-dropdown
         placeholder="Choose a playlist"
         .options=${options}
-      ></yt-dropdown>`,
+      ></yb-dropdown>`,
     );
     const trigger = el.shadowRoot!.querySelector(".trigger")!;
     expect(trigger.textContent).to.contain("Choose a playlist");
   });
 
   it("opens options menu on click and emits change on selection", async () => {
-    const el = await fixture<YtDropdown>(
-      html`<yt-dropdown .options=${options}></yt-dropdown>`,
+    const el = await fixture<YbDropdown>(
+      html`<yb-dropdown .options=${options}></yb-dropdown>`,
     );
     const trigger = el.shadowRoot!.querySelector(".trigger") as HTMLElement;
     trigger.click();
@@ -40,8 +40,8 @@ describe("YtDropdown", () => {
   });
 
   it("supports keyboard navigation and selection", async () => {
-    const el = await fixture<YtDropdown>(
-      html`<yt-dropdown .options=${options}></yt-dropdown>`,
+    const el = await fixture<YbDropdown>(
+      html`<yb-dropdown .options=${options}></yb-dropdown>`,
     );
     const trigger = el.shadowRoot!.querySelector(".trigger") as HTMLElement;
 
@@ -70,8 +70,8 @@ describe("YtDropdown", () => {
   });
 
   it("closes on Escape key and on clicking outside", async () => {
-    const el = await fixture<YtDropdown>(
-      html`<yt-dropdown .options=${options}></yt-dropdown>`,
+    const el = await fixture<YbDropdown>(
+      html`<yb-dropdown .options=${options}></yb-dropdown>`,
     );
     const trigger = el.shadowRoot!.querySelector(".trigger") as HTMLElement;
     trigger.click();
@@ -96,8 +96,8 @@ describe("YtDropdown", () => {
   });
 
   it("is accessible", async () => {
-    const el = await fixture<YtDropdown>(
-      html`<yt-dropdown label="Select Card" .options=${options}></yt-dropdown>`,
+    const el = await fixture<YbDropdown>(
+      html`<yb-dropdown label="Select Card" .options=${options}></yb-dropdown>`,
     );
     await expect(el).to.be.accessible();
   });

@@ -54,7 +54,7 @@ When configuring an import, users can specify:
 Yoto's API allows arbitrary textual descriptions on card records (`card.metadata.description` or internal passthrough fields). To enable persistent 1-click sync without an external database:
 - We serialize a structured, delimited JSON block at the end of the card description (or inside a dedicated metadata property):
   ```json
-  <!-- yoto-tools:sync
+  <!-- yoto-bench:sync
   {
     "version": 1,
     "sourceType": "podcast-rss",
@@ -68,7 +68,7 @@ Yoto's API allows arbitrary textual descriptions on card records (`card.metadata
   }
   -->
   ```
-- When `yoto-tools` inspects a card, it detects this sync block and renders a **"Sync New Episodes"** button.
+- When `yoto-bench` inspects a card, it detects this sync block and renders a **"Sync New Episodes"** button.
 
 ### E. Audio Hashing & Deduplication Workflow
 - Before uploading any audio, calculate `SHA-256(audioBytes)` in the browser via `crypto.subtle.digest`.

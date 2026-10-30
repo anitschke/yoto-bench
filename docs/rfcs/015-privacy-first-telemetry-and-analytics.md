@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal outlines the privacy-first telemetry architecture for `yoto-tools`. Because the application serves parents, educators, and children interacting with Yoto players, data minimization, strict IP anonymization, and complete transparency are mandatory. This RFC specifies our no-cookie GA4 Measurement Protocol integration, our dedicated public privacy disclosure page (`/privacy`), opt-out mechanisms, and GDPR/ePrivacy compliance strategy.
+This proposal outlines the privacy-first telemetry architecture for `yoto-bench`. Because the application serves parents, educators, and children interacting with Yoto players, data minimization, strict IP anonymization, and complete transparency are mandatory. This RFC specifies our no-cookie GA4 Measurement Protocol integration, our dedicated public privacy disclosure page (`/privacy`), opt-out mechanisms, and GDPR/ePrivacy compliance strategy.
 
 ---
 
@@ -70,7 +70,7 @@ Instead of injecting Google's heavy external `gtag.js` script tag (which execute
 const MEASUREMENT_ID = 'G-XXXXXXXXXX'; // Public GA4 Measurement ID
 const STORAGE_KEY_OPT_OUT = 'yoto_telemetry_disabled';
 
-const PRODUCTION_HOSTNAME = 'yoto-tools.netlify.app';
+const PRODUCTION_HOSTNAME = 'yoto-bench.netlify.app';
 
 export function isTelemetryDisabled(): boolean {
   // Automatically disable telemetry on localhost, PR previews, or staging to prevent data pollution

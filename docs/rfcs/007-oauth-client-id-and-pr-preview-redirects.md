@@ -8,16 +8,16 @@
 
 ## 1. Summary
 
-This proposal defines how OAuth 2.0 authentication is configured across environments in `yoto-tools`. Specifically, it solves the challenge of dynamic, ephemeral Pull Request deploy preview URLs (e.g. `https://deploy-preview-12--yoto-tools.netlify.app/callback`) when registering allowed redirect URIs with Yoto's Auth0 identity service.
+This proposal defines how OAuth 2.0 authentication is configured across environments in `yoto-bench`. Specifically, it solves the challenge of dynamic, ephemeral Pull Request deploy preview URLs (e.g. `https://deploy-preview-12--yoto-bench.netlify.app/callback`) when registering allowed redirect URIs with Yoto's Auth0 identity service.
 
 ---
 
 ## 2. Multi-Environment Redirect Configuration
 
-Authentication in `yoto-tools` must work across multiple distinct environments:
-- **Production Canonical URL:** `https://yoto-tools.netlify.app/callback`
+Authentication in `yoto-bench` must work across multiple distinct environments:
+- **Production Canonical URL:** `https://yoto-bench.netlify.app/callback`
 - **Localhost Development URL:** `http://localhost:5173/callback`
-- **Dynamic PR Previews:** Netlify generates unique, ephemeral subdomains for every PR (e.g. `https://deploy-preview-42--yoto-tools.netlify.app`). To support these without manually registering hundreds of URLs, the Yoto Developer Portal (backed by Auth0) supports wildcard subdomains in **Allowed Callback URLs** (`https://deploy-preview-*--yoto-tools.netlify.app/callback`).
+- **Dynamic PR Previews:** Netlify generates unique, ephemeral subdomains for every PR (e.g. `https://deploy-preview-42--yoto-bench.netlify.app`). To support these without manually registering hundreds of URLs, the Yoto Developer Portal (backed by Auth0) supports wildcard subdomains in **Allowed Callback URLs** (`https://deploy-preview-*--yoto-bench.netlify.app/callback`).
 
 ---
 
@@ -25,7 +25,7 @@ Authentication in `yoto-tools` must work across multiple distinct environments:
 
 Because Yoto's developer dashboard (backed by Auth0) supports wildcard subdomains in the **Allowed Callback URLs** setting:
 ```text
-https://yoto-tools.netlify.app/callback, http://localhost:5173/callback, https://deploy-preview-*--yoto-tools.netlify.app/callback
+https://yoto-bench.netlify.app/callback, http://localhost:5173/callback, https://deploy-preview-*--yoto-bench.netlify.app/callback
 ```
 
 Both redirecting and CORS requests for token exchange (`/oauth/token`) work directly from any ephemeral deploy preview origin without requiring any bounce or relay through production:

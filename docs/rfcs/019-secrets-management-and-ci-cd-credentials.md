@@ -9,9 +9,9 @@
 
 ## 1. Context & Background
 
-`yoto-tools` is architected as a 100% client-side, serverless Single-Page Application (SPA) deployed to Netlify via GitHub Actions workflows. 
+`yoto-bench` is architected as a 100% client-side, serverless Single-Page Application (SPA) deployed to Netlify via GitHub Actions workflows. 
 
-Because there is **no custom backend server or database**, secrets management in `yoto-tools` fundamentally differs from traditional multi-tier web applications:
+Because there is **no custom backend server or database**, secrets management in `yoto-bench` fundamentally differs from traditional multi-tier web applications:
 1. **Zero Runtime Secrets in Client Bundles:** No API master keys, database passwords, or server private keys exist or should ever be embedded in client-side code (`src/` or `dist/`).
 2. **Public Identifiers vs. Secrets:** Parameters such as Auth0 OAuth Client IDs and Google Analytics 4 Measurement IDs are designed by their respective providers to be public client identifiers, not secrets.
 3. **Automated CI/CD Deployment & Testing Credentials:** The only true confidential credentials in the repository belong to deployment automations (Netlify CLI tokens) and automated integration tests (test account credentials for Playwright E2E suites).
@@ -27,7 +27,7 @@ All production and CI/CD secrets are stored exclusively within **GitHub Secrets*
 | Secret Name | Purpose | Where Used | Sensitivity Level | Environment / Scope |
 |---|---|---|---|---|
 | `NETLIFY_AUTH_TOKEN` | Personal Access Token (PAT) used by Netlify CLI / GitHub Action to deploy static build artifacts (`dist/`) to Netlify. | GitHub Actions CI/CD (`.github/workflows/ci.yml`) | **Critical** (Grants deploy permissions to the Netlify site) | `production`, `staging-preview` |
-| `NETLIFY_SITE_ID` | Netlify API UUID identifying the specific target `yoto-tools` site instance. | GitHub Actions CI/CD (`.github/workflows/ci.yml`) | **Moderate** (Used with `NETLIFY_AUTH_TOKEN` to target the site) | Repository Secret / Environment |
+| `NETLIFY_SITE_ID` | Netlify API UUID identifying the specific target `yoto-bench` site instance. | GitHub Actions CI/CD (`.github/workflows/ci.yml`) | **Moderate** (Used with `NETLIFY_AUTH_TOKEN` to target the site) | Repository Secret / Environment |
 | `YOTO_TEST_ACCOUNT_EMAIL` | Dedicated test Yoto account email address used for headless Playwright end-to-end (E2E) verification against deployed preview URLs. | GitHub Actions E2E test step (`npm run test:e2e`) | **Moderate** (Test harness user, no production user data) | `staging-preview`, `production` |
 | `YOTO_TEST_ACCOUNT_PASSWORD` | Password for the dedicated Yoto E2E test harness account. | GitHub Actions E2E test step (`npm run test:e2e`) | **High** (Allows login to the isolated test account) | `staging-preview`, `production` |
 
@@ -39,7 +39,7 @@ All production and CI/CD secrets are stored exclusively within **GitHub Secrets*
 Public open-source repositories face supply-chain risks where untrusted pull requests from forks could attempt to exfiltrate CI secrets (e.g. by modifying test scripts or workflows to print secrets).
 
 ### B. Defense Strategy: Gated GitHub Environments
-To mitigate this risk, `yoto-tools` leverages **GitHub Environments** with explicit deployment protection rules:
+To mitigate this risk, `yoto-bench` leverages **GitHub Environments** with explicit deployment protection rules:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -78,7 +78,7 @@ To mitigate this risk, `yoto-tools` leverages **GitHub Environments** with expli
    - **Protection Rule:** External pull requests cannot trigger jobs targeting this environment without manual approval from a repository maintainer.
 2. **Environment `production`:**
    - Scoped strictly to pushes on the `main` branch.
-   - Deploys directly to the canonical production domain (`yoto-tools.netlify.app`).
+   - Deploys directly to the canonical production domain (`yoto-bench.netlify.app`).
 3. **Local Development:**
    - Developers working locally do not need `NETLIFY_AUTH_TOKEN` or `NETLIFY_SITE_ID` because local development runs via `npm run dev` (Vite dev server) with no Netlify interaction.
    - For running E2E tests locally, developers may optionally define `YOTO_TEST_ACCOUNT_EMAIL` and `YOTO_TEST_ACCOUNT_PASSWORD` in a local `.env.local` file (which is git-ignored).
@@ -103,7 +103,7 @@ Default values for public identifiers are committed directly to version control 
 
 export const CONFIG = {
   // Public Auth0 Client ID (RFC 007). Injected by Vite or falls back to production default.
-  yotoClientId: (import.meta.env.VITE_YOTO_CLIENT_ID as string) || 'yoto-tools-production-client-id',
+  yotoClientId: (import.meta.env.VITE_YOTO_CLIENT_ID as string) || 'yoto-bench-production-client-id',
 
   // Public GA4 Measurement ID (RFC 015). Injected by Vite; defaults to placeholder.
   gaMeasurementId: (import.meta.env.VITE_GA_MEASUREMENT_ID as string) || 'G-XXXXXXXXXX',
@@ -131,14 +131,14 @@ In GitHub Actions CI/CD, public configuration values do **not** use GitHub Secre
 During `vite build`, Vite automatically replaces all occurrences of `import.meta.env.VITE_*` with static string literals during Rollup minification.
 
 ### C. Zero `.env` Files Principle
-`yoto-tools` deliberately avoids relying on `.env` files:
+`yoto-bench` deliberately avoids relying on `.env` files:
 1. **Batteries-Included Source Defaults:** Running `npm run dev` immediately works out of the box without creating or copying any `.env` file because `src/config.ts` includes safe local fallbacks for all endpoints.
 2. **In-App Developer Settings:** Developers wanting to test a custom Yoto Client ID do so directly in the UI Settings modal (`localStorage`), eliminating the need for developer-specific local environment files.
 3. **No Local Telemetry Needed:** Because telemetry automatically disables itself on `localhost` ([RFC 015](015-privacy-first-telemetry-and-analytics.md)), developers never need a local GA4 Measurement ID.
 4. **Defensive `.gitignore`:** As a defense-in-depth precaution, `.gitignore` ignores `.env*` to ensure that if a developer ever accidentally creates a `.env` file on their machine, it is never committed.
 
 ### D. User Runtime Overrides ("Bring Your Own App")
-Per [RFC 007 (Section 4)](007-oauth-client-id-and-pr-preview-redirects.md), `yoto-tools` supports a runtime override:
+Per [RFC 007 (Section 4)](007-oauth-client-id-and-pr-preview-redirects.md), `yoto-bench` supports a runtime override:
 - In the application settings dialog, users can supply a custom Auth0 Client ID.
 - When set, the application persists the custom ID to `localStorage.getItem('yoto_custom_client_id')` and prioritizes it over `CONFIG.yotoClientId`.
 
@@ -151,7 +151,7 @@ Per [RFC 007 (Section 4)](007-oauth-client-id-and-pr-preview-redirects.md), `yot
 
 ## 5. Client-Side User Tokens & Ephemeral Secrets
 
-When a user logs in to `yoto-tools`, their browser receives an OAuth `access_token` and `refresh_token` from Yoto's Auth0 identity service.
+When a user logs in to `yoto-bench`, their browser receives an OAuth `access_token` and `refresh_token` from Yoto's Auth0 identity service.
 
 ### Security Boundaries:
 1. **Local Storage Isolation:**

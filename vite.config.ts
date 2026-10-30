@@ -21,7 +21,7 @@ function cspHashInjectionPlugin(): Plugin {
   let outDir = 'dist';
 
   return {
-    name: 'yt-csp-hash-injection',
+    name: 'yb-csp-hash-injection',
     apply: 'build',
     enforce: 'post',
     configResolved(config) {

@@ -2,12 +2,12 @@ import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 /**
- * <yt-progress-bar>
+ * <yb-progress-bar>
  * Progress indicator for audio uploads and indeterminate pending states.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement("yt-progress-bar")
-export class YtProgressBar extends LitElement {
+@customElement("yb-progress-bar")
+export class YbProgressBar extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -17,17 +17,17 @@ export class YtProgressBar extends LitElement {
     .progress-container {
       width: 100%;
       height: 8px;
-      background-color: var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-full, 9999px);
+      background-color: var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-full, 9999px);
       overflow: hidden;
       position: relative;
     }
 
     .bar {
       height: 100%;
-      background-color: var(--yt-color-primary, #ff5c35);
-      border-radius: var(--yt-radius-full, 9999px);
-      transition: width var(--yt-transition-fast, 150ms) ease-out;
+      background-color: var(--yb-color-primary, #ff5c35);
+      border-radius: var(--yb-radius-full, 9999px);
+      transition: width var(--yb-transition-fast, 150ms) ease-out;
     }
 
     .indeterminate {
@@ -72,6 +72,6 @@ export class YtProgressBar extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-progress-bar": YtProgressBar;
+    "yb-progress-bar": YbProgressBar;
   }
 }

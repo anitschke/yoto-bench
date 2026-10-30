@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal outlines the client-side audio ingestion engine for `yoto-tools`. It defines how local folders and ZIP archives are processed, how audio tags are extracted, how temporary storage is managed via the Origin Private File System (OPFS), and how concurrent S3 uploads are throttled to ensure browser and network stability.
+This proposal outlines the client-side audio ingestion engine for `yoto-bench`. It defines how local folders and ZIP archives are processed, how audio tags are extracted, how temporary storage is managed via the Origin Private File System (OPFS), and how concurrent S3 uploads are throttled to ensure browser and network stability.
 
 ---
 

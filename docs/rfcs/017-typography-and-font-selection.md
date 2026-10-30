@@ -8,13 +8,13 @@
 
 ## 1. Summary
 
-This proposal establishes the typography standard for `yoto-tools`. To ensure high UI readability, complete offline functionality, zero external CDN requests, and strict CSP compliance, the application standardizes on the **Roboto** typeface, bundled locally as highly compressed **WOFF2** assets.
+This proposal establishes the typography standard for `yoto-bench`. To ensure high UI readability, complete offline functionality, zero external CDN requests, and strict CSP compliance, the application standardizes on the **Roboto** typeface, bundled locally as highly compressed **WOFF2** assets.
 
 ---
 
 ## 2. Selection: Roboto
 
-**Roboto** is selected as the primary UI typeface for `yoto-tools`:
+**Roboto** is selected as the primary UI typeface for `yoto-bench`:
 1. **Geometric & Mechanical Harmony:** Roboto’s dual nature—a largely geometric skeleton with friendly, open curves—matches the industrial design and friendly personality of Yoto hardware.
 2. **Readability at Small Scales:** Excellent legibility at 12px–14px sizes, essential for dense track listings, chapter timestamps, and device telemetry badges.
 3. **Apache 2.0 License:** Completely free and open-source, permitting local redistribution and subsetting without legal ambiguity.

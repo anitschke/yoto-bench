@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal outlines the integration of Google Noto Emoji assets as a built-in icon provider for `yoto-tools`. Noto Emoji provides thousands of high-quality, legally unencumbered (Apache 2.0) 16×16 icons across animals, food, activities, nature, and objects.
+This proposal outlines the integration of Google Noto Emoji assets as a built-in icon provider for `yoto-bench`. Noto Emoji provides thousands of high-quality, legally unencumbered (Apache 2.0) 16×16 icons across animals, food, activities, nature, and objects.
 
 ---
 

@@ -1,10 +1,10 @@
 import { html, fixture, expect } from "@open-wc/testing";
-import { YtButton } from "./yt-button.js";
-import "./yt-button.js";
+import { YbButton } from "./yb-button.js";
+import "./yb-button.js";
 
-describe("YtButton", () => {
+describe("YbButton", () => {
   it("renders with default secondary variant", async () => {
-    const el = await fixture<YtButton>(html`<yt-button>Click Me</yt-button>`);
+    const el = await fixture<YbButton>(html`<yb-button>Click Me</yb-button>`);
     expect(el.variant).to.equal("secondary");
     const button = el.shadowRoot!.querySelector("button")!;
     expect(button.classList.contains("variant-secondary")).to.be.true;
@@ -12,8 +12,8 @@ describe("YtButton", () => {
   });
 
   it("renders primary variant", async () => {
-    const el = await fixture<YtButton>(
-      html`<yt-button variant="primary">Submit</yt-button>`,
+    const el = await fixture<YbButton>(
+      html`<yb-button variant="primary">Submit</yb-button>`,
     );
     expect(el.variant).to.equal("primary");
     const button = el.shadowRoot!.querySelector("button")!;
@@ -21,8 +21,8 @@ describe("YtButton", () => {
   });
 
   it("handles loading state", async () => {
-    const el = await fixture<YtButton>(
-      html`<yt-button loading>Loading</yt-button>`,
+    const el = await fixture<YbButton>(
+      html`<yb-button loading>Loading</yb-button>`,
     );
     const button = el.shadowRoot!.querySelector("button")!;
     expect(button.getAttribute("aria-busy")).to.equal("true");

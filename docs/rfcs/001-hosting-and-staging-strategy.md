@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal establishes the continuous integration, build, preview/staging, and static hosting pipeline for `yoto-tools`. Rather than having Netlify execute build commands, all compilation, linting, unit testing, and static asset generation are performed within **GitHub Actions**. GitHub Actions then deploys pre-built `dist/` artifacts to **Netlify**, automatically provisioning an **isolated, temporary preview environment for every Pull Request**, followed immediately by automated Playwright end-to-end testing against the live preview URL.
+This proposal establishes the continuous integration, build, preview/staging, and static hosting pipeline for `yoto-bench`. Rather than having Netlify execute build commands, all compilation, linting, unit testing, and static asset generation are performed within **GitHub Actions**. GitHub Actions then deploys pre-built `dist/` artifacts to **Netlify**, automatically provisioning an **isolated, temporary preview environment for every Pull Request**, followed immediately by automated Playwright end-to-end testing against the live preview URL.
 
 ---
 
@@ -24,8 +24,8 @@ flowchart TD
     end
 
     subgraph Netlify["Netlify Global Edge CDN"]
-        DeployAction -->|Push to main| ProdDeploy["Production: yoto-tools.netlify.app"]
-        DeployAction -->|Pull Request #42| PreviewDeploy["Temporary PR Staging: deploy-preview-42--yoto-tools.netlify.app"]
+        DeployAction -->|Push to main| ProdDeploy["Production: yoto-bench.netlify.app"]
+        DeployAction -->|Pull Request #42| PreviewDeploy["Temporary PR Staging: deploy-preview-42--yoto-bench.netlify.app"]
     end
 
     subgraph PostDeployTest["Automated E2E Verification"]
@@ -36,7 +36,7 @@ flowchart TD
 
 ### Key Advantages:
 1. **Isolated Temporary PR Staging per PR:**
-   - Every Pull Request automatically receives its own isolated URL (e.g. `https://deploy-preview-42--yoto-tools.netlify.app`).
+   - Every Pull Request automatically receives its own isolated URL (e.g. `https://deploy-preview-42--yoto-bench.netlify.app`).
    - The GitHub Action posts a comment on the PR containing the live preview URL.
    - Pushing new commits updates the staging environment in-place. Closing or merging the PR automatically archives it.
 2. **Unified CI/CD Pipeline:** Linting, type-checking, component tests, building, staging deployment, and post-deploy E2E testing execute sequentially within a single GitHub Actions workflow run.

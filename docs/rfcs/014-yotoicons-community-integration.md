@@ -3,7 +3,7 @@
 > [!CAUTION]
 > **DO NOT IMPLEMENT UNTIL FORMAL BUY-IN IS RECEIVED FROM THE MAINTAINER.**
 > 
-> Scraping, mirroring, or republishing assets from `yotoicons.com` without explicit consent from its creator/maintainer risks straining their community infrastructure and creating friction. Implementation of this RFC is strictly on hold until explicit written permission or an approved export mechanism is established with the maintainer (`yotoicons@gmail.com`). Until then, `yoto-tools` must rely exclusively on official Yoto public icons and Apache 2.0-licensed Google Noto Emoji.
+> Scraping, mirroring, or republishing assets from `yotoicons.com` without explicit consent from its creator/maintainer risks straining their community infrastructure and creating friction. Implementation of this RFC is strictly on hold until explicit written permission or an approved export mechanism is established with the maintainer (`yotoicons@gmail.com`). Until then, `yoto-bench` must rely exclusively on official Yoto public icons and Apache 2.0-licensed Google Noto Emoji.
 
 - **Date:** 2026-09-17
 - **Status:** Proposed (Blocked on Maintainer Approval)
@@ -13,13 +13,13 @@
 
 ## 1. Summary
 
-This proposal details the architectural design for integrating community pixel art from [yotoicons.com](https://yotoicons.com) into `yoto-tools`. It defines how icons and metadata would be imported, incrementally synced with minimal server load, merged into the client-side search index, and cached.
+This proposal details the architectural design for integrating community pixel art from [yotoicons.com](https://yotoicons.com) into `yoto-bench`. It defines how icons and metadata would be imported, incrementally synced with minimal server load, merged into the client-side search index, and cached.
 
 ---
 
 ## 2. Motivation & Community Context
 
-`yotoicons.com` is a beloved community project created by parents and kids to share 16×16 pixel art icons for Make-Your-Own Yoto cards. Integrating these icons into `yoto-tools` would provide users with a massive selection of creative artwork directly within the browser icon picker.
+`yotoicons.com` is a beloved community project created by parents and kids to share 16×16 pixel art icons for Make-Your-Own Yoto cards. Integrating these icons into `yoto-bench` would provide users with a massive selection of creative artwork directly within the browser icon picker.
 
 Because the service is funded through donations (Ko-fi) and operated as a personal passion project:
 1. We must respect their server resources and bandwidth.
@@ -87,6 +87,6 @@ To keep the index up to date without repeatedly crawling the entire site:
 
 ## 5. Next Steps to Unblock Implementation
 
-1. Send an introductory email to `yotoicons@gmail.com` detailing the non-commercial, open-source nature of `yoto-tools`.
+1. Send an introductory email to `yotoicons@gmail.com` detailing the non-commercial, open-source nature of `yoto-bench`.
 2. Propose the incremental sync strategy or ask if an API / SQLite / JSON dump is preferred.
 3. Only proceed with implementation if explicit approval is granted.
