@@ -1,13 +1,16 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { authService } from '../api/auth.js';
-import { yotoApi } from '../api/client.js';
-import { Device } from '../models/index.js';
-import { dispatchToast } from '../widgets/events.js';
-import '../widgets/yt-button.js';
-import '../widgets/yt-badge.js';
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { consume } from "@lit/context";
+import { authService } from "../api/auth.js";
+import { yotoApi } from "../api/client.js";
+import { authContext } from "../context/index.js";
+import { AuthSession, Device } from "../models/index.js";
+import { dispatchToast } from "../widgets/events.js";
+import "../widgets/yt-button.js";
+import "../widgets/yt-badge.js";
+import "../widgets/yt-please-sign-in.js";
 
-@customElement('yt-device-view')
+@customElement("yt-device-view")
 export class YtDeviceView extends LitElement {
   static override styles = css`
     :host {
@@ -65,31 +68,29 @@ export class YtDeviceView extends LitElement {
     }
   `;
 
+  @consume({ context: authContext, subscribe: true })
+  @state()
+  authSession: AuthSession | null = null;
+
   @state() private devices: Device[] = [];
   @state() private loading = true;
 
-  private onAuthChanged = () => {
-    this.requestUpdate();
-    if (authService.isAuthenticated()) {
-      this.loadDevices();
-    } else {
-      this.devices = [];
-      this.loading = false;
+  private isFetching = false;
+
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("authSession")) {
+      if (this.authSession && authService.isAuthenticated()) {
+        void this.loadDevices();
+      } else {
+        this.devices = [];
+        this.loading = false;
+      }
     }
-  };
-
-  override async connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener('yt-auth-changed', this.onAuthChanged);
-    await this.loadDevices();
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener('yt-auth-changed', this.onAuthChanged);
   }
 
   private async loadDevices() {
+    if (this.isFetching) return;
+    this.isFetching = true;
     this.loading = true;
     try {
       if (authService.isAuthenticated()) {
@@ -97,17 +98,19 @@ export class YtDeviceView extends LitElement {
       }
     } catch (err) {
       dispatchToast(this, {
-        type: 'error',
-        message: 'Failed to load devices.',
+        type: "error",
+        message: "Failed to load devices.",
         errorDetail: err,
       });
     } finally {
       this.loading = false;
+      this.isFetching = false;
     }
   }
 
   override render() {
-    if (!authService.isAuthenticated()) {
+    const isAuthed = !!this.authSession && authService.isAuthenticated();
+    if (!isAuthed) {
       return html`
         <yt-please-sign-in
           heading="Please Sign In"
@@ -126,28 +129,39 @@ export class YtDeviceView extends LitElement {
           <h2>Players & Devices (${this.devices.length})</h2>
         </div>
 
-        ${this.devices.length === 0
-          ? html`<div class="empty-state"><p>No Yoto players registered to your account.</p></div>`
-          : html`
-              <div class="device-grid">
-                ${this.devices.map(
-                  (device) => html`
-                    <div class="device-card">
-                      <div class="device-top">
-                        <h3 class="device-name">${device.name || 'Yoto Player'}</h3>
-                        <yt-badge variant=${device.online ? 'success' : 'neutral'}>
-                          ${device.online ? 'Online' : 'Offline'}
-                        </yt-badge>
+        ${
+          this.devices.length === 0
+            ? html`<div class="empty-state">
+                <p>No Yoto players registered to your account.</p>
+              </div>`
+            : html`
+                <div class="device-grid">
+                  ${this.devices.map(
+                    (device) => html`
+                      <div class="device-card">
+                        <div class="device-top">
+                          <h3 class="device-name">
+                            ${device.name || "Yoto Player"}
+                          </h3>
+                          <yt-badge
+                            variant=${device.online ? "success" : "neutral"}
+                          >
+                            ${device.online ? "Online" : "Offline"}
+                          </yt-badge>
+                        </div>
+                        <div class="meta-row">
+                          <span
+                            ><strong>Model:</strong>
+                            ${device.deviceType || "Yoto Player"}</span
+                          >
+                          <span><strong>ID:</strong> ${device.deviceId}</span>
+                        </div>
                       </div>
-                      <div class="meta-row">
-                        <span><strong>Model:</strong> ${device.deviceType || 'Yoto Player'}</span>
-                        <span><strong>ID:</strong> ${device.deviceId}</span>
-                      </div>
-                    </div>
-                  `
-                )}
-              </div>
-            `}
+                    `,
+                  )}
+                </div>
+              `
+        }
       </div>
     `;
   }
@@ -155,6 +169,6 @@ export class YtDeviceView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-device-view': YtDeviceView;
+    "yt-device-view": YtDeviceView;
   }
 }

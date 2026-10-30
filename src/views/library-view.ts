@@ -1,16 +1,19 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { authService } from '../api/auth.js';
-import { yotoApi } from '../api/client.js';
-import { Card } from '../models/index.js';
-import { dispatchToast } from '../widgets/events.js';
-import '../widgets/yt-button.js';
-import '../widgets/yt-badge.js';
-import '../widgets/yt-pixel-icon.js';
-import '../widgets/yt-dialog.js';
-import '../widgets/yt-text-input.js';
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { consume } from "@lit/context";
+import { authService } from "../api/auth.js";
+import { yotoApi } from "../api/client.js";
+import { authContext } from "../context/index.js";
+import { AuthSession, Card } from "../models/index.js";
+import { dispatchToast } from "../widgets/events.js";
+import "../widgets/yt-button.js";
+import "../widgets/yt-badge.js";
+import "../widgets/yt-pixel-icon.js";
+import "../widgets/yt-dialog.js";
+import "../widgets/yt-text-input.js";
+import "../widgets/yt-please-sign-in.js";
 
-@customElement('yt-library-view')
+@customElement("yt-library-view")
 export class YtLibraryView extends LitElement {
   static override styles = css`
     :host {
@@ -52,7 +55,9 @@ export class YtLibraryView extends LitElement {
       flex-direction: column;
       gap: 0.75rem;
       box-shadow: var(--yt-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
-      transition: box-shadow var(--yt-transition-fast, 150ms), transform var(--yt-transition-fast, 150ms);
+      transition:
+        box-shadow var(--yt-transition-fast, 150ms),
+        transform var(--yt-transition-fast, 150ms);
     }
 
     .card-item:hover {
@@ -98,32 +103,30 @@ export class YtLibraryView extends LitElement {
     }
   `;
 
+  @consume({ context: authContext, subscribe: true })
+  @state()
+  authSession: AuthSession | null = null;
+
   @state() private cards: Card[] = [];
-  @state() private searchQuery = '';
+  @state() private searchQuery = "";
   @state() private loading = true;
 
-  private onAuthChanged = () => {
-    this.requestUpdate();
-    if (authService.isAuthenticated()) {
-      this.loadCards();
-    } else {
-      this.cards = [];
-      this.loading = false;
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("authSession")) {
+      if (this.authSession && authService.isAuthenticated()) {
+        void this.loadCards();
+      } else {
+        this.cards = [];
+        this.loading = false;
+      }
     }
-  };
-
-  override async connectedCallback() {
-    super.connectedCallback();
-    window.addEventListener('yt-auth-changed', this.onAuthChanged);
-    await this.loadCards();
   }
 
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    window.removeEventListener('yt-auth-changed', this.onAuthChanged);
-  }
+  private isFetching = false;
 
   private async loadCards() {
+    if (this.isFetching) return;
+    this.isFetching = true;
     this.loading = true;
     try {
       if (authService.isAuthenticated()) {
@@ -131,12 +134,13 @@ export class YtLibraryView extends LitElement {
       }
     } catch (err) {
       dispatchToast(this, {
-        type: 'error',
-        message: 'Failed to load card library.',
+        type: "error",
+        message: "Failed to load card library.",
         errorDetail: err,
       });
     } finally {
       this.loading = false;
+      this.isFetching = false;
     }
   }
 
@@ -145,7 +149,8 @@ export class YtLibraryView extends LitElement {
   }
 
   override render() {
-    if (!authService.isAuthenticated()) {
+    const isAuthed = !!this.authSession && authService.isAuthenticated();
+    if (!isAuthed) {
       return html`
         <yt-please-sign-in
           heading="Please Sign In"
@@ -158,7 +163,9 @@ export class YtLibraryView extends LitElement {
       return html`<div class="empty-state"><p>Loading library...</p></div>`;
     }
 
-    const filtered = this.cards.filter((c) => (c.title || '').toLowerCase().includes(this.searchQuery));
+    const filtered = this.cards.filter((c) =>
+      (c.title || "").toLowerCase().includes(this.searchQuery),
+    );
 
     return html`
       <div>
@@ -175,41 +182,58 @@ export class YtLibraryView extends LitElement {
           </div>
         </div>
 
-        ${filtered.length === 0
-          ? html`<div class="empty-state"><p>No cards match your search.</p></div>`
-          : html`
-              <div class="card-grid">
-                ${filtered.map((card) => {
-                  const firstChapter = card.content?.chapters?.[0];
-                  const iconUrl = firstChapter?.display?.icon16x16 || '';
-                  const trackCount = card.content?.chapters?.length || 0;
+        ${
+          filtered.length === 0
+            ? html`<div class="empty-state">
+                <p>No cards match your search.</p>
+              </div>`
+            : html`
+                <div class="card-grid">
+                  ${filtered.map((card) => {
+                    const firstChapter = card.content?.chapters?.[0];
+                    const iconUrl = firstChapter?.display?.icon16x16 || "";
+                    const trackCount = card.content?.chapters?.length || 0;
 
-                  return html`
-                    <div class="card-item">
-                      <div class="card-top">
-                        <yt-pixel-icon src=${iconUrl} alt=${card.title} size="md"></yt-pixel-icon>
-                        <div style="flex: 1; min-width: 0;">
-                          <h4 class="card-title">${card.title}</h4>
-                          <span class="card-meta">${trackCount} ${trackCount === 1 ? 'track' : 'tracks'}</span>
+                    return html`
+                      <div class="card-item">
+                        <div class="card-top">
+                          <yt-pixel-icon
+                            src=${iconUrl}
+                            alt=${card.title}
+                            size="md"
+                          ></yt-pixel-icon>
+                          <div style="flex: 1; min-width: 0;">
+                            <h4 class="card-title">${card.title}</h4>
+                            <span class="card-meta"
+                              >${trackCount}
+                              ${trackCount === 1 ? "track" : "tracks"}</span
+                            >
+                          </div>
+                        </div>
+                        <div class="card-actions">
+                          <yt-button
+                            variant="subtle"
+                            size="small"
+                            @click=${() => {
+                              window.history.pushState(
+                                null,
+                                "",
+                                `/cards/${card.cardId}`,
+                              );
+                              window.dispatchEvent(
+                                new PopStateEvent("popstate"),
+                              );
+                            }}
+                          >
+                            Edit
+                          </yt-button>
                         </div>
                       </div>
-                      <div class="card-actions">
-                        <yt-button
-                          variant="subtle"
-                          size="small"
-                          @click=${() => {
-                            window.history.pushState(null, '', `/cards/${card.cardId}`);
-                            window.dispatchEvent(new PopStateEvent('popstate'));
-                          }}
-                        >
-                          Edit
-                        </yt-button>
-                      </div>
-                    </div>
-                  `;
-                })}
-              </div>
-            `}
+                    `;
+                  })}
+                </div>
+              `
+        }
       </div>
     `;
   }
@@ -217,6 +241,6 @@ export class YtLibraryView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-library-view': YtLibraryView;
+    "yt-library-view": YtLibraryView;
   }
 }

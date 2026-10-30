@@ -1,10 +1,10 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { authService } from '../api/auth.js';
-import { dispatchToast } from '../widgets/events.js';
-import '../widgets/yt-button.js';
+import { LitElement, html, css } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { authService } from "../api/auth.js";
+import { dispatchToast } from "../widgets/events.js";
+import "../widgets/yt-button.js";
 
-@customElement('yt-callback-view')
+@customElement("yt-callback-view")
 export class YtCallbackView extends LitElement {
   static override styles = css`
     :host {
@@ -36,12 +36,16 @@ export class YtCallbackView extends LitElement {
     }
 
     @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
   `;
 
-  @state() private error = '';
+  @state() private error = "";
 
   override async connectedCallback() {
     super.connectedCallback();
@@ -55,19 +59,18 @@ export class YtCallbackView extends LitElement {
       if (completed) {
         // Successfully exchanged tokens on this origin
         dispatchToast(window, {
-          type: 'success',
-          message: 'Signed in successfully!',
+          type: "success",
+          message: "Signed in successfully!",
         });
-        window.history.replaceState(null, '', '/');
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        window.history.replaceState(null, "", "/");
+        window.dispatchEvent(new PopStateEvent("popstate"));
       }
-      // If completed is false, authService handled canonical relay redirect to target preview
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.error = msg;
       dispatchToast(window, {
-        type: 'error',
-        message: 'Authentication failed.',
+        type: "error",
+        message: "Authentication failed.",
         errorDetail: err,
       });
     }
@@ -82,8 +85,8 @@ export class YtCallbackView extends LitElement {
           <yt-button
             variant="primary"
             @click=${() => {
-              window.history.pushState(null, '', '/');
-              window.dispatchEvent(new PopStateEvent('popstate'));
+              window.history.pushState(null, "", "/");
+              window.dispatchEvent(new PopStateEvent("popstate"));
             }}
           >
             Return Home
@@ -104,6 +107,6 @@ export class YtCallbackView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-callback-view': YtCallbackView;
+    "yt-callback-view": YtCallbackView;
   }
 }

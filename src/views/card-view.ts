@@ -1,14 +1,18 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
-import { yotoApi } from '../api/client.js';
-import { Card } from '../models/index.js';
-import { dispatchToast } from '../widgets/events.js';
-import '../widgets/yt-button.js';
-import '../widgets/yt-badge.js';
-import '../widgets/yt-pixel-icon.js';
-import '../widgets/yt-text-input.js';
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
+import { consume } from "@lit/context";
+import { authService } from "../api/auth.js";
+import { yotoApi } from "../api/client.js";
+import { authContext } from "../context/index.js";
+import { AuthSession, Card } from "../models/index.js";
+import { dispatchToast } from "../widgets/events.js";
+import "../widgets/yt-button.js";
+import "../widgets/yt-badge.js";
+import "../widgets/yt-pixel-icon.js";
+import "../widgets/yt-text-input.js";
+import "../widgets/yt-please-sign-in.js";
 
-@customElement('yt-card-view')
+@customElement("yt-card-view")
 export class YtCardView extends LitElement {
   static override styles = css`
     :host {
@@ -65,32 +69,59 @@ export class YtCardView extends LitElement {
     }
   `;
 
-  @property({ type: String }) cardId = '';
+  @consume({ context: authContext, subscribe: true })
+  @state()
+  authSession: AuthSession | null = null;
+
+  @property({ type: String }) cardId = "";
   @state() private card: Card | null = null;
   @state() private loading = true;
+  private isFetching = false;
 
-  override async connectedCallback() {
-    super.connectedCallback();
-    await this.loadCard();
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    if (
+      changedProperties.has("cardId") ||
+      changedProperties.has("authSession")
+    ) {
+      if (this.authSession && authService.isAuthenticated() && this.cardId) {
+        void this.loadCard();
+      } else {
+        this.card = null;
+        this.loading = false;
+      }
+    }
   }
 
   private async loadCard() {
-    if (!this.cardId) return;
+    if (!this.cardId || !authService.isAuthenticated()) return;
+    if (this.isFetching) return;
+    this.isFetching = true;
     this.loading = true;
     try {
       this.card = await yotoApi.getCard(this.cardId);
     } catch (err) {
       dispatchToast(this, {
-        type: 'error',
-        message: 'Failed to load card details.',
+        type: "error",
+        message: "Failed to load card details.",
         errorDetail: err,
       });
     } finally {
       this.loading = false;
+      this.isFetching = false;
     }
   }
 
   override render() {
+    const isAuthed = !!this.authSession && authService.isAuthenticated();
+    if (!isAuthed) {
+      return html`
+        <yt-please-sign-in
+          heading="Please Sign In"
+          description="Sign in with your Yoto account to view and edit this card."
+        ></yt-please-sign-in>
+      `;
+    }
+
     if (this.loading) {
       return html`<div class="empty-state"><p>Loading card...</p></div>`;
     }
@@ -106,13 +137,15 @@ export class YtCardView extends LitElement {
         <div class="header-row">
           <div>
             <h2>${this.card.title}</h2>
-            <small style="color: var(--yt-color-text-muted, #718096);">ID: ${this.card.cardId}</small>
+            <small style="color: var(--yt-color-text-muted, #718096);"
+              >ID: ${this.card.cardId}</small
+            >
           </div>
           <yt-button
             variant="secondary"
             @click=${() => {
-              window.history.pushState(null, '', '/');
-              window.dispatchEvent(new PopStateEvent('popstate'));
+              window.history.pushState(null, "", "/");
+              window.dispatchEvent(new PopStateEvent("popstate"));
             }}
           >
             ← Back to Library
@@ -124,12 +157,18 @@ export class YtCardView extends LitElement {
           ${chapters.map(
             (chap, index) => html`
               <div class="track-item">
-                <span style="font-weight: 600; min-width: 24px;">${index + 1}</span>
-                <yt-pixel-icon src=${chap.display?.icon16x16 || ''} alt=${chap.title} size="sm"></yt-pixel-icon>
+                <span style="font-weight: 600; min-width: 24px;"
+                  >${index + 1}</span
+                >
+                <yt-pixel-icon
+                  src=${chap.display?.icon16x16 || ""}
+                  alt=${chap.title}
+                  size="sm"
+                ></yt-pixel-icon>
                 <div class="track-title">${chap.title}</div>
-                ${chap.duration ? html`<small>${Math.floor(chap.duration)}s</small>` : ''}
+                ${chap.duration ? html`<small>${Math.floor(chap.duration)}s</small>` : ""}
               </div>
-            `
+            `,
           )}
         </div>
       </div>
@@ -139,6 +178,6 @@ export class YtCardView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-card-view': YtCardView;
+    "yt-card-view": YtCardView;
   }
 }

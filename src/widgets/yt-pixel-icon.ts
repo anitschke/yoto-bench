@@ -1,14 +1,14 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 
-export type PixelIconSize = 'sm' | 'md' | 'lg' | 'xl';
+export type PixelIconSize = "sm" | "md" | "lg" | "xl";
 
 /**
  * <yt-pixel-icon>
  * Standardizes 16x16 pixel icon rendering with crisp edges and contrast background canvas.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-pixel-icon')
+@customElement("yt-pixel-icon")
 export class YtPixelIcon extends LitElement {
   static override styles = css`
     :host {
@@ -62,10 +62,16 @@ export class YtPixelIcon extends LitElement {
     }
   `;
 
-  @property({ type: String }) src = '';
-  @property({ type: String }) alt = '';
-  @property({ type: String }) size: PixelIconSize = 'md';
-  @property({ type: Boolean, state: true }) private hasError = false;
+  @property({ type: String }) src = "";
+  @property({ type: String }) alt = "";
+  @property({ type: String }) size: PixelIconSize = "md";
+  @state() private hasError = false;
+
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has("src")) {
+      this.hasError = false;
+    }
+  }
 
   private onError() {
     this.hasError = true;
@@ -74,16 +80,18 @@ export class YtPixelIcon extends LitElement {
   override render() {
     return html`
       <div class="icon-container size-${this.size}">
-        ${this.src && !this.hasError
-          ? html`
-              <img
-                src=${this.src}
-                alt=${this.alt}
-                loading="lazy"
-                @error=${this.onError}
-              />
-            `
-          : html`<span class="fallback">16×16</span>`}
+        ${
+          this.src && !this.hasError
+            ? html`
+                <img
+                  src=${this.src}
+                  alt=${this.alt}
+                  loading="lazy"
+                  @error=${this.onError}
+                />
+              `
+            : html`<span class="fallback">16×16</span>`
+        }
       </div>
     `;
   }
@@ -91,6 +99,6 @@ export class YtPixelIcon extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-pixel-icon': YtPixelIcon;
+    "yt-pixel-icon": YtPixelIcon;
   }
 }

@@ -1,8 +1,8 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import '../widgets/yt-button.js';
+import { LitElement, html, css } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import "../widgets/yt-button.js";
 
-@customElement('yt-privacy-view')
+@customElement("yt-privacy-view")
 export class YtPrivacyView extends LitElement {
   static override styles = css`
     :host {
@@ -29,7 +29,8 @@ export class YtPrivacyView extends LitElement {
       color: var(--yt-color-text, #1a202c);
     }
 
-    p, li {
+    p,
+    li {
       color: var(--yt-color-text, #1a202c);
       line-height: 1.6;
     }
@@ -51,15 +52,16 @@ export class YtPrivacyView extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this.telemetryEnabled = localStorage.getItem('yoto_telemetry_disabled') !== 'true';
+    this.telemetryEnabled =
+      localStorage.getItem("yoto_telemetry_disabled") !== "true";
   }
 
   private toggleTelemetry() {
     this.telemetryEnabled = !this.telemetryEnabled;
     if (this.telemetryEnabled) {
-      localStorage.removeItem('yoto_telemetry_disabled');
+      localStorage.removeItem("yoto_telemetry_disabled");
     } else {
-      localStorage.setItem('yoto_telemetry_disabled', 'true');
+      localStorage.setItem("yoto_telemetry_disabled", "true");
     }
   }
 
@@ -68,48 +70,81 @@ export class YtPrivacyView extends LitElement {
       <div class="container">
         <h2>Privacy & Transparency Policy</h2>
         <p>
-          <strong>yoto-tools</strong> is a 100% client-side application. We run directly inside your web browser
-          and never send your tokens, audio files, or account credentials to any intermediary server.
+          <strong>yoto-tools</strong> is a 100% client-side application. We run
+          directly inside your web browser and never send your tokens, audio
+          files, or account credentials to any intermediary server.
         </p>
 
         <div class="toggle-box">
           <div>
             <strong>Anonymous Usage Telemetry</strong>
-            <p style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--yt-color-text-muted, #718096);">
-              Status: ${this.telemetryEnabled ? 'Active (Cookieless)' : 'Opted Out / Disabled'}
+            <p
+              style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--yt-color-text-muted, #718096);"
+            >
+              Status:
+              ${this.telemetryEnabled ? "Active (Cookieless)" : "Opted Out / Disabled"}
             </p>
           </div>
           <yt-button
-            variant=${this.telemetryEnabled ? 'danger' : 'primary'}
+            variant=${this.telemetryEnabled ? "danger" : "primary"}
             @click=${this.toggleTelemetry}
           >
-            ${this.telemetryEnabled ? 'Disable Telemetry' : 'Enable Telemetry'}
+            ${this.telemetryEnabled ? "Disable Telemetry" : "Enable Telemetry"}
           </yt-button>
         </div>
 
         <h3>1. Direct Browser-to-Yoto Communication</h3>
         <p>
-          All requests made to Yoto's APIs (fetching cards, uploading tracks, controlling devices) travel directly
-          from your browser to Yoto's official servers (<code>api.yotoplay.com</code> and AWS S3/IoT).
+          All requests made to Yoto's APIs (fetching cards, uploading tracks,
+          controlling devices) travel directly from your browser to Yoto's
+          official servers (<code>api.yotoplay.com</code> and AWS S3/IoT).
         </p>
 
         <h3>2. What We Never Collect</h3>
         <ul>
-          <li>Never collect passwords or Auth0 secrets (PKCE authorization is stored strictly in your browser session).</li>
-          <li>Never collect audio files, podcast feed contents, or private family recordings.</li>
-          <li>Never use tracking cookies or persistent advertising identifiers.</li>
+          <li>
+            Never collect passwords or Auth0 secrets (PKCE authorization is
+            stored strictly in your browser session).
+          </li>
+          <li>
+            Never collect audio files, podcast feed contents, or private family
+            recordings.
+          </li>
+          <li>
+            Never use tracking cookies or persistent advertising identifiers.
+          </li>
         </ul>
 
         <h3>3. Minimal Anonymous Telemetry</h3>
         <p>
-          We use cookieless Google Analytics 4 Measurement Protocol pings solely to improve the app and understand feature usage. Specifically, we collect:
+          We use cookieless Google Analytics 4 Measurement Protocol pings solely
+          to improve the app and understand feature usage. Specifically, we
+          collect:
         </p>
         <ul>
-          <li><strong>Page Views & Navigation:</strong> Aggregate visits to application routes (without query parameters or personal IDs).</li>
-          <li><strong>Icon Usage:</strong> Icons that you add or set on cards (e.g. icon IDs and search terms, to identify popular icons).</li>
-          <li><strong>Podcast RSS Imports:</strong> Podcast RSS URLs you import (to identify popular public feeds and improve feed compatibility).</li>
-          <li><strong>Local Audio Imports:</strong> When you import files from your computer (strictly logging the fact that you used the feature and aggregate track counts, but never file names or personal ID3 tags).</li>
-          <li><strong>Device Control Actions:</strong> Generic control commands invoked (e.g. play, pause, volume changes, but never device IDs or serial numbers).</li>
+          <li>
+            <strong>Page Views & Navigation:</strong> Aggregate visits to
+            application routes (without query parameters or personal IDs).
+          </li>
+          <li>
+            <strong>Icon Usage:</strong> Icons that you add or set on cards
+            (e.g. icon IDs and search terms, to identify popular icons).
+          </li>
+          <li>
+            <strong>Podcast RSS Imports:</strong> Podcast RSS URLs you import
+            (to identify popular public feeds and improve feed compatibility).
+          </li>
+          <li>
+            <strong>Local Audio Imports:</strong> When you import files from
+            your computer (strictly logging the fact that you used the feature
+            and aggregate track counts, but never file names or personal ID3
+            tags).
+          </li>
+          <li>
+            <strong>Device Control Actions:</strong> Generic control commands
+            invoked (e.g. play, pause, volume changes, but never device IDs or
+            serial numbers).
+          </li>
         </ul>
       </div>
     `;
@@ -118,6 +153,6 @@ export class YtPrivacyView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-privacy-view': YtPrivacyView;
+    "yt-privacy-view": YtPrivacyView;
   }
 }

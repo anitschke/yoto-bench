@@ -1,12 +1,12 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property, query } from "lit/decorators.js";
 
 /**
  * <yt-dialog>
  * Accessible modal dialog component wrapping the native <dialog> element.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-dialog')
+@customElement("yt-dialog")
 export class YtDialog extends LitElement {
   static override styles = css`
     :host {
@@ -78,8 +78,8 @@ export class YtDialog extends LitElement {
     }
   `;
 
-  @property({ type: String }) heading = '';
-  @query('dialog') private dialogEl!: HTMLDialogElement;
+  @property({ type: String }) heading = "";
+  @query("dialog") private dialogEl!: HTMLDialogElement;
 
   public showModal(): void {
     if (this.dialogEl && !this.dialogEl.open) {
@@ -90,7 +90,9 @@ export class YtDialog extends LitElement {
   public close(): void {
     if (this.dialogEl && this.dialogEl.open) {
       this.dialogEl.close();
-      this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
+      this.dispatchEvent(
+        new CustomEvent("close", { bubbles: true, composed: true }),
+      );
     }
   }
 
@@ -119,7 +121,12 @@ export class YtDialog extends LitElement {
           <slot name="header">
             <h3 class="heading">${this.heading}</h3>
           </slot>
-          <button type="button" class="close-button" @click=${this.close} aria-label="Close dialog">
+          <button
+            type="button"
+            class="close-button"
+            @click=${this.close}
+            aria-label="Close dialog"
+          >
             ✕
           </button>
         </div>
@@ -136,6 +143,6 @@ export class YtDialog extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-dialog': YtDialog;
+    "yt-dialog": YtDialog;
   }
 }

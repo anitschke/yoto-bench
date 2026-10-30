@@ -1,7 +1,7 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, state } from 'lit/decorators.js';
-import { ToastNotificationEvent, ToastOptions } from './events.js';
-import './yt-toast.js';
+import { LitElement, html, css } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { ToastNotificationEvent, ToastOptions } from "./events.js";
+import "./yt-toast.js";
 
 interface QueuedToast extends ToastOptions {
   id: string;
@@ -13,7 +13,7 @@ interface QueuedToast extends ToastOptions {
  * See: docs/rfcs/005-widgets-and-component-library.md
  *      docs/rfcs/006-error-handling-and-toast-notifications.md
  */
-@customElement('yt-toast-manager')
+@customElement("yt-toast-manager")
 export class YtToastManager extends LitElement {
   static override styles = css`
     :host {
@@ -36,12 +36,18 @@ export class YtToastManager extends LitElement {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    window.addEventListener(ToastNotificationEvent.EVENT_NAME, this.handleToastEvent as EventListener);
+    window.addEventListener(
+      ToastNotificationEvent.EVENT_NAME,
+      this.handleToastEvent as EventListener,
+    );
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
-    window.removeEventListener(ToastNotificationEvent.EVENT_NAME, this.handleToastEvent as EventListener);
+    window.removeEventListener(
+      ToastNotificationEvent.EVENT_NAME,
+      this.handleToastEvent as EventListener,
+    );
   }
 
   private handleToastEvent = (e: CustomEvent<ToastOptions>) => {
@@ -50,16 +56,29 @@ export class YtToastManager extends LitElement {
     const toast: QueuedToast = { ...detail, id };
 
     // Diagnostic console logging per RFC 006
-    if (detail.type === 'error') {
-      console.error('[Yoto-Tools Error]', detail.message, detail.errorDetail || '');
-    } else if (detail.type === 'warning') {
-      console.warn('[Yoto-Tools Warning]', detail.message, detail.errorDetail || '');
+    if (detail.type === "error") {
+      console.error(
+        "[Yoto-Tools Error]",
+        detail.message,
+        detail.errorDetail || "",
+      );
+    } else if (detail.type === "warning") {
+      console.warn(
+        "[Yoto-Tools Warning]",
+        detail.message,
+        detail.errorDetail || "",
+      );
     }
 
     this.toasts = [...this.toasts, toast];
 
     // Duration timer (0 means persistent)
-    const duration = detail.durationMs !== undefined ? detail.durationMs : (detail.type === 'error' ? 0 : 4000);
+    const duration =
+      detail.durationMs !== undefined
+        ? detail.durationMs
+        : detail.type === "error"
+          ? 0
+          : 4000;
     if (duration > 0) {
       setTimeout(() => {
         this.dismiss(id);
@@ -78,15 +97,15 @@ export class YtToastManager extends LitElement {
           (t) => html`
             <yt-toast
               .message=${t.message}
-              .type=${t.type || 'info'}
-              .actionLabel=${t.actionLabel || ''}
+              .type=${t.type || "info"}
+              .actionLabel=${t.actionLabel || ""}
               @dismiss=${() => this.dismiss(t.id)}
               @action=${() => {
                 if (t.onAction) t.onAction();
                 this.dismiss(t.id);
               }}
             ></yt-toast>
-          `
+          `,
         )}
       </div>
     `;
@@ -95,6 +114,6 @@ export class YtToastManager extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-toast-manager': YtToastManager;
+    "yt-toast-manager": YtToastManager;
   }
 }

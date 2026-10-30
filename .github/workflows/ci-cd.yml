@@ -32,12 +32,20 @@ jobs:
       - name: Code Quality & Type Check
         run: |
           npm run typecheck
+          npm run lint
 
       - name: Install Playwright Browsers for WTR
         run: npx playwright install --with-deps chromium
 
       - name: Run Component Unit Tests
         run: npm run test:unit
+
+      - name: Build Static Production Assets
+        run: npm run build
+
+      - name: Run End-to-End Smoke Tests
+        run: npm run test:e2e
+
 
   # Deploy to preview/staging or production.
   # For PRs, this job is gated behind a GitHub Environment ('staging-preview')

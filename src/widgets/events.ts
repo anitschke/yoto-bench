@@ -5,7 +5,7 @@
 
 export interface ToastOptions {
   message: string;
-  type?: 'info' | 'success' | 'warning' | 'error';
+  type?: "info" | "success" | "warning" | "error";
   durationMs?: number; // default: 4000ms (0 for persistent error toasts)
   actionLabel?: string;
   onAction?: () => void;
@@ -13,7 +13,7 @@ export interface ToastOptions {
 }
 
 export class ToastNotificationEvent extends CustomEvent<ToastOptions> {
-  static readonly EVENT_NAME = 'yt-toast';
+  static readonly EVENT_NAME = "yt-toast";
   constructor(options: ToastOptions) {
     super(ToastNotificationEvent.EVENT_NAME, {
       bubbles: true,
@@ -26,11 +26,14 @@ export class ToastNotificationEvent extends CustomEvent<ToastOptions> {
 /**
  * Global helper to dispatch a toast notification event from any DOM element or window.
  */
-export function dispatchToast(target: EventTarget | null | undefined, options: ToastOptions): void {
+export function dispatchToast(
+  target: EventTarget | null | undefined,
+  options: ToastOptions,
+): void {
   const event = new ToastNotificationEvent(options);
-  if (target && typeof (target as EventTarget).dispatchEvent === 'function') {
+  if (target && typeof (target as EventTarget).dispatchEvent === "function") {
     target.dispatchEvent(event);
-  } else if (typeof window !== 'undefined') {
+  } else if (typeof window !== "undefined") {
     window.dispatchEvent(event);
   }
 }

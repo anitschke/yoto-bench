@@ -1,4 +1,4 @@
-import { css } from 'lit';
+import { css } from "lit";
 
 // ==============================================================================
 // Design Tokens & Shared CSS Custom Properties
@@ -9,7 +9,7 @@ import { css } from 'lit';
 export const themeStyles = css`
   :root {
     /* Brand Accents */
-    --yt-color-primary: #ff5c35;      /* Yoto orange */
+    --yt-color-primary: #ff5c35; /* Yoto orange */
     --yt-color-primary-hover: #e04b25;
     --yt-color-primary-light: #fff2ed;
     --yt-color-surface: #ffffff;
@@ -33,8 +33,11 @@ export const themeStyles = css`
     --yt-color-neutral-subtle: #f1f5f9;
 
     /* Typography */
-    --yt-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    --yt-font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --yt-font-family:
+      system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    --yt-font-family-mono:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     --yt-font-size-xs: 0.75rem;
     --yt-font-size-sm: 0.875rem;
     --yt-font-size-md: 1rem;
@@ -59,3 +62,19 @@ export const themeStyles = css`
     --yt-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 `;
+
+// Automatically adopt theme styles into document root if running in a browser environment
+if (typeof document !== "undefined") {
+  try {
+    if (document.adoptedStyleSheets && themeStyles.styleSheet) {
+      document.adoptedStyleSheets = [
+        ...document.adoptedStyleSheets,
+        themeStyles.styleSheet,
+      ];
+    }
+  } catch {
+    const styleEl = document.createElement("style");
+    styleEl.textContent = themeStyles.cssText;
+    document.head.appendChild(styleEl);
+  }
+}

@@ -1,12 +1,12 @@
-import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, html, css } from "lit";
+import { customElement, property } from "lit/decorators.js";
 
 /**
  * <yt-text-input>
  * Encapsulated text and search input field with clear buttons and label.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement('yt-text-input')
+@customElement("yt-text-input")
 export class YtTextInput extends LitElement {
   static override styles = css`
     :host {
@@ -33,8 +33,9 @@ export class YtTextInput extends LitElement {
       border: 1px solid var(--yt-color-border, #e2e8f0);
       border-radius: var(--yt-radius-md, 10px);
       padding: 0 0.75rem;
-      transition: border-color var(--yt-transition-fast, 150ms),
-                  box-shadow var(--yt-transition-fast, 150ms);
+      transition:
+        border-color var(--yt-transition-fast, 150ms),
+        box-shadow var(--yt-transition-fast, 150ms);
     }
 
     .input-container:focus-within {
@@ -84,66 +85,92 @@ export class YtTextInput extends LitElement {
     }
   `;
 
-  @property({ type: String }) label = '';
-  @property({ type: String }) value = '';
-  @property({ type: String }) placeholder = '';
-  @property({ type: String }) type = 'text';
+  @property({ type: String }) label = "";
+  @property({ type: String }) value = "";
+  @property({ type: String }) placeholder = "";
+  @property({ type: String }) type = "text";
   @property({ type: Boolean }) clearable = false;
   @property({ type: Boolean }) disabled = false;
-  @property({ type: String }) error = '';
-  @property({ type: String, attribute: 'aria-label' }) accessibleLabel = '';
+  @property({ type: String }) error = "";
+  @property({ type: String, attribute: "aria-label" }) accessibleLabel = "";
 
   private inputId = `yt-input-${Math.random().toString(36).substring(2, 9)}`;
 
   private onInput(e: Event) {
     const input = e.target as HTMLInputElement;
     this.value = input.value;
-    this.dispatchEvent(new CustomEvent('input', { detail: { value: this.value }, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent("input", {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private onChange(e: Event) {
     const input = e.target as HTMLInputElement;
     this.value = input.value;
-    this.dispatchEvent(new CustomEvent('change', { detail: { value: this.value }, bubbles: true, composed: true }));
+    this.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private clear() {
-    this.value = '';
-    this.dispatchEvent(new CustomEvent('input', { detail: { value: '' }, bubbles: true, composed: true }));
-    this.dispatchEvent(new CustomEvent('change', { detail: { value: '' }, bubbles: true, composed: true }));
+    this.value = "";
+    this.dispatchEvent(
+      new CustomEvent("input", {
+        detail: { value: "" },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    this.dispatchEvent(
+      new CustomEvent("change", {
+        detail: { value: "" },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   override render() {
     return html`
       <div class="wrapper">
-        ${this.label ? html`<label for=${this.inputId}>${this.label}</label>` : ''}
-        <div class="input-container ${this.error ? 'error' : ''}">
+        ${this.label ? html`<label for=${this.inputId}>${this.label}</label>` : ""}
+        <div class="input-container ${this.error ? "error" : ""}">
           <slot name="leading"></slot>
           <input
             id=${this.inputId}
             type=${this.type}
             .value=${this.value}
             placeholder=${this.placeholder}
-            aria-label=${this.accessibleLabel || this.label || this.placeholder || 'Text input'}
+            aria-label=${this.accessibleLabel || this.label || this.placeholder || "Text input"}
             ?disabled=${this.disabled}
             @input=${this.onInput}
             @change=${this.onChange}
           />
-          ${this.clearable && this.value && !this.disabled
-            ? html`
-                <button
-                  type="button"
-                  class="clear-btn"
-                  @click=${this.clear}
-                  aria-label="Clear input"
-                >
-                  ✕
-                </button>
-              `
-            : ''}
+          ${
+            this.clearable && this.value && !this.disabled
+              ? html`
+                  <button
+                    type="button"
+                    class="clear-btn"
+                    @click=${this.clear}
+                    aria-label="Clear input"
+                  >
+                    ✕
+                  </button>
+                `
+              : ""
+          }
           <slot name="trailing"></slot>
         </div>
-        ${this.error ? html`<div class="error-msg">${this.error}</div>` : ''}
+        ${this.error ? html`<div class="error-msg">${this.error}</div>` : ""}
       </div>
     `;
   }
@@ -151,6 +178,6 @@ export class YtTextInput extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'yt-text-input': YtTextInput;
+    "yt-text-input": YtTextInput;
   }
 }
