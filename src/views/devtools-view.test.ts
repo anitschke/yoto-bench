@@ -28,8 +28,9 @@ describe("<yb-devtools-view>", () => {
     await el.updateComplete;
 
     const logItems = el.shadowRoot?.querySelectorAll(".event-log-item");
-    expect(logItems?.length).to.equal(1);
-    expect(logItems?.[0].textContent).to.include("test-click");
-    expect(logItems?.[0].textContent).to.include('{"foo":"bar"}');
+    expect(logItems).to.exist;
+    expect(logItems!.length).to.equal(1);
+    expect(logItems![0]!.textContent).to.include("test-click");
+    expect(logItems![0]!.textContent).to.include('{"foo":"bar"}');
   });
 });
