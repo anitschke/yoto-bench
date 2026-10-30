@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { live } from "lit/directives/live.js";
 
 /**
  * <yb-text-input>
@@ -103,6 +104,7 @@ export class YbTextInput extends LitElement {
   }
 
   private onInput(e: Event) {
+    e.stopPropagation();
     const input = e.target as HTMLInputElement;
     this.value = input.value;
     this.dispatchEvent(
@@ -122,6 +124,7 @@ export class YbTextInput extends LitElement {
   }
 
   private onChange(e: Event) {
+    e.stopPropagation();
     const input = e.target as HTMLInputElement;
     this.value = input.value;
     this.dispatchEvent(
@@ -181,7 +184,7 @@ export class YbTextInput extends LitElement {
           <input
             id=${this.inputId}
             type=${this.type}
-            .value=${this.value}
+            .value=${live(this.value)}
             placeholder=${this.placeholder}
             aria-label=${this.accessibleLabel || this.label || this.placeholder || "Text input"}
             ?disabled=${this.disabled}

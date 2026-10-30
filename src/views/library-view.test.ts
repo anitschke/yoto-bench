@@ -2,6 +2,7 @@ import { html, fixture, expect } from "@open-wc/testing";
 import "./library-view.js";
 import { YbLibraryView } from "./library-view.js";
 import { YbDialog } from "../widgets/yb-dialog.js";
+import { YbTextInput } from "../widgets/yb-text-input.js";
 import { authService } from "../api/auth.js";
 import { yotoApi } from "../api/client.js";
 import { Card } from "../models/index.js";
@@ -112,6 +113,45 @@ describe("yb-library-view", () => {
       expect(dialog.open).to.be.true;
       const nativeDialog = dialog.shadowRoot?.querySelector("dialog");
       expect(nativeDialog?.open).to.be.true;
+    });
+
+    it("updates newCardTitle and retains value when typing in the dialog input", async () => {
+      const el = await fixture<YbLibraryView>(
+        html`<yb-library-view></yb-library-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const newCardBtn = el.shadowRoot?.querySelector(
+        ".search-filter yb-button",
+      ) as HTMLElement;
+      newCardBtn.click();
+      await el.updateComplete;
+
+      const textInput = el.shadowRoot?.querySelector(
+        "yb-dialog yb-text-input",
+      ) as YbTextInput;
+      expect(textInput).to.exist;
+
+      const nativeInput = textInput.shadowRoot!.querySelector("input")!;
+      expect(nativeInput).to.exist;
+
+      nativeInput.value = "Bedtime Stories Podcast";
+      nativeInput.dispatchEvent(
+        new Event("input", { bubbles: true, composed: true }),
+      );
+
+      await el.updateComplete;
+      await textInput.updateComplete;
+
+      expect(nativeInput.value).to.equal("Bedtime Stories Podcast");
+      expect(textInput.value).to.equal("Bedtime Stories Podcast");
     });
   });
 });

@@ -154,8 +154,12 @@ export class YbLibraryView extends LitElement {
     }
   }
 
-  private onSearch(e: CustomEvent<{ value: string }>) {
-    this.searchQuery = e.detail.value.toLowerCase();
+  private onSearch(e: Event) {
+    const detail = (e as CustomEvent<{ value: string }>).detail;
+    const target = e.target as HTMLInputElement | { value: string };
+    const query =
+      detail?.value !== undefined ? detail.value : (target?.value ?? "");
+    this.searchQuery = query.toLowerCase();
   }
 
   private async openCreateDialog() {
@@ -317,11 +321,18 @@ export class YbLibraryView extends LitElement {
             placeholder="e.g. Bedtime Stories, Favorite Songs"
             autofocus
             .value=${this.newCardTitle}
-            @input=${(e: CustomEvent<{ value: string }>) => {
-              this.newCardTitle = e.detail?.value ?? "";
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.newCardTitle =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
             }}
             @yb-input=${(e: CustomEvent<{ value: string }>) => {
-              this.newCardTitle = e.detail?.value ?? "";
+              if (e.detail?.value !== undefined) {
+                this.newCardTitle = e.detail.value;
+              }
             }}
             @keydown=${(e: KeyboardEvent) => {
               if (e.key === "Enter") {

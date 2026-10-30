@@ -138,7 +138,7 @@ export class YbDialog extends LitElement {
 
   private onDialogClick(e: MouseEvent): void {
     // Click on the backdrop closes the dialog
-    if (!this.dialogEl) return;
+    if (!this.dialogEl || e.target !== this.dialogEl) return;
     const rect = this.dialogEl.getBoundingClientRect();
     const isInDialog =
       rect.top <= e.clientY &&

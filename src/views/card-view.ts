@@ -1016,8 +1016,18 @@ export class YbCardView extends LitElement {
             label="Podcast RSS Feed URL"
             placeholder="https://feeds.example.com/podcast.xml"
             .value=${this.podcastFeedUrl}
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.podcastFeedUrl =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
+            }}
             @yb-input=${(e: CustomEvent<{ value: string }>) => {
-              this.podcastFeedUrl = e.detail.value;
+              if (e.detail?.value !== undefined) {
+                this.podcastFeedUrl = e.detail.value;
+              }
             }}
           ></yb-text-input>
 
@@ -1027,8 +1037,15 @@ export class YbCardView extends LitElement {
               .value=${this.podcastLimit}
               .min=${1}
               .max=${50}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.podcastLimit = e.detail.value;
+                }
+              }}
               @yb-input=${(e: CustomEvent<{ value: number }>) => {
-                this.podcastLimit = e.detail.value;
+                if (e.detail?.value !== undefined) {
+                  this.podcastLimit = e.detail.value;
+                }
               }}
             ></yb-number-input>
 
@@ -1036,8 +1053,15 @@ export class YbCardView extends LitElement {
               label="Min Duration (s)"
               .value=${this.podcastMinDuration}
               .min=${0}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.podcastMinDuration = e.detail.value;
+                }
+              }}
               @yb-input=${(e: CustomEvent<{ value: number }>) => {
-                this.podcastMinDuration = e.detail.value;
+                if (e.detail?.value !== undefined) {
+                  this.podcastMinDuration = e.detail.value;
+                }
               }}
             ></yb-number-input>
           </div>
