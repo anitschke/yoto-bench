@@ -9,6 +9,7 @@ import "../../widgets/yb-progress-bar.js";
 import "../../widgets/yb-pixel-icon.js";
 import "../../widgets/yb-toast.js";
 import "../../widgets/yb-please-sign-in.js";
+import "./demo-icon-picker.js";
 import { dispatchToast } from "../../widgets/events.js";
 
 export interface WidgetDemoItem {
@@ -523,6 +524,23 @@ export const WIDGET_DEMOS: WidgetDemoItem[] = [
           heading="Sign in to Manage Cards"
           description="Authenticate with your Yoto account to access your personal MYO library and physical cards."
         ></yb-please-sign-in>
+      </div>
+    `,
+  },
+  {
+    id: "icon-picker",
+    title: "Icon Picker Modal",
+    tag: "<yb-icon-picker>",
+    description:
+      "Interactive 16x16 pixel icon modal browser and search engine supporting multi-word prefix search, provider filtering, and custom PNG uploads.",
+    renderDemo: (ctx) => html`
+      <div class="demo-section">
+        <h4>Interactive Icon Selection Sandbox</h4>
+        <yb-demo-icon-picker
+          @yb-icon-selected=${(e: CustomEvent<{ icon: unknown }>) =>
+            ctx.logEvent("yb-icon-selected", e.detail.icon)}
+          @yb-dialog-close=${() => ctx.logEvent("yb-dialog-close", "Closed")}
+        ></yb-demo-icon-picker>
       </div>
     `,
   },

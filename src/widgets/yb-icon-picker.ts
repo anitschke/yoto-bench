@@ -198,10 +198,22 @@ export class YbIconPicker extends LitElement {
   }
 
   private handleIconClick(icon: IconRecord): void {
+    const resolvedPath =
+      icon.path.startsWith("/") ||
+      icon.path.startsWith("http://") ||
+      icon.path.startsWith("https://") ||
+      icon.path.startsWith("blob:") ||
+      icon.path.startsWith("data:")
+        ? icon.path
+        : `/${icon.path}`;
+    const normalizedIcon: IconRecord = {
+      ...icon,
+      path: resolvedPath,
+    };
     this.selectedIconId = icon.id;
     this.dispatchEvent(
       new CustomEvent<IconSelectedDetail>("yb-icon-selected", {
-        detail: { icon },
+        detail: { icon: normalizedIcon },
         bubbles: true,
         composed: true,
       }),

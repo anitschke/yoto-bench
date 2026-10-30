@@ -73,6 +73,24 @@ export class YbPixelIcon extends LitElement {
     }
   }
 
+  /**
+   * Resolves relative paths (e.g. 'assets/icons/...') to absolute paths ('/assets/icons/...')
+   * to ensure assets load correctly across deep SPA client-side routes (e.g. /cards/:id).
+   */
+  private get resolvedSrc(): string {
+    if (!this.src) return "";
+    if (
+      this.src.startsWith("/") ||
+      this.src.startsWith("http://") ||
+      this.src.startsWith("https://") ||
+      this.src.startsWith("blob:") ||
+      this.src.startsWith("data:")
+    ) {
+      return this.src;
+    }
+    return `/${this.src}`;
+  }
+
   private onError() {
     this.hasError = true;
   }
@@ -84,7 +102,7 @@ export class YbPixelIcon extends LitElement {
           this.src && !this.hasError
             ? html`
                 <img
-                  src=${this.src}
+                  src=${this.resolvedSrc}
                   alt=${this.alt}
                   loading="lazy"
                   @error=${this.onError}

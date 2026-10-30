@@ -56,7 +56,7 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
     script-src 'self' 'sha384-...';
     style-src 'self' 'unsafe-inline';
     font-src 'self';
-    img-src 'self' data: https:;
+    img-src 'self' data: blob: https:;
     media-src 'self' blob: https:;
     connect-src 'self' https: wss://*.iot.eu-west-2.amazonaws.com;
     base-uri 'self';
@@ -72,7 +72,7 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
   - **No Unsafe Inline:** Omits `'unsafe-inline'`. Only the hashed and SRI-verified entry bundle and its same-origin dynamic module chunks can run.
 - **`style-src 'self'`:** Restricts stylesheets to local self-hosted bundles (`fonts-[hash].css`) and component Shadow DOM styles.
 - **`font-src 'self'`:** Restricts font files (`.woff2`) strictly to the same origin.
-- **`img-src 'self' data: https:`:** Allows local icons, base64 data URIs (< 4 KB Vite inlining), Yoto official icons, and arbitrary podcast cover art thumbnails loaded over secure TLS.
+- **`img-src 'self' data: blob: https:`:** Allows local icons, base64 data URIs (< 4 KB Vite inlining), in-memory user-uploaded PNG blob object URLs, Yoto official icons, and arbitrary podcast cover art thumbnails loaded over secure TLS.
 - **`media-src 'self' blob: https:`:** Allows in-browser audio previews from OPFS blob URLs, Yoto media CDNs, and arbitrary podcast audio streams.
 - **`connect-src 'self' https: wss://*.iot.eu-west-2.amazonaws.com;`:** Restricts network requests (`fetch` and WebSockets) to secure HTTPS endpoints and our authenticated AWS IoT MQTT broker.
 
