@@ -1,5 +1,6 @@
 import { LitElement, html, css, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { resolveIconMediaId } from "../services/icon-search.js";
 
 export type PixelIconSize = "sm" | "md" | "lg" | "xl";
 
@@ -75,20 +76,30 @@ export class YbPixelIcon extends LitElement {
 
   /**
    * Resolves relative paths (e.g. 'assets/icons/...') to absolute paths ('/assets/icons/...')
-   * to ensure assets load correctly across deep SPA client-side routes (e.g. /cards/:id).
+   * or "yoto:#<mediaId>" references to cached image URLs, ensuring assets load correctly
+   * across deep SPA client-side routes (e.g. /cards/:id).
    */
   private get resolvedSrc(): string {
     if (!this.src) return "";
-    if (
-      this.src.startsWith("/") ||
-      this.src.startsWith("http://") ||
-      this.src.startsWith("https://") ||
-      this.src.startsWith("blob:") ||
-      this.src.startsWith("data:")
-    ) {
-      return this.src;
+
+    let target = this.src;
+    if (target.startsWith("yoto:#")) {
+      const mapped = resolveIconMediaId(target);
+      if (mapped) {
+        target = mapped;
+      }
     }
-    return `/${this.src}`;
+
+    if (
+      target.startsWith("/") ||
+      target.startsWith("http://") ||
+      target.startsWith("https://") ||
+      target.startsWith("blob:") ||
+      target.startsWith("data:")
+    ) {
+      return target;
+    }
+    return `/${target}`;
   }
 
   private onError() {

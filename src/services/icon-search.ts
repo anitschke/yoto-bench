@@ -88,15 +88,104 @@ export function buildInvertedIndex(
   return index;
 }
 
+const mediaIdToPath = new Map<string, string>();
+const pathToMediaId = new Map<string, string>();
+
+/**
+ * Registers a mapping between a 43-character Yoto mediaId and its renderable image path/URL.
+ * This allows <yb-pixel-icon> to cleanly render "yoto:#<mediaId>" references.
+ */
+export function registerIconMediaId(mediaId: string, path: string): void {
+  if (!mediaId || !path) return;
+  const cleanId = mediaId.startsWith("yoto:#") ? mediaId.slice(6) : mediaId;
+  mediaIdToPath.set(cleanId, path);
+
+  const cleanPath = path.startsWith("/") ? path.slice(1) : path;
+  pathToMediaId.set(cleanPath, cleanId);
+  pathToMediaId.set(`/${cleanPath}`, cleanId);
+}
+
+/**
+ * Resolves a "yoto:#<mediaId>" reference or bare mediaId to an image path/URL.
+ */
+export function resolveIconMediaId(mediaIdOrRef: string): string | undefined {
+  if (!mediaIdOrRef) return undefined;
+  const cleanId = mediaIdOrRef.startsWith("yoto:#")
+    ? mediaIdOrRef.slice(6)
+    : mediaIdOrRef;
+  return mediaIdToPath.get(cleanId);
+}
+
+/**
+ * Resolves a local asset path to its associated 43-character Yoto mediaId if known.
+ */
+export function resolveMediaIdFromPath(path: string): string | undefined {
+  if (!path) return undefined;
+  return pathToMediaId.get(path);
+}
+
+/**
+ * Normalizes an icon reference or URL to the canonical "yoto:#<mediaId>" format
+ * required by Yoto's POST /content API (where mediaId is 43 characters).
+ * See: docs/rfcs/013-yoto-official-icon-provider.md
+ */
+export function normalizeIconRef(icon?: string | null): string | undefined {
+  if (!icon) return undefined;
+
+  // 1. If already in canonical yoto:#<hash> format
+  if (icon.startsWith("yoto:#")) {
+    return icon;
+  }
+
+  // 2. If it is an HTTP/HTTPS CDN URL (e.g. from GET /content)
+  if (icon.startsWith("http://") || icon.startsWith("https://")) {
+    const clean = icon.split("?")[0]!;
+    const lastSlash = clean.lastIndexOf("/");
+    const hash = lastSlash !== -1 ? clean.slice(lastSlash + 1) : clean;
+    if (hash.length === 43) {
+      return `yoto:#${hash}`;
+    }
+    return icon;
+  }
+
+  // 3. If it is a bare 43-character base64url hash
+  if (icon.length === 43) {
+    return `yoto:#${icon}`;
+  }
+
+  // 4. If it is a local asset path, check if it maps to a known mediaId
+  const mappedId = resolveMediaIdFromPath(icon);
+  if (mappedId) {
+    return `yoto:#${mappedId}`;
+  }
+
+  return icon;
+}
+
 export class IconSearchEngine {
   private catalog: IconCatalogData;
 
   constructor(catalog?: IconCatalogData) {
     this.catalog = catalog || { version: 1, icons: [], index: {} };
+    this.registerIcons(this.catalog.icons);
   }
 
   public setCatalog(catalog: IconCatalogData): void {
     this.catalog = catalog;
+    this.registerIcons(this.catalog.icons);
+  }
+
+  private registerIcons(icons: IconRecord[]): void {
+    for (const icon of icons) {
+      const mId =
+        icon.mediaId ||
+        (icon.provider === "yoto" && icon.id.length === 43
+          ? icon.id
+          : undefined);
+      if (mId && icon.path) {
+        registerIconMediaId(mId, icon.path);
+      }
+    }
   }
 
   public getIcons(): IconRecord[] {
@@ -111,6 +200,8 @@ export class IconSearchEngine {
     const existingIds = new Set(this.catalog.icons.map((i) => i.id));
     const toAdd = newIcons.filter((i) => !existingIds.has(i.id));
     if (toAdd.length === 0) return;
+
+    this.registerIcons(toAdd);
 
     for (const icon of toAdd) {
       const idx = this.catalog.icons.length;

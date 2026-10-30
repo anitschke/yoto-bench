@@ -33,7 +33,7 @@ import {
   CardSyncMetadata,
   PodcastEpisode,
 } from "../services/podcast-importer.js";
-import { IconRecord } from "../services/icon-search.js";
+import { IconRecord, registerIconMediaId } from "../services/icon-search.js";
 
 import "../widgets/yb-button.js";
 import "../widgets/yb-badge.js";
@@ -292,6 +292,22 @@ export class YbCardView extends LitElement {
     this.loading = true;
     try {
       this.card = await yotoApi.getCard(this.cardId);
+      if (this.card?.content?.chapters) {
+        for (const chap of this.card.content.chapters) {
+          if (chap.display?.icon16x16) {
+            const url = chap.display.icon16x16;
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+              const clean = url.split("?")[0]!;
+              const lastSlash = clean.lastIndexOf("/");
+              const hash =
+                lastSlash !== -1 ? clean.slice(lastSlash + 1) : clean;
+              if (hash.length === 43) {
+                registerIconMediaId(hash, url);
+              }
+            }
+          }
+        }
+      }
     } catch (err) {
       dispatchToast(this, {
         type: "error",
@@ -360,16 +376,50 @@ export class YbCardView extends LitElement {
     this.iconPickerOpen = true;
   }
 
-  private handleIconSelected(e: CustomEvent<{ icon: IconRecord }>) {
+  private async handleIconSelected(e: CustomEvent<{ icon: IconRecord }>) {
     if (this.activeChapterIndex === null || !this.card?.content?.chapters)
       return;
     const icon = e.detail.icon;
     const chapters = [...this.card.content.chapters];
     const chapter = chapters[this.activeChapterIndex];
     if (chapter) {
+      let mediaId =
+        icon.mediaId ||
+        (icon.provider === "yoto" && icon.id.length === 43
+          ? icon.id
+          : undefined);
+
+      // If icon has no valid 43-character Yoto mediaId (e.g. Noto Emoji or local upload not yet on Yoto),
+      // upload it to Yoto now to obtain the required 43-character mediaId.
+      if (!mediaId || mediaId.length !== 43) {
+        try {
+          this.isSaving = true;
+          const resp = await fetch(icon.path);
+          const blob = await resp.blob();
+          mediaId = await yotoApi.uploadIcon(blob);
+          icon.mediaId = mediaId;
+          icon.displayIconId = mediaId;
+        } catch (err) {
+          console.error("Failed to upload icon to Yoto:", err);
+          dispatchToast(this, {
+            type: "error",
+            message: "Failed to upload icon to Yoto.",
+            errorDetail: err,
+          });
+          this.activeChapterIndex = null;
+          return;
+        } finally {
+          this.isSaving = false;
+        }
+      }
+
+      // Register mapping so <yb-pixel-icon> immediately renders the visual preview
+      registerIconMediaId(mediaId, icon.path);
+
+      const iconRef = `yoto:#${mediaId}`;
       const displayObj = {
-        icon16x16: icon.path,
-        icon: icon.displayIconId || icon.id,
+        icon16x16: iconRef,
+        icon: iconRef,
       };
       chapter.display = displayObj;
       if (chapter.tracks && chapter.tracks[0]) {

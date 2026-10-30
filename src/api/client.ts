@@ -2,6 +2,7 @@ import { CONFIG } from "../config.js";
 import { authService } from "./auth.js";
 import { Card, Device, DisplayIcon, LibraryResponse } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
+import { normalizeIconRef } from "../services/icon-search.js";
 
 // ==============================================================================
 // Yoto REST API Client with Silent Token Refresh
@@ -116,16 +117,18 @@ export class YotoApiClient {
   public async createCard(
     card: Partial<Card>,
   ): Promise<{ cardId?: string; card?: Card }> {
+    const payload = sanitizeCardForApi(card);
     return await this.request<{ cardId?: string; card?: Card }>("/content", {
       method: "POST",
-      body: JSON.stringify(card),
+      body: JSON.stringify(payload),
     });
   }
 
   public async updateCard(card: Card): Promise<void> {
+    const payload = sanitizeCardForApi(card);
     await this.request<void>("/content", {
       method: "POST",
-      body: JSON.stringify(card),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -299,3 +302,53 @@ export interface TranscodeData {
 }
 
 export const yotoApi = new YotoApiClient();
+
+/**
+ * Sanitizes a card object before sending it to Yoto's POST /content endpoint.
+ * Yoto's API strictly requires chapter and track display.icon16x16 to be in the
+ * format "yoto:#{mediaId}" where mediaId is 43 characters, and rejects raw CDN
+ * HTTPS URLs or local asset paths.
+ * See: docs/rfcs/013-yoto-official-icon-provider.md
+ */
+export function sanitizeCardForApi<T extends Partial<Card>>(card: T): T {
+  if (!card.content || !card.content.chapters) return card;
+
+  const chapters = card.content.chapters.map((chapter) => {
+    let chapDisplay = chapter.display ? { ...chapter.display } : undefined;
+    if (chapDisplay?.icon16x16) {
+      const normalized = normalizeIconRef(chapDisplay.icon16x16);
+      if (normalized) {
+        chapDisplay = { ...chapDisplay, icon16x16: normalized };
+      }
+    }
+
+    const tracks = chapter.tracks?.map((track) => {
+      let trackDisplay = track.display ? { ...track.display } : undefined;
+      if (trackDisplay?.icon16x16) {
+        const normalized = normalizeIconRef(trackDisplay.icon16x16);
+        if (normalized) {
+          trackDisplay = { ...trackDisplay, icon16x16: normalized };
+        }
+      }
+      return {
+        ...track,
+        type: track.type || "audio",
+        display: trackDisplay,
+      };
+    });
+
+    return {
+      ...chapter,
+      display: chapDisplay,
+      tracks,
+    };
+  });
+
+  return {
+    ...card,
+    content: {
+      ...card.content,
+      chapters,
+    },
+  };
+}
