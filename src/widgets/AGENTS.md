@@ -2,7 +2,7 @@
 
 Welcome to `src/widgets/`! This directory contains the reusable, framework-agnostic design system and UI component primitives for `yoto-bench` (YotoBench).
 
-All components in this directory adhere to the architectural specifications defined in [RFC 005: Design System & Reusable Widget Component Library](file:///home/anitschk/sandbox/yoto-bench/docs/rfcs/005-widgets-and-component-library.md) and [RFC 021: Project Rebranding & Naming Strategy](file:///home/anitschk/sandbox/yoto-bench/docs/rfcs/021-project-rebranding-and-naming-strategy.md).
+All components in this directory adhere to the architectural specifications defined in [RFC 005: Design System & Reusable Widget Component Library](file:///home/anitschk/sandbox/yoto-bench/docs/rfcs/005-widgets-and-component-library.md), [RFC 021: Project Rebranding & Naming Strategy](file:///home/anitschk/sandbox/yoto-bench/docs/rfcs/021-project-rebranding-and-naming-strategy.md), and [RFC 022: Developer Tools & Widget Component Gallery](file:///home/anitschk/sandbox/yoto-bench/docs/rfcs/022-devtools-and-widget-gallery.md).
 
 ---
 
@@ -12,8 +12,9 @@ All components in this directory adhere to the architectural specifications defi
 2. **Naming Standard:**
    - All custom elements must be prefixed with `yb-` (e.g., `<yb-button>`, `<yb-dialog>`, `<yb-pixel-icon>`).
    - All CSS custom properties must be prefixed with `--yb-` (defined in [`src/widgets/theme.css.ts`](file:///home/anitschk/sandbox/yoto-bench/src/widgets/theme.css.ts)).
-3. **Keep Views Free of Ad-hoc Primitives:** If a component is missing, build it here first, write tests for it, document it in this catalog, and then consume it in the view.
-4. **Automated Testing & Co-location:** Every widget must have a companion `.test.ts` file located **directly next to the source file in this directory** (e.g. `src/widgets/yb-button.test.ts` next to `src/widgets/yb-button.ts`), run via `@web/test-runner` verifying slot projection, custom event dispatch, keyboard navigation, and accessibility (`axe-core`).
+3. **Iterate & Inspect in Devtools:** Test and iterate on component variants in isolation at `/devtools/widgets` (accessible via the subtle monochrome `🛠︎` footer link).
+4. **Keep Views Free of Ad-hoc Primitives:** If a component is missing, build it here first, write tests for it, document it in this catalog, and then consume it in the view.
+5. **Automated Testing & Co-location:** Every widget must have a companion `.test.ts` file located **directly next to the source file in this directory** (e.g. `src/widgets/yb-button.test.ts` next to `src/widgets/yb-button.ts`), run via `@web/test-runner` verifying slot projection, custom event dispatch, keyboard navigation, and accessibility (`axe-core`).
 
 ---
 

@@ -11,12 +11,14 @@ import "./views/card-view.js";
 import "./views/device-view.js";
 import "./views/privacy-view.js";
 import "./views/callback-view.js";
+import "./views/devtools-view.js";
 
 /**
  * <yb-app>
  * Root Single-Page Application shell with @lit-labs/router navigation.
  * See: docs/rfcs/003-client-spa-and-routing-strategy.md
  *      docs/rfcs/021-project-rebranding-and-naming-strategy.md
+ *      docs/rfcs/022-devtools-and-widget-gallery.md
  */
 @customElement("yb-app")
 export class YbApp extends LitElement {
@@ -90,11 +92,30 @@ export class YbApp extends LitElement {
       text-align: center;
       font-size: var(--yb-font-size-xs, 0.75rem);
       color: var(--yb-color-text-muted, #718096);
+      position: relative;
     }
 
     footer a {
       color: var(--yb-color-primary, #ff5c35);
       text-decoration: none;
+    }
+
+    .footer-devtools-link {
+      color: var(--yb-color-text, #1a202c);
+      opacity: 0.08;
+      text-decoration: none;
+      font-size: 0.95rem;
+      margin-left: 0.5rem;
+      cursor: pointer;
+      display: inline-block;
+      vertical-align: middle;
+      transition: opacity var(--yb-transition-fast, 150ms);
+    }
+
+    .footer-devtools-link:hover,
+    .footer-devtools-link:focus-visible {
+      opacity: 0.8;
+      outline: none;
     }
   `;
 
@@ -131,6 +152,14 @@ export class YbApp extends LitElement {
     {
       path: "/callback",
       render: () => html`<yb-callback-view></yb-callback-view>`,
+    },
+    {
+      path: "/devtools/*",
+      render: () => html`<yb-devtools-view></yb-devtools-view>`,
+    },
+    {
+      path: "/devtools",
+      render: () => html`<yb-devtools-view></yb-devtools-view>`,
     },
   ]);
 
@@ -221,6 +250,14 @@ export class YbApp extends LitElement {
             href="/privacy"
             @click=${(e: Event) => this.navigate("/privacy", e)}
             >Privacy & Transparency</a
+          >
+          <a
+            class="footer-devtools-link"
+            href="/devtools/widgets"
+            title="devtools"
+            aria-label="devtools"
+            @click=${(e: Event) => this.navigate("/devtools/widgets", e)}
+            >&#x1F6E0;&#xFE0E;</a
           >
         </p>
       </footer>
