@@ -121,7 +121,7 @@ export async function runSync(): Promise<void> {
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(catalog));
+    fs.writeFileSync(DATA_FILE, JSON.stringify(catalog, null, 2) + "\n");
     console.log(
       `Sync complete. Added ${totalNewIcons} icons. Total: ${catalog.icons.length}`,
     );
