@@ -139,6 +139,15 @@ export class YtApp extends LitElement {
     this.isAuthenticated = authService.isAuthenticated();
     window.addEventListener("yt-auth-changed", this.onAuthChanged);
     window.addEventListener("popstate", this.onAuthChanged);
+
+    // If access token is expired on startup but refresh token is present, renew silently
+    if (
+      this.authSession &&
+      this.authSession.refreshToken &&
+      Date.now() >= this.authSession.expiresAt - 60000
+    ) {
+      void authService.refreshToken();
+    }
   }
 
   override disconnectedCallback() {
@@ -148,6 +157,11 @@ export class YtApp extends LitElement {
   }
 
   private navigate(path: string, e?: Event) {
+    if (e instanceof MouseEvent) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) {
+        return;
+      }
+    }
     if (e) e.preventDefault();
     window.history.pushState(null, "", path);
     window.dispatchEvent(new PopStateEvent("popstate"));

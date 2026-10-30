@@ -75,6 +75,8 @@ export class YtDeviceView extends LitElement {
   @state() private devices: Device[] = [];
   @state() private loading = true;
 
+  private isFetching = false;
+
   override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("authSession")) {
       if (this.authSession && authService.isAuthenticated()) {
@@ -86,14 +88,9 @@ export class YtDeviceView extends LitElement {
     }
   }
 
-  override async connectedCallback() {
-    super.connectedCallback();
-    if (this.authSession && authService.isAuthenticated()) {
-      await this.loadDevices();
-    }
-  }
-
   private async loadDevices() {
+    if (this.isFetching) return;
+    this.isFetching = true;
     this.loading = true;
     try {
       if (authService.isAuthenticated()) {
@@ -107,6 +104,7 @@ export class YtDeviceView extends LitElement {
       });
     } finally {
       this.loading = false;
+      this.isFetching = false;
     }
   }
 

@@ -88,11 +88,16 @@ export class AuthService {
     return this.session;
   }
 
+  private refreshPromise: Promise<string | null> | null = null;
+
   public isAuthenticated(): boolean {
     const session = this.getSession();
     if (!session) return false;
     // Session is valid if expiresAt is in the future (with 60s buffer)
-    return Date.now() < session.expiresAt - 60000;
+    // or if a refresh token is available to renew it silently
+    return Boolean(
+      session.refreshToken || Date.now() < session.expiresAt - 60000,
+    );
   }
 
   private notifyAuthChanged(): void {
@@ -228,8 +233,19 @@ export class AuthService {
 
   /**
    * Refreshes the access token using the stored refresh token.
+   * Deduplicates concurrent invocations to prevent Auth0 token reuse detection.
    */
   public async refreshToken(): Promise<string | null> {
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+    this.refreshPromise = this.performRefreshToken().finally(() => {
+      this.refreshPromise = null;
+    });
+    return this.refreshPromise;
+  }
+
+  private async performRefreshToken(): Promise<string | null> {
     const session = this.getSession();
     if (!session || !session.refreshToken) {
       this.clearSession();

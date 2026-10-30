@@ -121,12 +121,22 @@ export class YtDropdown extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     window.addEventListener("click", this.onDocumentClick);
+    this.addEventListener("focusout", this.onFocusOut);
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     window.removeEventListener("click", this.onDocumentClick);
+    this.removeEventListener("focusout", this.onFocusOut);
   }
+
+  private onFocusOut = (e: FocusEvent) => {
+    if (!this.isOpen) return;
+    const nextTarget = e.relatedTarget as Node | null;
+    if (!nextTarget || !this.contains(nextTarget)) {
+      this.closeMenu();
+    }
+  };
 
   private onDocumentClick = (e: MouseEvent) => {
     if (!this.isOpen) return;

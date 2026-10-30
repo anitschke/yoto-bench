@@ -28,6 +28,14 @@ export class YotoApiClient {
       throw new Error("User is not authenticated.");
     }
 
+    // Proactively refresh expired token before making request if refresh token exists
+    if (session.refreshToken && Date.now() >= session.expiresAt - 60000) {
+      const refreshedToken = await authService.refreshToken();
+      if (refreshedToken) {
+        session = authService.getSession()!;
+      }
+    }
+
     const headers = new Headers(options.headers || {});
     headers.set("Authorization", `Bearer ${session.accessToken}`);
     if (
@@ -73,7 +81,16 @@ export class YotoApiClient {
       return {} as T;
     }
 
-    return response.json() as Promise<T>;
+    const text = await response.text();
+    if (!text || !text.trim()) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text) as T;
+    } catch {
+      return text as unknown as T;
+    }
   }
 
   // --- Library / Cards ---

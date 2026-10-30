@@ -40,6 +40,13 @@ jobs:
       - name: Run Component Unit Tests
         run: npm run test:unit
 
+      - name: Build Static Production Assets
+        run: npm run build
+
+      - name: Run End-to-End Smoke Tests
+        run: npm run test:e2e
+
+
   # Deploy to preview/staging or production.
   # For PRs, this job is gated behind a GitHub Environment ('staging-preview')
   # requiring explicit manual review and approval by the maintainer.

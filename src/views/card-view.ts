@@ -1,12 +1,16 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { consume } from "@lit/context";
+import { authService } from "../api/auth.js";
 import { yotoApi } from "../api/client.js";
-import { Card } from "../models/index.js";
+import { authContext } from "../context/index.js";
+import { AuthSession, Card } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
 import "../widgets/yt-button.js";
 import "../widgets/yt-badge.js";
 import "../widgets/yt-pixel-icon.js";
 import "../widgets/yt-text-input.js";
+import "../widgets/yt-please-sign-in.js";
 
 @customElement("yt-card-view")
 export class YtCardView extends LitElement {
@@ -65,17 +69,33 @@ export class YtCardView extends LitElement {
     }
   `;
 
+  @consume({ context: authContext, subscribe: true })
+  @state()
+  authSession: AuthSession | null = null;
+
   @property({ type: String }) cardId = "";
   @state() private card: Card | null = null;
   @state() private loading = true;
+  private isFetching = false;
 
-  override async connectedCallback() {
-    super.connectedCallback();
-    await this.loadCard();
+  override willUpdate(changedProperties: PropertyValues<this>) {
+    if (
+      changedProperties.has("cardId") ||
+      changedProperties.has("authSession")
+    ) {
+      if (this.authSession && authService.isAuthenticated() && this.cardId) {
+        void this.loadCard();
+      } else {
+        this.card = null;
+        this.loading = false;
+      }
+    }
   }
 
   private async loadCard() {
-    if (!this.cardId) return;
+    if (!this.cardId || !authService.isAuthenticated()) return;
+    if (this.isFetching) return;
+    this.isFetching = true;
     this.loading = true;
     try {
       this.card = await yotoApi.getCard(this.cardId);
@@ -87,10 +107,21 @@ export class YtCardView extends LitElement {
       });
     } finally {
       this.loading = false;
+      this.isFetching = false;
     }
   }
 
   override render() {
+    const isAuthed = !!this.authSession && authService.isAuthenticated();
+    if (!isAuthed) {
+      return html`
+        <yt-please-sign-in
+          heading="Please Sign In"
+          description="Sign in with your Yoto account to view and edit this card."
+        ></yt-please-sign-in>
+      `;
+    }
+
     if (this.loading) {
       return html`<div class="empty-state"><p>Loading card...</p></div>`;
     }

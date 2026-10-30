@@ -62,3 +62,19 @@ export const themeStyles = css`
     --yt-transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 `;
+
+// Automatically adopt theme styles into document root if running in a browser environment
+if (typeof document !== "undefined") {
+  try {
+    if (document.adoptedStyleSheets && themeStyles.styleSheet) {
+      document.adoptedStyleSheets = [
+        ...document.adoptedStyleSheets,
+        themeStyles.styleSheet,
+      ];
+    }
+  } catch {
+    const styleEl = document.createElement("style");
+    styleEl.textContent = themeStyles.cssText;
+    document.head.appendChild(styleEl);
+  }
+}
