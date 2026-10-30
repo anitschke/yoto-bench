@@ -91,16 +91,29 @@ export class YbTextInput extends LitElement {
   @property({ type: String }) type = "text";
   @property({ type: Boolean }) clearable = false;
   @property({ type: Boolean }) disabled = false;
+  @property({ type: Boolean }) autofocus = false;
   @property({ type: String }) error = "";
   @property({ type: String, attribute: "aria-label" }) accessibleLabel = "";
 
   private inputId = `yb-input-${Math.random().toString(36).substring(2, 9)}`;
+
+  public override focus(options?: FocusOptions): void {
+    const input = this.shadowRoot?.querySelector("input");
+    input?.focus(options);
+  }
 
   private onInput(e: Event) {
     const input = e.target as HTMLInputElement;
     this.value = input.value;
     this.dispatchEvent(
       new CustomEvent("input", {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    this.dispatchEvent(
+      new CustomEvent("yb-input", {
         detail: { value: this.value },
         bubbles: true,
         composed: true,
@@ -118,6 +131,13 @@ export class YbTextInput extends LitElement {
         composed: true,
       }),
     );
+    this.dispatchEvent(
+      new CustomEvent("yb-change", {
+        detail: { value: this.value },
+        bubbles: true,
+        composed: true,
+      }),
+    );
   }
 
   private clear() {
@@ -130,7 +150,21 @@ export class YbTextInput extends LitElement {
       }),
     );
     this.dispatchEvent(
+      new CustomEvent("yb-input", {
+        detail: { value: "" },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    this.dispatchEvent(
       new CustomEvent("change", {
+        detail: { value: "" },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+    this.dispatchEvent(
+      new CustomEvent("yb-change", {
         detail: { value: "" },
         bubbles: true,
         composed: true,
@@ -151,6 +185,7 @@ export class YbTextInput extends LitElement {
             placeholder=${this.placeholder}
             aria-label=${this.accessibleLabel || this.label || this.placeholder || "Text input"}
             ?disabled=${this.disabled}
+            ?autofocus=${this.autofocus}
             @input=${this.onInput}
             @change=${this.onChange}
           />

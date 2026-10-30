@@ -158,9 +158,14 @@ export class YbLibraryView extends LitElement {
     this.searchQuery = e.detail.value.toLowerCase();
   }
 
-  private openCreateDialog() {
+  private async openCreateDialog() {
     this.newCardTitle = "";
     this.createDialogOpen = true;
+    await this.updateComplete;
+    const input = this.shadowRoot?.querySelector(
+      "yb-dialog yb-text-input",
+    ) as HTMLElement | null;
+    input?.focus();
   }
 
   private closeCreateDialog() {
@@ -310,9 +315,19 @@ export class YbLibraryView extends LitElement {
           <yb-text-input
             label="Card Title"
             placeholder="e.g. Bedtime Stories, Favorite Songs"
+            autofocus
             .value=${this.newCardTitle}
+            @input=${(e: CustomEvent<{ value: string }>) => {
+              this.newCardTitle = e.detail?.value ?? "";
+            }}
             @yb-input=${(e: CustomEvent<{ value: string }>) => {
-              this.newCardTitle = e.detail.value;
+              this.newCardTitle = e.detail?.value ?? "";
+            }}
+            @keydown=${(e: KeyboardEvent) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void this.createNewCard();
+              }
             }}
           ></yb-text-input>
         </form>

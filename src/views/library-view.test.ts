@@ -1,6 +1,7 @@
 import { html, fixture, expect } from "@open-wc/testing";
 import "./library-view.js";
 import { YbLibraryView } from "./library-view.js";
+import { YbDialog } from "../widgets/yb-dialog.js";
 import { authService } from "../api/auth.js";
 import { yotoApi } from "../api/client.js";
 import { Card } from "../models/index.js";
@@ -105,8 +106,12 @@ describe("yb-library-view", () => {
       newCardBtn.click();
       await el.updateComplete;
 
-      const dialog = el.shadowRoot?.querySelector("yb-dialog");
-      expect(dialog?.hasAttribute("open")).to.be.true;
+      const dialog = el.shadowRoot?.querySelector("yb-dialog") as YbDialog;
+      expect(dialog).to.exist;
+      expect(dialog.hasAttribute("open")).to.be.true;
+      expect(dialog.open).to.be.true;
+      const nativeDialog = dialog.shadowRoot?.querySelector("dialog");
+      expect(nativeDialog?.open).to.be.true;
     });
   });
 });
