@@ -56,15 +56,9 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
     script-src 'sha384-...';
     style-src 'self';
     font-src 'self';
-    img-src 'self' data: https://api.yotoplay.com https://*.prxu.org https://*.podtrac.com;
-    media-src 'self' blob: https://*.prxu.org https://*.podtrac.com;
-    connect-src 'self'
-      https://login.yotoplay.com
-      https://api.yotoplay.com
-      https://*.s3.amazonaws.com
-      wss://*.iot.eu-west-2.amazonaws.com
-      https://corsproxy.io
-      https://www.google-analytics.com;
+    img-src 'self' data: https:;
+    media-src 'self' blob: https:;
+    connect-src 'self' https: wss://*.iot.eu-west-2.amazonaws.com;
     base-uri 'self';
     form-action 'none';
   "
@@ -73,21 +67,38 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
 
 ### Directives Breakdown:
 - **`script-src 'sha384-...'` (Pure Cryptographic Hash Pinning):**
-  - **No `'self'` Bypass:** Omits `'self'`. Including `'self'` would allow any arbitrary same-origin script file to execute, negating the hash restriction. Omitting `'self'` enforces that **only** scripts whose cryptographic digest matches the build-time SRI hash can execute.
+  - **No `'self'` Bypass:** Omits `'self'` in production builds. Including `'self'` would allow any arbitrary same-origin script file to execute, negating the hash restriction. Omitting `'self'` enforces that **only** scripts whose cryptographic digest matches the build-time SRI hash can execute.
   - **No `eval`:** Omits `'unsafe-eval'`. The use of `eval()`, `new Function()`, and string-based timers is completely blocked. (Lit 3 uses compiled tagged template literals and natively complies with no-eval environments).
   - **No Unsafe Inline:** Omits `'unsafe-inline'`. Only the hashed and SRI-verified `app-[hash].js` bundle can run.
 - **`style-src 'self'`:** Restricts stylesheets to local self-hosted bundles (`fonts-[hash].css`) and component Shadow DOM styles.
 - **`font-src 'self'`:** Restricts font files (`.woff2`) strictly to the same origin.
-- **`img-src 'self' data: ...`:** Allows local icons, base64 data URIs (< 4 KB Vite inlining), and Yoto/podcast cover art thumbnails.
-- **`media-src 'self' blob: ...`:** Allows audio previews from OPFS blob URLs and verified podcast hosts.
-- **`connect-src`:** Restricts network requests (`fetch` and WebSockets) strictly to:
-  - Same origin (`'self'`)
-  - Yoto Auth0 (`https://login.yotoplay.com`)
-  - Yoto REST API (`https://api.yotoplay.com`)
-  - AWS S3 for direct audio uploads (`https://*.s3.amazonaws.com`)
-  - AWS IoT Core MQTT WebSockets (`wss://*.iot.eu-west-2.amazonaws.com`)
-  - Free RSS CORS proxy relay (`https://corsproxy.io`) ([RFC 009](009-cors-proxy-for-rss-feeds.md))
-  - GA4 Measurement Protocol (`https://www.google-analytics.com`)
+- **`img-src 'self' data: https:`:** Allows local icons, base64 data URIs (< 4 KB Vite inlining), Yoto official icons, and arbitrary podcast cover art thumbnails loaded over secure TLS.
+- **`media-src 'self' blob: https:`:** Allows in-browser audio previews from OPFS blob URLs, Yoto media CDNs, and arbitrary podcast audio streams.
+- **`connect-src 'self' https: wss://*.iot.eu-west-2.amazonaws.com;`:** Restricts network requests (`fetch` and WebSockets) to secure HTTPS endpoints and our authenticated AWS IoT MQTT broker.
+
+---
+
+### Architectural Rationale: Relaxing `connect-src` to `https:`
+
+Earlier revisions of this RFC attempted to maintain a strict hostname allowlist in `connect-src` (restricting connections exclusively to `api.yotoplay.com`, `*.s3.amazonaws.com`, and `corsproxy.io`). However, supporting client-side podcast RSS ingestion and audio uploading ([RFC 008](008-audio-ingestion-zip-and-upload-concurrency.md), [RFC 010](010-podcast-rss-importer-and-card-sync.md)) required relaxing `connect-src` to permit `https:` for the following reasons:
+
+1. **W3C CSP Fetch Semantics (`connect-src` vs `media-src`):**
+   - In CSP, `media-src` exclusively applies to media elements rendered directly in the DOM (`<audio src="...">` and `<video src="...">`).
+   - In `yoto-bench`, podcast episodes cannot merely be played; their audio binaries must be fetched directly by JavaScript via `fetch(ep.enclosureUrl)` in order to extract ID3 tags, stage them in OPFS, compute SHA-256 digests via Web Crypto, and stream them to Yoto's S3 storage.
+   - Because these requests execute via `fetch()`, the browser strictly evaluates them against **`connect-src`**, completely bypassing `media-src`.
+
+2. **Unbounded Diversity of Podcast Media CDNs:**
+   - Podcast publishers host audio files across thousands of distinct CDNs, edge networks, and redirect trackers (e.g. `*.prxu.org`, `*.podtrac.com`, Megaphone, Libsyn, Buzzsprout, Podbean, Transistor, Simplecast, AWS CloudFront, and custom self-hosted WordPress/Nginx servers).
+   - An open podcast importer cannot predict which CDN host a user's chosen RSS feed will point to. Maintaining a static hostname allowlist in `connect-src` is fundamentally brittle and breaks whenever a user enters a podcast hosted on an unlisted CDN.
+
+3. **Infeasibility of Audio Proxying:**
+   - While lightweight XML text feeds (~30–80 KB) are relayed through a CORS proxy ([RFC 009](009-cors-proxy-for-rss-feeds.md)), proxying multi-hundred-megabyte audio files is unviable: it violates third-party proxy Terms of Service, exhausts bandwidth quotas, introduces extreme latency, and contradicts our zero-server-maintenance architecture. Audio tracks must be downloaded directly by the client browser.
+
+4. **Threat Model & Defense-in-Depth:**
+   - The primary purpose of CSP in Single-Page Applications is **preventing unauthorized script execution (XSS)**. This defense is fully upheld:
+     - `script-src` remains cryptographically pinned to SHA-384 hashes with zero `'unsafe-inline'` or `eval`.
+     - `default-src 'none'`, `object-src 'none'`, and `form-action 'none'` prevent injection of plugins, objects, or malicious form posts.
+   - Allowing `https:` in `connect-src` requires all egress traffic to use encrypted TLS connections, enabling user-directed media downloads without sacrificing the application's core XSS protections.
 
 ---
 
