@@ -36,8 +36,15 @@ export class YbLibraryView extends LitElement {
     }
 
     .search-filter {
-      max-width: 320px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      max-width: 480px;
       width: 100%;
+    }
+
+    .search-filter yb-text-input {
+      flex: 1;
     }
 
     .card-grid {
@@ -110,6 +117,9 @@ export class YbLibraryView extends LitElement {
   @state() private cards: Card[] = [];
   @state() private searchQuery = "";
   @state() private loading = true;
+  @state() private createDialogOpen = false;
+  @state() private newCardTitle = "";
+  @state() private isCreating = false;
 
   override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("authSession")) {
@@ -144,8 +154,61 @@ export class YbLibraryView extends LitElement {
     }
   }
 
-  private onSearch(e: CustomEvent<{ value: string }>) {
-    this.searchQuery = e.detail.value.toLowerCase();
+  private onSearch(e: Event) {
+    const detail = (e as CustomEvent<{ value: string }>).detail;
+    const target = e.target as HTMLInputElement | { value: string };
+    const query =
+      detail?.value !== undefined ? detail.value : (target?.value ?? "");
+    this.searchQuery = query.toLowerCase();
+  }
+
+  private async openCreateDialog() {
+    this.newCardTitle = "";
+    this.createDialogOpen = true;
+    await this.updateComplete;
+    const input = this.shadowRoot?.querySelector(
+      "yb-dialog yb-text-input",
+    ) as HTMLElement | null;
+    input?.focus();
+  }
+
+  private closeCreateDialog() {
+    this.createDialogOpen = false;
+  }
+
+  private async createNewCard() {
+    const title = this.newCardTitle.trim();
+    if (!title) return;
+
+    this.isCreating = true;
+    try {
+      const res = await yotoApi.createCard({
+        title,
+        content: { chapters: [] },
+      });
+
+      this.createDialogOpen = false;
+      dispatchToast(this, {
+        type: "success",
+        message: `Created card "${title}"!`,
+      });
+
+      const cardId = res?.cardId || res?.card?.cardId;
+      if (cardId) {
+        window.history.pushState(null, "", `/cards/${cardId}`);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      } else {
+        await this.loadCards();
+      }
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to create new card.",
+        errorDetail: err,
+      });
+    } finally {
+      this.isCreating = false;
+    }
   }
 
   override render() {
@@ -179,6 +242,9 @@ export class YbLibraryView extends LitElement {
               clearable
               @input=${this.onSearch}
             ></yb-text-input>
+            <yb-button variant="primary" @click=${this.openCreateDialog}>
+              + New Card
+            </yb-button>
           </div>
         </div>
 
@@ -235,6 +301,62 @@ export class YbLibraryView extends LitElement {
               `
         }
       </div>
+
+      <!-- Create New Card Dialog -->
+      <yb-dialog
+        ?open=${this.createDialogOpen}
+        @yb-dialog-close=${this.closeCreateDialog}
+      >
+        <span slot="header">Create New Card</span>
+
+        <form
+          @submit=${(e: Event) => {
+            e.preventDefault();
+            void this.createNewCard();
+          }}
+          style="display: flex; flex-direction: column; gap: 1rem;"
+        >
+          <yb-text-input
+            label="Card Title"
+            placeholder="e.g. Bedtime Stories, Favorite Songs"
+            autofocus
+            .value=${this.newCardTitle}
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.newCardTitle =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
+            }}
+            @yb-input=${(e: CustomEvent<{ value: string }>) => {
+              if (e.detail?.value !== undefined) {
+                this.newCardTitle = e.detail.value;
+              }
+            }}
+            @keydown=${(e: KeyboardEvent) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                void this.createNewCard();
+              }
+            }}
+          ></yb-text-input>
+        </form>
+
+        <div slot="footer">
+          <yb-button variant="subtle" @click=${this.closeCreateDialog}>
+            Cancel
+          </yb-button>
+          <yb-button
+            variant="primary"
+            ?loading=${this.isCreating}
+            ?disabled=${!this.newCardTitle.trim()}
+            @click=${this.createNewCard}
+          >
+            Create Card
+          </yb-button>
+        </div>
+      </yb-dialog>
     `;
   }
 }

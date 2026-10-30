@@ -11,6 +11,7 @@ export interface AppConfig {
   apiBaseUrl: string;
   mqttBrokerUrl: string;
   corsProxyUrl: string;
+  corsProxyKey: string;
 }
 
 export const CONFIG: AppConfig = {
@@ -34,8 +35,17 @@ export const CONFIG: AppConfig = {
   // AWS IoT Core MQTT broker endpoint (RFC 018)
   mqttBrokerUrl: "wss://aqrphjqbp3u2z-ats.iot.eu-west-2.amazonaws.com/mqtt",
 
-  // Free public CORS Proxy for RSS podcast feeds (RFC 009)
-  corsProxyUrl: "https://corsproxy.io/?url=",
+  // Public CorsProxy.io API Key (RFC 009)
+  corsProxyKey:
+    (typeof import.meta !== "undefined" &&
+      import.meta.env?.VITE_CORSPROXY_KEY) ||
+    "8480af1e",
+
+  // CORS Proxy for RSS podcast feeds (RFC 009)
+  corsProxyUrl:
+    (typeof import.meta !== "undefined" &&
+      import.meta.env?.VITE_CORS_PROXY_URL) ||
+    "https://corsproxy.io/?key=8480af1e&url=",
 } as const;
 
 /**
@@ -48,4 +58,19 @@ export function getActiveClientId(): string {
     return customId.trim();
   }
   return CONFIG.yotoClientId;
+}
+
+/**
+ * Returns the effective CORS proxy URL for external podcast feeds.
+ */
+export function getActiveCorsProxyUrl(): string {
+  const customProxy = localStorage.getItem("yoto_custom_cors_proxy");
+  if (customProxy && customProxy.trim() !== "") {
+    return customProxy.trim();
+  }
+  const customKey = localStorage.getItem("yoto_corsproxy_key");
+  if (customKey && customKey.trim() !== "") {
+    return `https://corsproxy.io/?key=${encodeURIComponent(customKey.trim())}&url=`;
+  }
+  return CONFIG.corsProxyUrl;
 }

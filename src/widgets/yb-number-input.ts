@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
+import { live } from "lit/directives/live.js";
 
 /**
  * <yb-number-input>
@@ -100,7 +101,28 @@ export class YbNumberInput extends LitElement {
     if (clamped !== this.value) {
       this.value = clamped;
       this.dispatchEvent(
+        new CustomEvent("input", {
+          detail: { value: this.value },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      this.dispatchEvent(
+        new CustomEvent("yb-input", {
+          detail: { value: this.value },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      this.dispatchEvent(
         new CustomEvent("change", {
+          detail: { value: this.value },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+      this.dispatchEvent(
+        new CustomEvent("yb-change", {
           detail: { value: this.value },
           bubbles: true,
           composed: true,
@@ -118,6 +140,7 @@ export class YbNumberInput extends LitElement {
   }
 
   private onInput(e: Event) {
+    e.stopPropagation();
     const input = e.target as HTMLInputElement;
     const num = parseInt(input.value, 10);
     if (!isNaN(num)) {
@@ -141,12 +164,13 @@ export class YbNumberInput extends LitElement {
           <input
             id=${this.inputId}
             type="number"
-            .value=${String(this.value)}
+            .value=${live(String(this.value))}
             min=${this.min}
             max=${this.max}
             step=${this.step}
             aria-label=${this.accessibleLabel || this.label || "Number input"}
             ?disabled=${this.disabled}
+            @input=${this.onInput}
             @change=${this.onInput}
           />
           <button

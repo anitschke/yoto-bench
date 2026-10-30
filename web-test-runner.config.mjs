@@ -15,6 +15,15 @@ export default {
     }),
   ],
   plugins: [
+    {
+      name: 'json-module-loader',
+      transform(context) {
+        if (context.path.endsWith('.json')) {
+          context.body = `export default ${context.body};`;
+          context.set('content-type', 'application/javascript; charset=utf-8');
+        }
+      },
+    },
     esbuildPlugin({
       ts: true,
       target: 'es2022',

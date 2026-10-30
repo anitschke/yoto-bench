@@ -19,7 +19,7 @@ describe("YbDialog", () => {
     expect(dialog.open).to.be.false;
   });
 
-  it("emits close event when close button is clicked", async () => {
+  it("emits close and yb-dialog-close events when close button is clicked", async () => {
     const el = await fixture<YbDialog>(
       html`<yb-dialog heading="Test Dialog"></yb-dialog>`,
     );
@@ -28,9 +28,31 @@ describe("YbDialog", () => {
       ".close-button",
     ) as HTMLButtonElement;
 
+    let ybCloseFired = false;
+    el.addEventListener("yb-dialog-close", () => {
+      ybCloseFired = true;
+    });
+
     setTimeout(() => closeBtn.click());
     await oneEvent(el, "close");
     const dialog = el.shadowRoot!.querySelector("dialog")!;
+    expect(dialog.open).to.be.false;
+    expect(ybCloseFired).to.be.true;
+    expect(el.open).to.be.false;
+  });
+
+  it("opens and closes declaratively via open property", async () => {
+    const el = await fixture<YbDialog>(html`
+      <yb-dialog heading="Declarative Dialog" ?open=${true}>
+        <p>Declarative content</p>
+      </yb-dialog>
+    `);
+    const dialog = el.shadowRoot!.querySelector("dialog")!;
+    expect(dialog.open).to.be.true;
+    expect(el.open).to.be.true;
+
+    el.open = false;
+    await el.updateComplete;
     expect(dialog.open).to.be.false;
   });
 

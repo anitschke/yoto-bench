@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint 'src/**/*.ts' 'test/**/*.ts'",
     "format": "prettier --write 'src/**/*.{ts,css,html}'",
+    "sync:icons": "tsx tools/sync-icons.ts",
+    "rebuild:icons": "tsx tools/rebuild-icons.ts",
     "test:unit": "wtr",
     "test:e2e": "playwright test"
   },
@@ -32,14 +34,17 @@
   "dependencies": {
     "@lit-labs/router": "^0.1.4",
     "@lit/context": "^1.1.6",
+    "@zip.js/zip.js": "^2.24.0",
     "lit": "^3.3.3",
-    "mqtt": "^5.16.1"
+    "mqtt": "^5.16.1",
+    "music-metadata-browser": "^2.5.11"
   },
   "devDependencies": {
     "@open-wc/testing": "^5.0.0",
     "@playwright/test": "^1.63.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^26.6.1",
+    "@types/sharp": "^0.31.1",
     "@typescript-eslint/eslint-plugin": "^8.70.0",
     "@typescript-eslint/parser": "^8.70.0",
     "@web/dev-server-esbuild": "^2.0.0",
@@ -50,6 +55,8 @@
     "eslint-plugin-lit": "^2.3.1",
     "playwright": "^1.63.0",
     "prettier": "^3.9.8",
+    "sharp": "^0.35.5",
+    "tsx": "^4.23.15",
     "typescript": "~5.7.3",
     "vite": "^8.3.0",
     "vite-plugin-sri": "^0.0.2"

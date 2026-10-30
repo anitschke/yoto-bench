@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "lit";
+import { LitElement, html, css, type PropertyValues } from "lit";
 import { customElement, property, query } from "lit/decorators.js";
 
 /**
@@ -79,30 +79,66 @@ export class YbDialog extends LitElement {
   `;
 
   @property({ type: String }) heading = "";
+  @property({ type: Boolean, reflect: true }) open = false;
   @query("dialog") private dialogEl!: HTMLDialogElement;
 
+  override updated(changedProperties: PropertyValues<this>): void {
+    if (changedProperties.has("open")) {
+      if (this.open) {
+        if (this.dialogEl && !this.dialogEl.open) {
+          this.dialogEl.showModal();
+        }
+      } else {
+        if (this.dialogEl && this.dialogEl.open) {
+          this.dialogEl.close();
+        }
+      }
+    }
+  }
+
   public showModal(): void {
+    this.open = true;
     if (this.dialogEl && !this.dialogEl.open) {
       this.dialogEl.showModal();
     }
   }
 
   public close(): void {
+    const wasOpen = this.open || (this.dialogEl && this.dialogEl.open);
+    this.open = false;
     if (this.dialogEl && this.dialogEl.open) {
       this.dialogEl.close();
+    }
+    if (wasOpen) {
+      this.dispatchEvent(
+        new CustomEvent("yb-dialog-close", { bubbles: true, composed: true }),
+      );
       this.dispatchEvent(
         new CustomEvent("close", { bubbles: true, composed: true }),
       );
     }
   }
 
-  private onCancel(e: Event) {
+  private onCancel(e: Event): void {
     e.preventDefault();
     this.close();
   }
 
-  private onDialogClick(e: MouseEvent) {
+  private onNativeClose(): void {
+    if (this.open) {
+      this.open = false;
+      this.dispatchEvent(
+        new CustomEvent("yb-dialog-close", { bubbles: true, composed: true }),
+      );
+      this.dispatchEvent(
+        new CustomEvent("close", { bubbles: true, composed: true }),
+      );
+    }
+  }
+
+  private onDialogClick(e: MouseEvent): void {
     // Click on the backdrop closes the dialog
+    if (!this.dialogEl || e.target !== this.dialogEl) return;
     const rect = this.dialogEl.getBoundingClientRect();
     const isInDialog =
       rect.top <= e.clientY &&
@@ -116,7 +152,11 @@ export class YbDialog extends LitElement {
 
   override render() {
     return html`
-      <dialog @cancel=${this.onCancel} @click=${this.onDialogClick}>
+      <dialog
+        @cancel=${this.onCancel}
+        @close=${this.onNativeClose}
+        @click=${this.onDialogClick}
+      >
         <div class="dialog-header">
           <slot name="header">
             <h3 class="heading">${this.heading}</h3>

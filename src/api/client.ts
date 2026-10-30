@@ -2,6 +2,7 @@ import { CONFIG } from "../config.js";
 import { authService } from "./auth.js";
 import { Card, Device, DisplayIcon, LibraryResponse } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
+import { normalizeIconRef } from "../services/icon-search.js";
 
 // ==============================================================================
 // Yoto REST API Client with Silent Token Refresh
@@ -113,17 +114,21 @@ export class YotoApiClient {
     });
   }
 
-  public async createCard(card: Card): Promise<void> {
-    await this.request<void>("/content", {
+  public async createCard(
+    card: Partial<Card>,
+  ): Promise<{ cardId?: string; card?: Card }> {
+    const payload = sanitizeCardForApi(card);
+    return await this.request<{ cardId?: string; card?: Card }>("/content", {
       method: "POST",
-      body: JSON.stringify(card),
+      body: JSON.stringify(payload),
     });
   }
 
   public async updateCard(card: Card): Promise<void> {
+    const payload = sanitizeCardForApi(card);
     await this.request<void>("/content", {
       method: "POST",
-      body: JSON.stringify(card),
+      body: JSON.stringify(payload),
     });
   }
 
@@ -181,6 +186,169 @@ export class YotoApiClient {
     }
     return iconId;
   }
+
+  // --- Audio Uploads & Transcoding (RFC 008) ---
+
+  /**
+   * Requests a presigned S3 upload URL for an audio file.
+   * If Yoto already holds audio with the matching sha256, uploadUrl will be empty
+   * and uploadId points to the already existing asset (deduplication).
+   */
+  public async getUploadUrl(
+    sha256?: string,
+    filename?: string,
+  ): Promise<UploadURLResponse> {
+    const params = new URLSearchParams();
+    if (sha256) params.set("sha256", sha256);
+    if (filename) params.set("filename", filename);
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return await this.request<UploadURLResponse>(
+      `/media/transcode/audio/uploadUrl${query}`,
+    );
+  }
+
+  /**
+   * Uploads an audio binary directly to a presigned S3 PUT URL.
+   * Note: S3 presigned URLs must NOT include Yoto authorization headers.
+   */
+  public async uploadFileToS3(
+    uploadUrl: string,
+    fileBlob: Blob,
+    contentType = "audio/mp3",
+    onProgress?: (percent: number) => void,
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", uploadUrl, true);
+      xhr.setRequestHeader("Content-Type", contentType);
+
+      if (onProgress && xhr.upload) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            onProgress(percent);
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve();
+        } else {
+          reject(
+            new Error(
+              `S3 upload failed with status ${xhr.status}: ${xhr.statusText}`,
+            ),
+          );
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("Network error during S3 direct upload."));
+      };
+
+      xhr.send(fileBlob);
+    });
+  }
+
+  /**
+   * Polls Yoto's transcode worker until normalization and transcoding to Opus finishes.
+   */
+  public async pollTranscode(
+    uploadId: string,
+    maxWaitMs = 15 * 60 * 1000,
+    pollIntervalMs = 750,
+  ): Promise<TranscodeData> {
+    const deadline = Date.now() + maxWaitMs;
+
+    while (Date.now() < deadline) {
+      const result = await this.request<Record<string, unknown>>(
+        `/media/upload/${encodeURIComponent(uploadId)}/transcoded`,
+      );
+
+      const data = (result.transcode && typeof result.transcode === "object"
+        ? result.transcode
+        : result) as unknown as TranscodeData;
+
+      if (data && (data.complete || !!data.transcodedSha256)) {
+        return data;
+      }
+
+      await new Promise((r) => setTimeout(r, pollIntervalMs));
+    }
+
+    throw new Error(`Audio transcode timed out for upload ${uploadId}`);
+  }
+}
+
+export interface UploadURLResponse {
+  upload: {
+    uploadUrl?: string;
+    uploadId: string;
+  };
+}
+
+export interface TranscodeInfo {
+  duration?: number;
+  fileSize?: number;
+  format?: string;
+  channels?: string;
+}
+
+export interface TranscodeData {
+  transcodedSha256?: string;
+  complete?: boolean;
+  transcodedInfo?: TranscodeInfo;
 }
 
 export const yotoApi = new YotoApiClient();
+
+/**
+ * Sanitizes a card object before sending it to Yoto's POST /content endpoint.
+ * Yoto's API strictly requires chapter and track display.icon16x16 to be in the
+ * format "yoto:#{mediaId}" where mediaId is 43 characters, and rejects raw CDN
+ * HTTPS URLs or local asset paths.
+ * See: docs/rfcs/013-yoto-official-icon-provider.md
+ */
+export function sanitizeCardForApi<T extends Partial<Card>>(card: T): T {
+  if (!card.content || !card.content.chapters) return card;
+
+  const chapters = card.content.chapters.map((chapter) => {
+    let chapDisplay = chapter.display ? { ...chapter.display } : undefined;
+    if (chapDisplay?.icon16x16) {
+      const normalized = normalizeIconRef(chapDisplay.icon16x16);
+      if (normalized) {
+        chapDisplay = { ...chapDisplay, icon16x16: normalized };
+      }
+    }
+
+    const tracks = chapter.tracks?.map((track) => {
+      let trackDisplay = track.display ? { ...track.display } : undefined;
+      if (trackDisplay?.icon16x16) {
+        const normalized = normalizeIconRef(trackDisplay.icon16x16);
+        if (normalized) {
+          trackDisplay = { ...trackDisplay, icon16x16: normalized };
+        }
+      }
+      return {
+        ...track,
+        type: track.type || "audio",
+        display: trackDisplay,
+      };
+    });
+
+    return {
+      ...chapter,
+      display: chapDisplay,
+      tracks,
+    };
+  });
+
+  return {
+    ...card,
+    content: {
+      ...card.content,
+      chapters,
+    },
+  };
+}
