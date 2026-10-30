@@ -113,8 +113,10 @@ export class YotoApiClient {
     });
   }
 
-  public async createCard(card: Card): Promise<void> {
-    await this.request<void>("/content", {
+  public async createCard(
+    card: Partial<Card>,
+  ): Promise<{ cardId?: string; card?: Card }> {
+    return await this.request<{ cardId?: string; card?: Card }>("/content", {
       method: "POST",
       body: JSON.stringify(card),
     });

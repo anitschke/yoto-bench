@@ -36,8 +36,15 @@ export class YbLibraryView extends LitElement {
     }
 
     .search-filter {
-      max-width: 320px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      max-width: 480px;
       width: 100%;
+    }
+
+    .search-filter yb-text-input {
+      flex: 1;
     }
 
     .card-grid {
@@ -110,6 +117,9 @@ export class YbLibraryView extends LitElement {
   @state() private cards: Card[] = [];
   @state() private searchQuery = "";
   @state() private loading = true;
+  @state() private createDialogOpen = false;
+  @state() private newCardTitle = "";
+  @state() private isCreating = false;
 
   override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("authSession")) {
@@ -148,6 +158,50 @@ export class YbLibraryView extends LitElement {
     this.searchQuery = e.detail.value.toLowerCase();
   }
 
+  private openCreateDialog() {
+    this.newCardTitle = "";
+    this.createDialogOpen = true;
+  }
+
+  private closeCreateDialog() {
+    this.createDialogOpen = false;
+  }
+
+  private async createNewCard() {
+    const title = this.newCardTitle.trim();
+    if (!title) return;
+
+    this.isCreating = true;
+    try {
+      const res = await yotoApi.createCard({
+        title,
+        content: { chapters: [] },
+      });
+
+      this.createDialogOpen = false;
+      dispatchToast(this, {
+        type: "success",
+        message: `Created card "${title}"!`,
+      });
+
+      const cardId = res?.cardId || res?.card?.cardId;
+      if (cardId) {
+        window.history.pushState(null, "", `/cards/${cardId}`);
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      } else {
+        await this.loadCards();
+      }
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to create new card.",
+        errorDetail: err,
+      });
+    } finally {
+      this.isCreating = false;
+    }
+  }
+
   override render() {
     const isAuthed = !!this.authSession && authService.isAuthenticated();
     if (!isAuthed) {
@@ -179,6 +233,9 @@ export class YbLibraryView extends LitElement {
               clearable
               @input=${this.onSearch}
             ></yb-text-input>
+            <yb-button variant="primary" @click=${this.openCreateDialog}>
+              + New Card
+            </yb-button>
           </div>
         </div>
 
@@ -235,6 +292,45 @@ export class YbLibraryView extends LitElement {
               `
         }
       </div>
+
+      <!-- Create New Card Dialog -->
+      <yb-dialog
+        ?open=${this.createDialogOpen}
+        @yb-dialog-close=${this.closeCreateDialog}
+      >
+        <span slot="header">Create New Card</span>
+
+        <form
+          @submit=${(e: Event) => {
+            e.preventDefault();
+            void this.createNewCard();
+          }}
+          style="display: flex; flex-direction: column; gap: 1rem;"
+        >
+          <yb-text-input
+            label="Card Title"
+            placeholder="e.g. Bedtime Stories, Favorite Songs"
+            .value=${this.newCardTitle}
+            @yb-input=${(e: CustomEvent<{ value: string }>) => {
+              this.newCardTitle = e.detail.value;
+            }}
+          ></yb-text-input>
+        </form>
+
+        <div slot="footer">
+          <yb-button variant="subtle" @click=${this.closeCreateDialog}>
+            Cancel
+          </yb-button>
+          <yb-button
+            variant="primary"
+            ?loading=${this.isCreating}
+            ?disabled=${!this.newCardTitle.trim()}
+            @click=${this.createNewCard}
+          >
+            Create Card
+          </yb-button>
+        </div>
+      </yb-dialog>
     `;
   }
 }
