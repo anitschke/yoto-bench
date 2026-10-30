@@ -53,8 +53,8 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
   http-equiv="Content-Security-Policy"
   content="
     default-src 'none';
-    script-src 'sha384-...';
-    style-src 'self';
+    script-src 'self' 'sha384-...';
+    style-src 'self' 'unsafe-inline';
     font-src 'self';
     img-src 'self' data: https:;
     media-src 'self' blob: https:;
@@ -66,10 +66,10 @@ A strict Content Security Policy is injected into the `<head>` of `index.html`:
 ```
 
 ### Directives Breakdown:
-- **`script-src 'sha384-...'` (Pure Cryptographic Hash Pinning):**
-  - **No `'self'` Bypass:** Omits `'self'` in production builds. Including `'self'` would allow any arbitrary same-origin script file to execute, negating the hash restriction. Omitting `'self'` enforces that **only** scripts whose cryptographic digest matches the build-time SRI hash can execute.
+- **`script-src 'self' 'sha384-...'` (Cryptographic Hash Pinning with Dynamic Chunk Support):**
+  - **Dynamic Code-Splitting Support:** Retains `'self'` alongside the entry script's SHA-384 hash. Vite splits large lazy-loaded features into dynamic ES module chunks (e.g. the lazy-loaded 880 KB icon catalog chunk `icons-[hash].js`). In modern browsers, dynamic `import()` statements cannot specify an SRI hash; if `'self'` were omitted, the browser rejects all dynamic chunk imports as unauthorized scripts. Retaining `'self'` ensures first-party compiled chunks execute while prohibiting untrusted third-party script hosts.
   - **No `eval`:** Omits `'unsafe-eval'`. The use of `eval()`, `new Function()`, and string-based timers is completely blocked. (Lit 3 uses compiled tagged template literals and natively complies with no-eval environments).
-  - **No Unsafe Inline:** Omits `'unsafe-inline'`. Only the hashed and SRI-verified `app-[hash].js` bundle can run.
+  - **No Unsafe Inline:** Omits `'unsafe-inline'`. Only the hashed and SRI-verified entry bundle and its same-origin dynamic module chunks can run.
 - **`style-src 'self'`:** Restricts stylesheets to local self-hosted bundles (`fonts-[hash].css`) and component Shadow DOM styles.
 - **`font-src 'self'`:** Restricts font files (`.woff2`) strictly to the same origin.
 - **`img-src 'self' data: https:`:** Allows local icons, base64 data URIs (< 4 KB Vite inlining), Yoto official icons, and arbitrary podcast cover art thumbnails loaded over secure TLS.

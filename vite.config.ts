@@ -15,7 +15,8 @@ import { load } from 'cheerio';
 /**
  * Custom build plugin to enforce RFC 016 CSP script-src hash pinning.
  * Computes the SHA-384 digest of entry script(s) and updates the <meta http-equiv="Content-Security-Policy">
- * tag in dist/index.html to replace `script-src ...` with `script-src 'sha384-<hash>'`.
+ * tag in dist/index.html to `script-src 'self' 'sha384-<hash>'`.
+ * Retaining 'self' allows Vite's dynamically imported ES module code-split chunks (such as the lazy-loaded icon catalog) to load and execute.
  */
 function cspHashInjectionPlugin(): Plugin {
   let outDir = 'dist';
@@ -60,11 +61,11 @@ function cspHashInjectionPlugin(): Plugin {
           const cspMeta = $('meta[http-equiv="Content-Security-Policy"]');
           if (cspMeta.length > 0) {
             let csp = cspMeta.attr('content') || '';
-            // Replace script-src directive with the computed hashes
-            csp = csp.replace(/script-src\s+[^;]+;?/, `script-src ${uniqueHashes};`);
+            // Replace script-src directive with 'self' and computed hashes
+            csp = csp.replace(/script-src\s+[^;]+;?/, `script-src 'self' ${uniqueHashes};`);
             cspMeta.attr('content', csp);
             writeFileSync(htmlPath, $.html(), 'utf-8');
-            console.log(`[cspHashInjectionPlugin] Injected CSP script-src hashes: ${uniqueHashes}`);
+            console.log(`[cspHashInjectionPlugin] Injected CSP script-src: 'self' ${uniqueHashes}`);
           }
         }
       } catch (err) {

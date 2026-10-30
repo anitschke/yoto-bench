@@ -29,4 +29,40 @@ describe("yb-icon-picker", () => {
     const tabs = el.shadowRoot?.querySelectorAll(".provider-tab");
     expect(tabs?.length).to.equal(4);
   });
+
+  it("loads catalog and renders icons in the grid", async () => {
+    const el = await fixture<YbIconPicker>(
+      html`<yb-icon-picker open></yb-icon-picker>`,
+    );
+    // Wait for async loadCatalog
+    while (el.shadowRoot?.querySelector(".empty-state")?.textContent?.includes("Loading")) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    await el.updateComplete;
+
+    const iconItems = el.shadowRoot?.querySelectorAll(".icon-item");
+    expect(iconItems?.length).to.be.greaterThan(0);
+  });
+
+  it("dispatches yb-icon-selected when an icon is clicked", async () => {
+    const el = await fixture<YbIconPicker>(
+      html`<yb-icon-picker open></yb-icon-picker>`,
+    );
+    while (el.shadowRoot?.querySelector(".empty-state")?.textContent?.includes("Loading")) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    await el.updateComplete;
+
+    let selectedIcon: unknown = null;
+    el.addEventListener("yb-icon-selected", ((e: CustomEvent) => {
+      selectedIcon = e.detail.icon;
+    }) as EventListener);
+
+    const firstIcon = el.shadowRoot?.querySelector<HTMLButtonElement>(".icon-item");
+    expect(firstIcon).to.exist;
+    firstIcon?.click();
+
+    expect(selectedIcon).to.not.be.null;
+    expect(el.open).to.be.false;
+  });
 });
