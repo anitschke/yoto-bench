@@ -3,8 +3,9 @@ import { customElement, state } from "lit/decorators.js";
 import { Router } from "@lit-labs/router";
 import { provide } from "@lit/context";
 import { authService, AuthStateChangedEvent } from "./api/auth.js";
-import { authContext } from "./context/index.js";
-import { AuthSession } from "./models/index.js";
+import { authContext, devicesContext } from "./context/index.js";
+import { AuthSession, Device } from "./models/index.js";
+import { yotoApi } from "./api/client.js";
 import "./widgets/index.js";
 import "./views/library-view.js";
 import "./views/card-view.js";
@@ -123,13 +124,30 @@ export class YbApp extends LitElement {
   @state()
   authSession: AuthSession | null = null;
 
+  @provide({ context: devicesContext })
+  @state()
+  devices: Device[] = [];
+
   @state() private isAuthenticated = false;
 
   private onAuthChanged = () => {
     const session = authService.getSession();
     this.authSession = session ? { ...session } : null;
     this.isAuthenticated = authService.isAuthenticated();
+    void this.loadDevices();
   };
+
+  private async loadDevices() {
+    if (this.isAuthenticated) {
+      try {
+        this.devices = await yotoApi.listDevices();
+      } catch {
+        // Handled in device view
+      }
+    } else {
+      this.devices = [];
+    }
+  }
 
   private router = new Router(this, [
     {
@@ -167,6 +185,7 @@ export class YbApp extends LitElement {
     super.connectedCallback();
     this.authSession = authService.getSession();
     this.isAuthenticated = authService.isAuthenticated();
+    void this.loadDevices();
     window.addEventListener(
       AuthStateChangedEvent.EVENT_NAME,
       this.onAuthChanged,
