@@ -91,8 +91,25 @@ describe("Icon Search Engine", () => {
     it("falls back to OR when AND intersection yields nothing", () => {
       const results = engine.search("orange dog");
       expect(results.length).to.be.greaterThan(0);
-      expect(results.some((r) => r.id === "cat_orange")).to.be.true;
-      expect(results.some((r) => r.id === "dog_golden")).to.be.true;
+      expect(results.some((r) => r.id === "cat_orange")).to.true;
+      expect(results.some((r) => r.id === "dog_golden")).to.true;
+    });
+
+    it("incrementally adds new icons and searches them", () => {
+      engine.addIcons([
+        {
+          id: "yoto_space_rocket",
+          provider: "yoto",
+          title: "Space Rocket",
+          path: "https://api.yotoplay.com/icons/rocket.png",
+          tags: ["space", "astronomy", "rocket", "fly"],
+        },
+      ]);
+
+      const results = engine.search("rocket");
+      expect(results.length).to.equal(1);
+      expect(results[0]?.id).to.equal("yoto_space_rocket");
+      expect(results[0]?.provider).to.equal("yoto");
     });
   });
 });

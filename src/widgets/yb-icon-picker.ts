@@ -11,6 +11,7 @@ import {
   IconCatalogData,
 } from "../services/icon-search.js";
 import { yotoApi } from "../api/client.js";
+import { authService } from "../api/auth.js";
 import "./yb-dialog.js";
 import "./yb-button.js";
 import "./yb-text-input.js";
@@ -154,13 +155,19 @@ export class YbIconPicker extends LitElement {
   @state()
   private customIcons: IconRecord[] = [];
 
+  private yotoIconsSynced = false;
+
   protected override async firstUpdated(): Promise<void> {
     await this.loadCatalog();
   }
 
   protected override updated(changedProps: PropertyValues): void {
-    if (changedProps.has("open") && this.open && !this.searchEngine) {
-      void this.loadCatalog();
+    if (changedProps.has("open") && this.open) {
+      if (!this.searchEngine) {
+        void this.loadCatalog();
+      } else {
+        void this.syncYotoIcons();
+      }
     }
   }
 
@@ -174,6 +181,7 @@ export class YbIconPicker extends LitElement {
       };
       const catalog = catalogModule.default || catalogModule;
       this.searchEngine = new IconSearchEngine(catalog);
+      void this.syncYotoIcons();
     } catch (err) {
       console.warn("Failed to load icon catalog:", err);
       // Fallback empty catalog
@@ -184,6 +192,57 @@ export class YbIconPicker extends LitElement {
       });
     } finally {
       this.loading = false;
+    }
+  }
+
+  /**
+   * Dynamically fetches official public and user display icons from the Yoto API
+   * when the user is authenticated, and indexes them into the active search engine.
+   * See: docs/rfcs/011-inverted-icon-index-and-search.md, docs/rfcs/013-yoto-official-icon-provider.md
+   */
+  private async syncYotoIcons(): Promise<void> {
+    if (this.yotoIconsSynced || !authService.isAuthenticated() || !authService.getSession()) return;
+    this.yotoIconsSynced = true;
+
+    try {
+      const [publicIcons, userIcons] = await Promise.all([
+        yotoApi.getPublicIcons().catch((err: unknown) => {
+          console.warn("Failed to fetch public Yoto icons:", err);
+          return [];
+        }),
+        yotoApi.getUserIcons().catch((err: unknown) => {
+          console.warn("Failed to fetch user Yoto icons:", err);
+          return [];
+        }),
+      ]);
+
+      const mappedPublic: IconRecord[] = publicIcons.map((icon) => ({
+        id: icon.displayIconId || icon.mediaId,
+        provider: "yoto",
+        title: icon.title || icon.displayIconId,
+        path: icon.url,
+        tags: icon.publicTags || [],
+        displayIconId: icon.displayIconId,
+        mediaId: icon.mediaId,
+      }));
+
+      const mappedUser: IconRecord[] = userIcons.map((icon) => ({
+        id: icon.displayIconId || icon.mediaId,
+        provider: "custom",
+        title: icon.title || icon.displayIconId,
+        path: icon.url,
+        tags: icon.publicTags || [],
+        displayIconId: icon.displayIconId,
+        mediaId: icon.mediaId,
+      }));
+
+      const combined = [...mappedPublic, ...mappedUser];
+      if (combined.length > 0 && this.searchEngine) {
+        this.searchEngine.addIcons(combined);
+        this.requestUpdate();
+      }
+    } catch (err) {
+      console.warn("Error syncing Yoto icons:", err);
     }
   }
 

@@ -3,6 +3,9 @@
 // See: AGENTS.md, docs/rfcs/011-inverted-icon-index-and-search.md, docs/rfcs/013-yoto-official-icon-provider.md
 // ==============================================================================
 
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 import { IconProvider, IconsSyncResult, RawIconItem } from "./types.js";
 
 export interface YotoMetadata {
@@ -72,6 +75,32 @@ export class YotoOfficialProvider implements IconProvider<YotoMetadata> {
       }
     } catch {
       // Offline or network error during sync/rebuild; gracefully proceed
+    }
+
+    // Seed fallback if API is unauthorized or offline and no icons known
+    if (newIcons.length === 0 && knownIds.size === 0) {
+      const seedDir = path.join(os.homedir(), ".cache/yotocli/icons/yoto");
+      if (fs.existsSync(seedDir)) {
+        const files = fs.readdirSync(seedDir);
+        for (const file of files) {
+          const imgPath = path.join(seedDir, file);
+          try {
+            const buffer = fs.readFileSync(imgPath);
+            newIcons.push({
+              id: file,
+              provider: this.name,
+              title: `Yoto Icon ${file.slice(0, 8)}`,
+              tags: ["yoto", "official"],
+              imageBytes: buffer,
+              mediaId: file,
+              displayIconId: file,
+            });
+            knownIds.add(file);
+          } catch {
+            // Skip invalid file
+          }
+        }
+      }
     }
 
     return {

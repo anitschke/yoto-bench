@@ -104,6 +104,37 @@ export class IconSearchEngine {
   }
 
   /**
+   * Adds newly fetched icon records to the in-memory catalog and incrementally
+   * updates the inverted search index without rebuilding the entire index.
+   */
+  public addIcons(newIcons: IconRecord[]): void {
+    const existingIds = new Set(this.catalog.icons.map((i) => i.id));
+    const toAdd = newIcons.filter((i) => !existingIds.has(i.id));
+    if (toAdd.length === 0) return;
+
+    for (const icon of toAdd) {
+      const idx = this.catalog.icons.length;
+      this.catalog.icons.push(icon);
+
+      const tokens = new Set<string>();
+      for (const t of tokenizeText(icon.title)) {
+        tokens.add(t);
+      }
+      for (const tag of icon.tags || []) {
+        for (const t of tokenizeText(tag)) {
+          tokens.add(t);
+        }
+      }
+      tokens.forEach((token) => {
+        if (!this.catalog.index[token]) {
+          this.catalog.index[token] = [];
+        }
+        this.catalog.index[token].push(idx);
+      });
+    }
+  }
+
+  /**
    * Searches the catalog using multi-word queries with AND intersection,
    * prefix matching, and title-relevance ranking.
    */

@@ -114,13 +114,29 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     );
     await expect(providerBadge).toHaveText("noto-emoji");
 
-    // Re-open and test Official Yoto tab (which currently has 0 pre-indexed icons)
+    // Re-open and test Official Yoto tab
     await page.locator('[data-testid="open-icon-picker-btn"]').click();
     const yotoTab = picker.locator(".provider-tab", {
       hasText: "Official Yoto",
     });
     await yotoTab.click();
     await expect(yotoTab).toHaveClass(/active/);
+    const yotoIconItems = picker.locator(".icon-item");
+    await expect(yotoIconItems.first()).toBeVisible();
+
+    // Select an official Yoto icon
+    await yotoIconItems.first().click();
+
+    // Selected icon provider in preview should be "yoto"
+    await expect(providerBadge).toHaveText("yoto");
+
+    // Re-open and verify Custom tab shows empty state initially
+    await page.locator('[data-testid="open-icon-picker-btn"]').click();
+    const customTab = picker.locator(".provider-tab", {
+      hasText: "Custom",
+    });
+    await customTab.click();
+    await expect(customTab).toHaveClass(/active/);
     await expect(picker.locator(".empty-state")).toContainText(
       "No matching icons found",
     );
