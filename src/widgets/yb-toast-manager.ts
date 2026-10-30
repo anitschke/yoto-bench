@@ -1,20 +1,20 @@
 import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ToastNotificationEvent, ToastOptions } from "./events.js";
-import "./yt-toast.js";
+import "./yb-toast.js";
 
 interface QueuedToast extends ToastOptions {
   id: string;
 }
 
 /**
- * <yt-toast-manager>
+ * <yb-toast-manager>
  * Top-level notification queue listener and renderer.
  * See: docs/rfcs/005-widgets-and-component-library.md
  *      docs/rfcs/006-error-handling-and-toast-notifications.md
  */
-@customElement("yt-toast-manager")
-export class YtToastManager extends LitElement {
+@customElement("yb-toast-manager")
+export class YbToastManager extends LitElement {
   static override styles = css`
     :host {
       position: fixed;
@@ -27,7 +27,7 @@ export class YtToastManager extends LitElement {
       pointer-events: none;
     }
 
-    yt-toast {
+    yb-toast {
       pointer-events: auto;
     }
   `;
@@ -95,7 +95,7 @@ export class YtToastManager extends LitElement {
       <div role="status" aria-live="polite">
         ${this.toasts.map(
           (t) => html`
-            <yt-toast
+            <yb-toast
               .message=${t.message}
               .type=${t.type || "info"}
               .actionLabel=${t.actionLabel || ""}
@@ -104,7 +104,7 @@ export class YtToastManager extends LitElement {
                 if (t.onAction) t.onAction();
                 this.dismiss(t.id);
               }}
-            ></yt-toast>
+            ></yb-toast>
           `,
         )}
       </div>
@@ -114,6 +114,6 @@ export class YtToastManager extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-toast-manager": YtToastManager;
+    "yb-toast-manager": YbToastManager;
   }
 }

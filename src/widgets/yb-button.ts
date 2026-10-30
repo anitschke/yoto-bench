@@ -5,12 +5,12 @@ export type ButtonVariant = "primary" | "secondary" | "subtle" | "danger";
 export type ButtonSize = "small" | "medium" | "large";
 
 /**
- * <yt-button>
+ * <yb-button>
  * Interactive button primitive with variants, sizes, loading spinners, and icon slots.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement("yt-button")
-export class YtButton extends LitElement {
+@customElement("yb-button")
+export class YbButton extends LitElement {
   static override styles = css`
     :host {
       display: inline-block;
@@ -24,13 +24,13 @@ export class YtButton extends LitElement {
       gap: 0.5rem;
       font-family: inherit;
       font-weight: 500;
-      border-radius: var(--yt-radius-md, 10px);
+      border-radius: var(--yb-radius-md, 10px);
       border: 1px solid transparent;
       cursor: pointer;
       transition:
-        background-color var(--yt-transition-fast, 150ms),
-        border-color var(--yt-transition-fast, 150ms),
-        box-shadow var(--yt-transition-fast, 150ms);
+        background-color var(--yb-transition-fast, 150ms),
+        border-color var(--yb-transition-fast, 150ms),
+        box-shadow var(--yb-transition-fast, 150ms);
       user-select: none;
       white-space: nowrap;
       width: 100%;
@@ -49,56 +49,56 @@ export class YtButton extends LitElement {
 
     /* Sizes */
     .size-small {
-      font-size: var(--yt-font-size-xs, 0.75rem);
+      font-size: var(--yb-font-size-xs, 0.75rem);
       padding: 0.25rem 0.5rem;
       min-height: 28px;
     }
 
     .size-medium {
-      font-size: var(--yt-font-size-sm, 0.875rem);
+      font-size: var(--yb-font-size-sm, 0.875rem);
       padding: 0.5rem 1rem;
       min-height: 38px;
     }
 
     .size-large {
-      font-size: var(--yt-font-size-md, 1rem);
+      font-size: var(--yb-font-size-md, 1rem);
       padding: 0.75rem 1.25rem;
       min-height: 46px;
     }
 
     /* Variants */
     .variant-primary {
-      background-color: var(--yt-color-primary, #ff5c35);
+      background-color: var(--yb-color-primary, #ff5c35);
       color: #ffffff;
     }
     .variant-primary:hover:not(:disabled) {
-      background-color: var(--yt-color-primary-hover, #e04b25);
+      background-color: var(--yb-color-primary-hover, #e04b25);
     }
 
     .variant-secondary {
-      background-color: var(--yt-color-surface, #ffffff);
-      color: var(--yt-color-text, #1a202c);
-      border-color: var(--yt-color-border, #e2e8f0);
+      background-color: var(--yb-color-surface, #ffffff);
+      color: var(--yb-color-text, #1a202c);
+      border-color: var(--yb-color-border, #e2e8f0);
     }
     .variant-secondary:hover:not(:disabled) {
-      background-color: var(--yt-color-surface-subtle, #f8f9fa);
+      background-color: var(--yb-color-surface-subtle, #f8f9fa);
       border-color: #cbd5e1;
     }
 
     .variant-subtle {
       background-color: transparent;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
     }
     .variant-subtle:hover:not(:disabled) {
       background-color: rgba(0, 0, 0, 0.05);
     }
 
     .variant-danger {
-      background-color: var(--yt-color-danger, #ef4444);
+      background-color: var(--yb-color-danger, #ef4444);
       color: #ffffff;
     }
     .variant-danger:hover:not(:disabled) {
-      background-color: var(--yt-color-danger-hover, #dc2626);
+      background-color: var(--yb-color-danger-hover, #dc2626);
     }
 
     /* Spinner */
@@ -145,6 +145,6 @@ export class YtButton extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-button": YtButton;
+    "yb-button": YbButton;
   }
 }

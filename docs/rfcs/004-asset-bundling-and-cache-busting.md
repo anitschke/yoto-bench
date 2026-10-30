@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal outlines the build pipeline, asset bundling architecture, content-addressable hashing strategy, and HTTP caching mechanics for `yoto-tools`. Building and asset fingerprinting execute inside GitHub Actions, producing static assets deployed with immutable HTTP cache headers.
+This proposal outlines the build pipeline, asset bundling architecture, content-addressable hashing strategy, and HTTP caching mechanics for `yoto-bench`. Building and asset fingerprinting execute inside GitHub Actions, producing static assets deployed with immutable HTTP cache headers.
 
 ---
 

@@ -2,12 +2,12 @@ import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 /**
- * <yt-text-input>
+ * <yb-text-input>
  * Encapsulated text and search input field with clear buttons and label.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement("yt-text-input")
-export class YtTextInput extends LitElement {
+@customElement("yb-text-input")
+export class YbTextInput extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -21,30 +21,30 @@ export class YtTextInput extends LitElement {
     }
 
     label {
-      font-size: var(--yt-font-size-sm, 0.875rem);
+      font-size: var(--yb-font-size-sm, 0.875rem);
       font-weight: 500;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
     }
 
     .input-container {
       display: flex;
       align-items: center;
-      background-color: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-md, 10px);
+      background-color: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 10px);
       padding: 0 0.75rem;
       transition:
-        border-color var(--yt-transition-fast, 150ms),
-        box-shadow var(--yt-transition-fast, 150ms);
+        border-color var(--yb-transition-fast, 150ms),
+        box-shadow var(--yb-transition-fast, 150ms);
     }
 
     .input-container:focus-within {
-      border-color: var(--yt-color-border-focus, #ff5c35);
+      border-color: var(--yb-color-border-focus, #ff5c35);
       box-shadow: 0 0 0 3px rgba(255, 92, 53, 0.15);
     }
 
     .input-container.error {
-      border-color: var(--yt-color-danger, #ef4444);
+      border-color: var(--yb-color-danger, #ef4444);
     }
 
     input {
@@ -52,22 +52,22 @@ export class YtTextInput extends LitElement {
       border: none;
       background: transparent;
       padding: 0.6rem 0;
-      font-size: var(--yt-font-size-sm, 0.875rem);
+      font-size: var(--yb-font-size-sm, 0.875rem);
       font-family: inherit;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
       outline: none;
       width: 100%;
     }
 
     input::placeholder {
-      color: var(--yt-color-text-muted, #718096);
+      color: var(--yb-color-text-muted, #718096);
     }
 
     .clear-btn {
       background: none;
       border: none;
       cursor: pointer;
-      color: var(--yt-color-text-muted, #718096);
+      color: var(--yb-color-text-muted, #718096);
       font-size: 1rem;
       padding: 0 0.25rem;
       display: flex;
@@ -76,12 +76,12 @@ export class YtTextInput extends LitElement {
     }
 
     .clear-btn:hover {
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
     }
 
     .error-msg {
-      font-size: var(--yt-font-size-xs, 0.75rem);
-      color: var(--yt-color-danger, #ef4444);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      color: var(--yb-color-danger, #ef4444);
     }
   `;
 
@@ -94,7 +94,7 @@ export class YtTextInput extends LitElement {
   @property({ type: String }) error = "";
   @property({ type: String, attribute: "aria-label" }) accessibleLabel = "";
 
-  private inputId = `yt-input-${Math.random().toString(36).substring(2, 9)}`;
+  private inputId = `yb-input-${Math.random().toString(36).substring(2, 9)}`;
 
   private onInput(e: Event) {
     const input = e.target as HTMLInputElement;
@@ -178,6 +178,6 @@ export class YtTextInput extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-text-input": YtTextInput;
+    "yb-text-input": YbTextInput;
   }
 }

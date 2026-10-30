@@ -6,25 +6,25 @@ import { yotoApi } from "../api/client.js";
 import { authContext } from "../context/index.js";
 import { AuthSession, Card } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
-import "../widgets/yt-button.js";
-import "../widgets/yt-badge.js";
-import "../widgets/yt-pixel-icon.js";
-import "../widgets/yt-text-input.js";
-import "../widgets/yt-please-sign-in.js";
+import "../widgets/yb-button.js";
+import "../widgets/yb-badge.js";
+import "../widgets/yb-pixel-icon.js";
+import "../widgets/yb-text-input.js";
+import "../widgets/yb-please-sign-in.js";
 
-@customElement("yt-card-view")
-export class YtCardView extends LitElement {
+@customElement("yb-card-view")
+export class YbCardView extends LitElement {
   static override styles = css`
     :host {
       display: block;
     }
 
     .card-editor {
-      background: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-lg, 16px);
+      background: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-lg, 16px);
       padding: 2rem;
-      box-shadow: var(--yt-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+      box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
     }
 
     .header-row {
@@ -37,7 +37,7 @@ export class YtCardView extends LitElement {
 
     h2 {
       margin: 0;
-      font-size: var(--yt-font-size-2xl, 1.5rem);
+      font-size: var(--yb-font-size-2xl, 1.5rem);
     }
 
     .track-list {
@@ -52,9 +52,9 @@ export class YtCardView extends LitElement {
       align-items: center;
       gap: 1rem;
       padding: 0.75rem 1rem;
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-md, 10px);
-      background: var(--yt-color-surface-subtle, #f8f9fa);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 10px);
+      background: var(--yb-color-surface-subtle, #f8f9fa);
     }
 
     .track-title {
@@ -65,7 +65,7 @@ export class YtCardView extends LitElement {
     .empty-state {
       text-align: center;
       padding: 3rem 1rem;
-      color: var(--yt-color-text-muted, #718096);
+      color: var(--yb-color-text-muted, #718096);
     }
   `;
 
@@ -115,10 +115,10 @@ export class YtCardView extends LitElement {
     const isAuthed = !!this.authSession && authService.isAuthenticated();
     if (!isAuthed) {
       return html`
-        <yt-please-sign-in
+        <yb-please-sign-in
           heading="Please Sign In"
           description="Sign in with your Yoto account to view and edit this card."
-        ></yt-please-sign-in>
+        ></yb-please-sign-in>
       `;
     }
 
@@ -137,11 +137,11 @@ export class YtCardView extends LitElement {
         <div class="header-row">
           <div>
             <h2>${this.card.title}</h2>
-            <small style="color: var(--yt-color-text-muted, #718096);"
+            <small style="color: var(--yb-color-text-muted, #718096);"
               >ID: ${this.card.cardId}</small
             >
           </div>
-          <yt-button
+          <yb-button
             variant="secondary"
             @click=${() => {
               window.history.pushState(null, "", "/");
@@ -149,7 +149,7 @@ export class YtCardView extends LitElement {
             }}
           >
             ← Back to Library
-          </yt-button>
+          </yb-button>
         </div>
 
         <h3>Tracks (${chapters.length})</h3>
@@ -160,11 +160,11 @@ export class YtCardView extends LitElement {
                 <span style="font-weight: 600; min-width: 24px;"
                   >${index + 1}</span
                 >
-                <yt-pixel-icon
+                <yb-pixel-icon
                   src=${chap.display?.icon16x16 || ""}
                   alt=${chap.title}
                   size="sm"
-                ></yt-pixel-icon>
+                ></yb-pixel-icon>
                 <div class="track-title">${chap.title}</div>
                 ${chap.duration ? html`<small>${Math.floor(chap.duration)}s</small>` : ""}
               </div>
@@ -178,6 +178,6 @@ export class YtCardView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-card-view": YtCardView;
+    "yb-card-view": YbCardView;
   }
 }

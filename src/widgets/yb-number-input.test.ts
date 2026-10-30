@@ -1,28 +1,28 @@
 import { html, fixture, expect, oneEvent } from "@open-wc/testing";
-import { YtNumberInput } from "./yt-number-input.js";
-import "./yt-number-input.js";
+import { YbNumberInput } from "./yb-number-input.js";
+import "./yb-number-input.js";
 
-describe("YtNumberInput", () => {
+describe("YbNumberInput", () => {
   it("renders initial value and stepper buttons", async () => {
-    const el = await fixture<YtNumberInput>(
-      html`<yt-number-input
+    const el = await fixture<YbNumberInput>(
+      html`<yb-number-input
         label="Episode Count"
         .value=${5}
         .min=${1}
         .max=${20}
-      ></yt-number-input>`,
+      ></yb-number-input>`,
     );
     const input = el.shadowRoot!.querySelector("input")!;
     expect(input.value).to.equal("5");
   });
 
   it("increments and decrements on button click", async () => {
-    const el = await fixture<YtNumberInput>(
-      html`<yt-number-input
+    const el = await fixture<YbNumberInput>(
+      html`<yb-number-input
         .value=${5}
         .min=${1}
         .max=${10}
-      ></yt-number-input>`,
+      ></yb-number-input>`,
     );
     const buttons = el.shadowRoot!.querySelectorAll("button");
     const decBtn = buttons[0]!;
@@ -38,20 +38,20 @@ describe("YtNumberInput", () => {
   });
 
   it("enforces min and max bounds", async () => {
-    const el = await fixture<YtNumberInput>(
-      html`<yt-number-input
+    const el = await fixture<YbNumberInput>(
+      html`<yb-number-input
         .value=${10}
         .min=${0}
         .max=${10}
-      ></yt-number-input>`,
+      ></yb-number-input>`,
     );
     const incBtn = el.shadowRoot!.querySelectorAll("button")[1]!;
     expect(incBtn.hasAttribute("disabled")).to.be.true;
   });
 
   it("is accessible", async () => {
-    const el = await fixture<YtNumberInput>(
-      html`<yt-number-input label="Episodes" .value=${5}></yt-number-input>`,
+    const el = await fixture<YbNumberInput>(
+      html`<yb-number-input label="Episodes" .value=${5}></yb-number-input>`,
     );
     await expect(el).to.be.accessible();
   });

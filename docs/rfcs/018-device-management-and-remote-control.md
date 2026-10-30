@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal defines the user interface and architecture for managing Yoto player devices within `yoto-tools`. It specifies the `/device` route for viewing all registered Yoto players and `/device?id=<deviceId>` for inspecting real-time telemetry (battery percentage, charging status indicator, volume, firmware version, and currently playing card) and controlling playback (playing cards, pausing, and stopping audio) directly over AWS IoT MQTT WebSockets.
+This proposal defines the user interface and architecture for managing Yoto player devices within `yoto-bench`. It specifies the `/device` route for viewing all registered Yoto players and `/device?id=<deviceId>` for inspecting real-time telemetry (battery percentage, charging status indicator, volume, firmware version, and currently playing card) and controlling playback (playing cards, pausing, and stopping audio) directly over AWS IoT MQTT WebSockets.
 
 ---
 

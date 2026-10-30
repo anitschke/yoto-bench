@@ -2,12 +2,12 @@ import { LitElement, html, css } from "lit";
 import { customElement, property } from "lit/decorators.js";
 
 /**
- * <yt-number-input>
+ * <yb-number-input>
  * Numeric input with stepper buttons and min/max clamping.
  * See: docs/rfcs/005-widgets-and-component-library.md
  */
-@customElement("yt-number-input")
-export class YtNumberInput extends LitElement {
+@customElement("yb-number-input")
+export class YbNumberInput extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -21,39 +21,39 @@ export class YtNumberInput extends LitElement {
     }
 
     label {
-      font-size: var(--yt-font-size-sm, 0.875rem);
+      font-size: var(--yb-font-size-sm, 0.875rem);
       font-weight: 500;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
     }
 
     .stepper-container {
       display: inline-flex;
       align-items: center;
-      background-color: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-md, 10px);
+      background-color: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 10px);
       overflow: hidden;
       width: 100%;
       max-width: 180px;
     }
 
     .stepper-container:focus-within {
-      border-color: var(--yt-color-border-focus, #ff5c35);
+      border-color: var(--yb-color-border-focus, #ff5c35);
       box-shadow: 0 0 0 3px rgba(255, 92, 53, 0.15);
     }
 
     button {
-      background-color: var(--yt-color-surface-subtle, #f8f9fa);
+      background-color: var(--yb-color-surface-subtle, #f8f9fa);
       border: none;
       width: 38px;
       height: 38px;
       font-size: 1.1rem;
       cursor: pointer;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background-color var(--yt-transition-fast, 150ms);
+      transition: background-color var(--yb-transition-fast, 150ms);
     }
 
     button:hover:not(:disabled) {
@@ -70,9 +70,9 @@ export class YtNumberInput extends LitElement {
       border: none;
       background: transparent;
       text-align: center;
-      font-size: var(--yt-font-size-sm, 0.875rem);
+      font-size: var(--yb-font-size-sm, 0.875rem);
       font-family: inherit;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
       outline: none;
       -moz-appearance: textfield;
       width: 40px;
@@ -93,7 +93,7 @@ export class YtNumberInput extends LitElement {
   @property({ type: Boolean }) disabled = false;
   @property({ type: String, attribute: "aria-label" }) accessibleLabel = "";
 
-  private inputId = `yt-number-${Math.random().toString(36).substring(2, 9)}`;
+  private inputId = `yb-number-${Math.random().toString(36).substring(2, 9)}`;
 
   private updateValue(val: number) {
     const clamped = Math.max(this.min, Math.min(this.max, val));
@@ -165,6 +165,6 @@ export class YtNumberInput extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-number-input": YtNumberInput;
+    "yb-number-input": YbNumberInput;
   }
 }

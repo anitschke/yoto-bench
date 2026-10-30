@@ -23,7 +23,7 @@ When a client-side web application attempts to ingest a podcast:
    - RSS feed publishers (e.g., `feeds.wgbh.org`, NPR, Substack, custom WordPress sites) typically host XML files as static assets on S3, Apache, or Nginx **without** CORS headers.
    - Any direct browser request (`fetch("https://feeds.wgbh.org/2469/feed-rss.xml")`) fails immediately due to browser security checks:
      ```
-     Access to fetch at 'https://feeds.wgbh.org/...' from origin 'https://yoto-tools.netlify.app'
+     Access to fetch at 'https://feeds.wgbh.org/...' from origin 'https://yoto-bench.netlify.app'
      has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present.
      ```
 

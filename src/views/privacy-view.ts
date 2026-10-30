@@ -1,9 +1,9 @@
 import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import "../widgets/yt-button.js";
+import "../widgets/yb-button.js";
 
-@customElement("yt-privacy-view")
-export class YtPrivacyView extends LitElement {
+@customElement("yb-privacy-view")
+export class YbPrivacyView extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -12,35 +12,35 @@ export class YtPrivacyView extends LitElement {
     }
 
     .container {
-      background: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-lg, 16px);
+      background: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-lg, 16px);
       padding: 2.5rem;
-      box-shadow: var(--yt-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+      box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
     }
 
     h2 {
       margin-top: 0;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
     }
 
     h3 {
       margin-top: 1.5rem;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
     }
 
     p,
     li {
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
       line-height: 1.6;
     }
 
     .toggle-box {
       margin: 2rem 0;
       padding: 1.5rem;
-      background: var(--yt-color-surface-subtle, #f8f9fa);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-md, 10px);
+      background: var(--yb-color-surface-subtle, #f8f9fa);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 10px);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -70,7 +70,7 @@ export class YtPrivacyView extends LitElement {
       <div class="container">
         <h2>Privacy & Transparency Policy</h2>
         <p>
-          <strong>yoto-tools</strong> is a 100% client-side application. We run
+          <strong>YotoBench</strong> is a 100% client-side application. We run
           directly inside your web browser and never send your tokens, audio
           files, or account credentials to any intermediary server.
         </p>
@@ -79,18 +79,18 @@ export class YtPrivacyView extends LitElement {
           <div>
             <strong>Anonymous Usage Telemetry</strong>
             <p
-              style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--yt-color-text-muted, #718096);"
+              style="margin: 0.25rem 0 0; font-size: 0.875rem; color: var(--yb-color-text-muted, #718096);"
             >
               Status:
               ${this.telemetryEnabled ? "Active (Cookieless)" : "Opted Out / Disabled"}
             </p>
           </div>
-          <yt-button
+          <yb-button
             variant=${this.telemetryEnabled ? "danger" : "primary"}
             @click=${this.toggleTelemetry}
           >
             ${this.telemetryEnabled ? "Disable Telemetry" : "Enable Telemetry"}
-          </yt-button>
+          </yb-button>
         </div>
 
         <h3>1. Direct Browser-to-Yoto Communication</h3>
@@ -153,6 +153,6 @@ export class YtPrivacyView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-privacy-view": YtPrivacyView;
+    "yb-privacy-view": YbPrivacyView;
   }
 }

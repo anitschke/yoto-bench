@@ -1,14 +1,14 @@
 import { html, fixture, expect, oneEvent } from "@open-wc/testing";
-import { YtTextInput } from "./yt-text-input.js";
-import "./yt-text-input.js";
+import { YbTextInput } from "./yb-text-input.js";
+import "./yb-text-input.js";
 
-describe("YtTextInput", () => {
+describe("YbTextInput", () => {
   it("renders input with label and placeholder", async () => {
-    const el = await fixture<YtTextInput>(
-      html`<yt-text-input
+    const el = await fixture<YbTextInput>(
+      html`<yb-text-input
         label="Search Feed"
         placeholder="https://..."
-      ></yt-text-input>`,
+      ></yb-text-input>`,
     );
     const label = el.shadowRoot!.querySelector("label");
     expect(label).to.exist;
@@ -18,8 +18,8 @@ describe("YtTextInput", () => {
   });
 
   it("dispatches input event on typing", async () => {
-    const el = await fixture<YtTextInput>(
-      html`<yt-text-input></yt-text-input>`,
+    const el = await fixture<YbTextInput>(
+      html`<yb-text-input></yb-text-input>`,
     );
     const input = el.shadowRoot!.querySelector("input")!;
     input.value = "Hello Yoto";
@@ -31,8 +31,8 @@ describe("YtTextInput", () => {
   });
 
   it("clears value when clear button is clicked", async () => {
-    const el = await fixture<YtTextInput>(
-      html`<yt-text-input clearable value="Initial"></yt-text-input>`,
+    const el = await fixture<YbTextInput>(
+      html`<yb-text-input clearable value="Initial"></yb-text-input>`,
     );
     const clearBtn = el.shadowRoot!.querySelector(
       ".clear-btn",
@@ -45,11 +45,11 @@ describe("YtTextInput", () => {
   });
 
   it("is accessible", async () => {
-    const el = await fixture<YtTextInput>(
-      html`<yt-text-input
+    const el = await fixture<YbTextInput>(
+      html`<yb-text-input
         label="Card Name"
         value="Bedtime Stories"
-      ></yt-text-input>`,
+      ></yb-text-input>`,
     );
     await expect(el).to.be.accessible();
   });

@@ -13,7 +13,7 @@ export interface ToastOptions {
 }
 
 export class ToastNotificationEvent extends CustomEvent<ToastOptions> {
-  static readonly EVENT_NAME = "yt-toast";
+  static readonly EVENT_NAME = "yb-toast";
   constructor(options: ToastOptions) {
     super(ToastNotificationEvent.EVENT_NAME, {
       bubbles: true,

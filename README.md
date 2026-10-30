@@ -1,8 +1,8 @@
-# Yoto Tools (`yoto-tools`)
+# YotoBench (`yoto-bench`)
 
 A modern, responsive, client-side web application built with [Lit](https://lit.dev/) custom elements and `@lit-labs/router` for managing your [Yoto Player](https://yotoplay.com/) library directly in the browser.
 
-`yoto-tools` brings the power and precision of [`yotocli`](https://github.com/vgaro/yotocli) to anyone with a web browser—with zero installation, zero server infrastructure costs, and complete privacy.
+`YotoBench` brings the power and precision of [`yotocli`](https://github.com/vgaro/yotocli) to anyone with a web browser—with zero installation, zero server infrastructure costs, and complete privacy.
 
 ---
 
@@ -21,11 +21,11 @@ A modern, responsive, client-side web application built with [Lit](https://lit.d
    - Subresource Integrity (SRI) on all compiled bundles (`integrity="sha384-..."`).
 4. **Reactive State & Event-Driven UX:**
    - Powered by `@lit/context` and `@lit-labs/router` for persistent live WebSockets and uninterrupted background transfers.
-   - Decoupled toast notifications via bubbling custom DOM events (`<yt-toast-manager>`).
-5. **Standardized Reusable Widgets (`yt-` Prefix):**
-   - Design system (`src/widgets/`) built with Lit custom elements (`<yt-button>`, `<yt-dialog>`, `<yt-dropdown>`, `<yt-pixel-icon>`) and scoped CSS tokens (`--yt-*`).
+   - Decoupled toast notifications via bubbling custom DOM events (`<yb-toast-manager>`).
+5. **Standardized Reusable Widgets (`yb-` Prefix):**
+   - Design system (`src/widgets/`) built with Lit custom elements (`<yb-button>`, `<yb-dialog>`, `<yb-dropdown>`, `<yb-pixel-icon>`) and scoped CSS tokens (`--yb-*`).
    - Self-hosted **Roboto** typography in WOFF2 bundles for offline speed and readability.
-   - `<yt-pixel-icon>` standardizes 16×16 icon rendering using standard `<img>` tags with `image-rendering: pixelated` on a display contrast canvas.
+   - `<yb-pixel-icon>` standardizes 16×16 icon rendering using standard `<img>` tags with `image-rendering: pixelated` on a display contrast canvas.
 6. **Practical Persistence & Privacy:**
    - Session & metadata stored simply in `localStorage`.
    - Large audio uploads and ZIP extractions streamed through the browser's Origin Private File System (OPFS).
@@ -109,3 +109,4 @@ A modern, responsive, client-side web application built with [Lit](https://lit.d
   - [RFC 018: Device Management, Status Monitoring, & Card Playback Remote Control](docs/rfcs/018-device-management-and-remote-control.md)
   - [RFC 019: Secrets Management, CI/CD Credentials, & Client-Side Token Security](docs/rfcs/019-secrets-management-and-ci-cd-credentials.md)
   - [RFC 020: Pre-Implementation Maintainer Manual Setup Checklist](docs/rfcs/020-pre-implementation-manual-setup-checklist.md)
+  - [RFC 021: Project Rebranding & Naming Strategy](docs/rfcs/021-project-rebranding-and-naming-strategy.md)

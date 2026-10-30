@@ -6,15 +6,15 @@ import { yotoApi } from "../api/client.js";
 import { authContext } from "../context/index.js";
 import { AuthSession, Card } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
-import "../widgets/yt-button.js";
-import "../widgets/yt-badge.js";
-import "../widgets/yt-pixel-icon.js";
-import "../widgets/yt-dialog.js";
-import "../widgets/yt-text-input.js";
-import "../widgets/yt-please-sign-in.js";
+import "../widgets/yb-button.js";
+import "../widgets/yb-badge.js";
+import "../widgets/yb-pixel-icon.js";
+import "../widgets/yb-dialog.js";
+import "../widgets/yb-text-input.js";
+import "../widgets/yb-please-sign-in.js";
 
-@customElement("yt-library-view")
-export class YtLibraryView extends LitElement {
+@customElement("yb-library-view")
+export class YbLibraryView extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -31,8 +31,8 @@ export class YtLibraryView extends LitElement {
 
     h2 {
       margin: 0;
-      font-size: var(--yt-font-size-2xl, 1.5rem);
-      color: var(--yt-color-text, #1a202c);
+      font-size: var(--yb-font-size-2xl, 1.5rem);
+      color: var(--yb-color-text, #1a202c);
     }
 
     .search-filter {
@@ -47,21 +47,21 @@ export class YtLibraryView extends LitElement {
     }
 
     .card-item {
-      background: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-lg, 16px);
+      background: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-lg, 16px);
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
-      box-shadow: var(--yt-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+      box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
       transition:
-        box-shadow var(--yt-transition-fast, 150ms),
-        transform var(--yt-transition-fast, 150ms);
+        box-shadow var(--yb-transition-fast, 150ms),
+        transform var(--yb-transition-fast, 150ms);
     }
 
     .card-item:hover {
-      box-shadow: var(--yt-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+      box-shadow: var(--yb-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
       transform: translateY(-2px);
     }
 
@@ -72,18 +72,18 @@ export class YtLibraryView extends LitElement {
     }
 
     .card-title {
-      font-size: var(--yt-font-size-md, 1rem);
+      font-size: var(--yb-font-size-md, 1rem);
       font-weight: 600;
       margin: 0;
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .card-meta {
-      font-size: var(--yt-font-size-xs, 0.75rem);
-      color: var(--yt-color-text-muted, #718096);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      color: var(--yb-color-text-muted, #718096);
     }
 
     .card-actions {
@@ -93,13 +93,13 @@ export class YtLibraryView extends LitElement {
       gap: 0.5rem;
       margin-top: auto;
       padding-top: 0.75rem;
-      border-top: 1px solid var(--yt-color-border, #e2e8f0);
+      border-top: 1px solid var(--yb-color-border, #e2e8f0);
     }
 
     .empty-state {
       text-align: center;
       padding: 4rem 1rem;
-      color: var(--yt-color-text-muted, #718096);
+      color: var(--yb-color-text-muted, #718096);
     }
   `;
 
@@ -152,10 +152,10 @@ export class YtLibraryView extends LitElement {
     const isAuthed = !!this.authSession && authService.isAuthenticated();
     if (!isAuthed) {
       return html`
-        <yt-please-sign-in
+        <yb-please-sign-in
           heading="Please Sign In"
           description="Sign in with your Yoto account to access your cards and library."
-        ></yt-please-sign-in>
+        ></yb-please-sign-in>
       `;
     }
 
@@ -174,11 +174,11 @@ export class YtLibraryView extends LitElement {
             <h2>My Cards (${this.cards.length})</h2>
           </div>
           <div class="search-filter">
-            <yt-text-input
+            <yb-text-input
               placeholder="Search cards..."
               clearable
               @input=${this.onSearch}
-            ></yt-text-input>
+            ></yb-text-input>
           </div>
         </div>
 
@@ -197,11 +197,11 @@ export class YtLibraryView extends LitElement {
                     return html`
                       <div class="card-item">
                         <div class="card-top">
-                          <yt-pixel-icon
+                          <yb-pixel-icon
                             src=${iconUrl}
                             alt=${card.title}
                             size="md"
-                          ></yt-pixel-icon>
+                          ></yb-pixel-icon>
                           <div style="flex: 1; min-width: 0;">
                             <h4 class="card-title">${card.title}</h4>
                             <span class="card-meta"
@@ -211,7 +211,7 @@ export class YtLibraryView extends LitElement {
                           </div>
                         </div>
                         <div class="card-actions">
-                          <yt-button
+                          <yb-button
                             variant="subtle"
                             size="small"
                             @click=${() => {
@@ -226,7 +226,7 @@ export class YtLibraryView extends LitElement {
                             }}
                           >
                             Edit
-                          </yt-button>
+                          </yb-button>
                         </div>
                       </div>
                     `;
@@ -241,6 +241,6 @@ export class YtLibraryView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-library-view": YtLibraryView;
+    "yb-library-view": YbLibraryView;
   }
 }

@@ -2,10 +2,10 @@ import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { authService } from "../api/auth.js";
 import { dispatchToast } from "../widgets/events.js";
-import "../widgets/yt-button.js";
+import "../widgets/yb-button.js";
 
-@customElement("yt-callback-view")
-export class YtCallbackView extends LitElement {
+@customElement("yb-callback-view")
+export class YbCallbackView extends LitElement {
   static override styles = css`
     :host {
       display: flex;
@@ -16,19 +16,19 @@ export class YtCallbackView extends LitElement {
     }
 
     .box {
-      background: var(--yt-color-surface, #ffffff);
-      border: 1px solid var(--yt-color-border, #e2e8f0);
-      border-radius: var(--yt-radius-lg, 16px);
+      background: var(--yb-color-surface, #ffffff);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-lg, 16px);
       padding: 3rem 2rem;
       max-width: 440px;
       width: 100%;
-      box-shadow: var(--yt-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+      box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
     }
 
     .spinner {
       width: 32px;
       height: 32px;
-      border: 3px solid var(--yt-color-primary, #ff5c35);
+      border: 3px solid var(--yb-color-primary, #ff5c35);
       border-right-color: transparent;
       border-radius: 50%;
       animation: spin 750ms linear infinite;
@@ -80,9 +80,9 @@ export class YtCallbackView extends LitElement {
     if (this.error) {
       return html`
         <div class="box">
-          <h3 style="color: var(--yt-color-danger, #ef4444);">Login Failed</h3>
+          <h3 style="color: var(--yb-color-danger, #ef4444);">Login Failed</h3>
           <p>${this.error}</p>
-          <yt-button
+          <yb-button
             variant="primary"
             @click=${() => {
               window.history.pushState(null, "", "/");
@@ -90,7 +90,7 @@ export class YtCallbackView extends LitElement {
             }}
           >
             Return Home
-          </yt-button>
+          </yb-button>
         </div>
       `;
     }
@@ -107,6 +107,6 @@ export class YtCallbackView extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-callback-view": YtCallbackView;
+    "yb-callback-view": YbCallbackView;
   }
 }

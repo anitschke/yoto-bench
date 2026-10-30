@@ -2,7 +2,7 @@ import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { Router } from "@lit-labs/router";
 import { provide } from "@lit/context";
-import { authService } from "./api/auth.js";
+import { authService, AuthStateChangedEvent } from "./api/auth.js";
 import { authContext } from "./context/index.js";
 import { AuthSession } from "./models/index.js";
 import "./widgets/index.js";
@@ -13,12 +13,13 @@ import "./views/privacy-view.js";
 import "./views/callback-view.js";
 
 /**
- * <yt-app>
+ * <yb-app>
  * Root Single-Page Application shell with @lit-labs/router navigation.
  * See: docs/rfcs/003-client-spa-and-routing-strategy.md
+ *      docs/rfcs/021-project-rebranding-and-naming-strategy.md
  */
-@customElement("yt-app")
-export class YtApp extends LitElement {
+@customElement("yb-app")
+export class YbApp extends LitElement {
   static override styles = css`
     :host {
       display: block;
@@ -28,8 +29,8 @@ export class YtApp extends LitElement {
     }
 
     header {
-      background: var(--yt-color-surface, #ffffff);
-      border-bottom: 1px solid var(--yt-color-border, #e2e8f0);
+      background: var(--yb-color-surface, #ffffff);
+      border-bottom: 1px solid var(--yb-color-border, #e2e8f0);
       padding: 0.75rem 2rem;
       display: flex;
       align-items: center;
@@ -42,7 +43,7 @@ export class YtApp extends LitElement {
       gap: 0.75rem;
       font-size: 1.25rem;
       font-weight: 700;
-      color: var(--yt-color-primary, #ff5c35);
+      color: var(--yb-color-primary, #ff5c35);
       cursor: pointer;
       text-decoration: none;
     }
@@ -54,17 +55,17 @@ export class YtApp extends LitElement {
     }
 
     nav a {
-      color: var(--yt-color-text, #1a202c);
+      color: var(--yb-color-text, #1a202c);
       text-decoration: none;
       font-weight: 500;
-      font-size: var(--yt-font-size-sm, 0.875rem);
+      font-size: var(--yb-font-size-sm, 0.875rem);
       padding: 0.4rem 0.6rem;
-      border-radius: var(--yt-radius-sm, 6px);
-      transition: background-color var(--yt-transition-fast, 150ms);
+      border-radius: var(--yb-radius-sm, 6px);
+      transition: background-color var(--yb-transition-fast, 150ms);
     }
 
     nav a:hover {
-      background-color: var(--yt-color-surface-subtle, #f8f9fa);
+      background-color: var(--yb-color-surface-subtle, #f8f9fa);
     }
 
     .auth-section {
@@ -83,16 +84,16 @@ export class YtApp extends LitElement {
     }
 
     footer {
-      background: var(--yt-color-surface, #ffffff);
-      border-top: 1px solid var(--yt-color-border, #e2e8f0);
+      background: var(--yb-color-surface, #ffffff);
+      border-top: 1px solid var(--yb-color-border, #e2e8f0);
       padding: 1.5rem 2rem;
       text-align: center;
-      font-size: var(--yt-font-size-xs, 0.75rem);
-      color: var(--yt-color-text-muted, #718096);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      color: var(--yb-color-text-muted, #718096);
     }
 
     footer a {
-      color: var(--yt-color-primary, #ff5c35);
+      color: var(--yb-color-primary, #ff5c35);
       text-decoration: none;
     }
   `;
@@ -112,24 +113,24 @@ export class YtApp extends LitElement {
   private router = new Router(this, [
     {
       path: "/",
-      render: () => html`<yt-library-view></yt-library-view>`,
+      render: () => html`<yb-library-view></yb-library-view>`,
     },
     {
       path: "/cards/:id",
       render: ({ id }) =>
-        html`<yt-card-view .cardId=${id || ""}></yt-card-view>`,
+        html`<yb-card-view .cardId=${id || ""}></yb-card-view>`,
     },
     {
       path: "/device",
-      render: () => html`<yt-device-view></yt-device-view>`,
+      render: () => html`<yb-device-view></yb-device-view>`,
     },
     {
       path: "/privacy",
-      render: () => html`<yt-privacy-view></yt-privacy-view>`,
+      render: () => html`<yb-privacy-view></yb-privacy-view>`,
     },
     {
       path: "/callback",
-      render: () => html`<yt-callback-view></yt-callback-view>`,
+      render: () => html`<yb-callback-view></yb-callback-view>`,
     },
   ]);
 
@@ -137,7 +138,10 @@ export class YtApp extends LitElement {
     super.connectedCallback();
     this.authSession = authService.getSession();
     this.isAuthenticated = authService.isAuthenticated();
-    window.addEventListener("yt-auth-changed", this.onAuthChanged);
+    window.addEventListener(
+      AuthStateChangedEvent.EVENT_NAME,
+      this.onAuthChanged,
+    );
     window.addEventListener("popstate", this.onAuthChanged);
 
     // If access token is expired on startup but refresh token is present, renew silently
@@ -152,7 +156,10 @@ export class YtApp extends LitElement {
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    window.removeEventListener("yt-auth-changed", this.onAuthChanged);
+    window.removeEventListener(
+      AuthStateChangedEvent.EVENT_NAME,
+      this.onAuthChanged,
+    );
     window.removeEventListener("popstate", this.onAuthChanged);
   }
 
@@ -181,7 +188,7 @@ export class YtApp extends LitElement {
     return html`
       <header>
         <a class="brand" href="/" @click=${(e: Event) => this.navigate("/", e)}>
-          <span>🎵 Yoto Tools</span>
+          <span>🎵 YotoBench</span>
         </a>
         <nav>
           <a href="/" @click=${(e: Event) => this.navigate("/", e)}>Cards</a>
@@ -195,13 +202,13 @@ export class YtApp extends LitElement {
           >
         </nav>
         <div class="auth-section">
-          <yt-button
+          <yb-button
             variant=${this.isAuthenticated ? "secondary" : "primary"}
             size="small"
             @click=${this.handleLoginLogout}
           >
             ${this.isAuthenticated ? "Sign Out" : "Sign In"}
-          </yt-button>
+          </yb-button>
         </div>
       </header>
 
@@ -209,7 +216,7 @@ export class YtApp extends LitElement {
 
       <footer>
         <p>
-          Yoto Tools — A modern web client for Yoto Players.
+          YotoBench — A modern web client for Yoto Players.
           <a
             href="/privacy"
             @click=${(e: Event) => this.navigate("/privacy", e)}
@@ -219,13 +226,13 @@ export class YtApp extends LitElement {
       </footer>
 
       <!-- Global Toast Queue Manager per RFC 006 -->
-      <yt-toast-manager></yt-toast-manager>
+      <yb-toast-manager></yb-toast-manager>
     `;
   }
 }
 
 declare global {
   interface HTMLElementTagNameMap {
-    "yt-app": YtApp;
+    "yb-app": YbApp;
   }
 }

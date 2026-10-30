@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal establishes a defense-in-depth security posture for `yoto-tools` by implementing a strict **Content Security Policy (CSP)** delivered via an HTML `<meta>` tag and enforcing **Subresource Integrity (SRI)** on compiled JavaScript and CSS assets. It explicitly prohibits `eval`, restricts external connections to approved Yoto and AWS endpoints, and binds asset loading directly to cryptographic hashes.
+This proposal establishes a defense-in-depth security posture for `yoto-bench` by implementing a strict **Content Security Policy (CSP)** delivered via an HTML `<meta>` tag and enforcing **Subresource Integrity (SRI)** on compiled JavaScript and CSS assets. It explicitly prohibits `eval`, restricts external connections to approved Yoto and AWS endpoints, and binds asset loading directly to cryptographic hashes.
 
 ---
 

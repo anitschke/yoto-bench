@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal establishes the client-side architectural paradigm for `yoto-tools`, evaluating Single-Page Application (SPA) vs. Multi-Page Application (MPA) architectures and defining the routing model using **`@lit-labs/router`**.
+This proposal establishes the client-side architectural paradigm for `yoto-bench`, evaluating Single-Page Application (SPA) vs. Multi-Page Application (MPA) architectures and defining the routing model using **`@lit-labs/router`**.
 
 ---
 
@@ -21,14 +21,14 @@ In a traditional MPA, navigating between distinct views (e.g. from `/library` to
 - *Disadvantage 3 (Asset Re-Evaluation):* Icon catalog JSON indices and search caches would need to be reloaded into browser memory on every page.
 
 ### The Single-Page Application (SPA) Approach
-- **Decision:** Build `yoto-tools` as an SPA.
+- **Decision:** Build `yoto-bench` as an SPA.
 - In-memory state, live WebSockets, background upload tasks, and indexed icon data persist seamlessly across view changes.
 
 ---
 
 ## 3. Routing Engine: `@lit-labs/router`
 
-Rather than adopting heavy monolithic framework routers, `yoto-tools` uses **`@lit-labs/router`**:
+Rather than adopting heavy monolithic framework routers, `yoto-bench` uses **`@lit-labs/router`**:
 1. **Lightweight & Native:** Designed specifically for Lit components, integrating directly with component lifecycles and reactive properties.
 2. **HTML5 History API:** Provides clean URL paths without relying on hash fragments (`#`).
 3. **Declarative Route Table:** Maps routes directly to view components (e.g., `/`, `/cards/:id`, `/import/podcast`, `/device`, `/privacy`).

@@ -1,5 +1,5 @@
 # ==============================================================================
-# Netlify Configuration for yoto-tools
+# Netlify Configuration for yoto-bench
 # See: docs/rfcs/001-hosting-and-staging-strategy.md
 #      docs/rfcs/003-client-spa-and-routing-strategy.md
 #      docs/rfcs/004-asset-bundling-and-cache-busting.md

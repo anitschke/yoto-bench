@@ -1,12 +1,12 @@
 import { html, fixture, expect } from "@open-wc/testing";
-import { YtPleaseSignIn } from "./yt-please-sign-in.js";
+import { YbPleaseSignIn } from "./yb-please-sign-in.js";
 import { authService } from "../api/auth.js";
-import "./yt-please-sign-in.js";
+import "./yb-please-sign-in.js";
 
-describe("YtPleaseSignIn", () => {
+describe("YbPleaseSignIn", () => {
   it("renders default heading and description", async () => {
-    const el = await fixture<YtPleaseSignIn>(
-      html`<yt-please-sign-in></yt-please-sign-in>`,
+    const el = await fixture<YbPleaseSignIn>(
+      html`<yb-please-sign-in></yb-please-sign-in>`,
     );
     const h3 = el.shadowRoot!.querySelector("h3")!;
     expect(h3.textContent).to.equal("Please Sign In");
@@ -14,17 +14,17 @@ describe("YtPleaseSignIn", () => {
     expect(p.textContent).to.contain(
       "Sign in with your Yoto account to access this section.",
     );
-    const btn = el.shadowRoot!.querySelector("yt-button")!;
+    const btn = el.shadowRoot!.querySelector("yb-button")!;
     expect(btn).to.exist;
     expect(btn.textContent).to.contain("Sign In with Yoto");
   });
 
   it("renders custom heading and description", async () => {
-    const el = await fixture<YtPleaseSignIn>(
-      html`<yt-please-sign-in
+    const el = await fixture<YbPleaseSignIn>(
+      html`<yb-please-sign-in
         heading="Sign in to view cards"
         description="Your library will appear here."
-      ></yt-please-sign-in>`,
+      ></yb-please-sign-in>`,
     );
     const h3 = el.shadowRoot!.querySelector("h3")!;
     expect(h3.textContent).to.equal("Sign in to view cards");
@@ -40,10 +40,10 @@ describe("YtPleaseSignIn", () => {
     };
 
     try {
-      const el = await fixture<YtPleaseSignIn>(
-        html`<yt-please-sign-in></yt-please-sign-in>`,
+      const el = await fixture<YbPleaseSignIn>(
+        html`<yb-please-sign-in></yb-please-sign-in>`,
       );
-      const btn = el.shadowRoot!.querySelector("yt-button")!;
+      const btn = el.shadowRoot!.querySelector("yb-button")!;
       btn.click();
       expect(loginCalled).to.be.true;
     } finally {
@@ -52,8 +52,8 @@ describe("YtPleaseSignIn", () => {
   });
 
   it("is accessible", async () => {
-    const el = await fixture<YtPleaseSignIn>(
-      html`<yt-please-sign-in></yt-please-sign-in>`,
+    const el = await fixture<YbPleaseSignIn>(
+      html`<yb-please-sign-in></yb-please-sign-in>`,
     );
     await expect(el).to.be.accessible({
       ignoredRules: ["color-contrast"],

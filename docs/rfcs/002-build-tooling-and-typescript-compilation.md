@@ -8,7 +8,7 @@
 
 ## 1. Summary
 
-This proposal formalizes the development and production build pipeline for `yoto-tools`. It defines the compiler configuration, Vite integration, TypeScript strictness settings, decorator support for Lit 3.x, and the separation between development HMR and production type-checking.
+This proposal formalizes the development and production build pipeline for `yoto-bench`. It defines the compiler configuration, Vite integration, TypeScript strictness settings, decorator support for Lit 3.x, and the separation between development HMR and production type-checking.
 
 ---
 
