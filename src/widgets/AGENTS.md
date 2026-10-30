@@ -52,3 +52,6 @@ The `<yb-toast-manager>` component acts as the global notification orchestrator 
 
 ### 11. Please Sign In Prompt (`<yb-please-sign-in>`) — `src/widgets/yb-please-sign-in.ts`
 The `<yb-please-sign-in>` component renders a standardized empty-state prompt displayed across pages when the user is not signed in. It presents customizable heading and description messaging centered in a card surface alongside a primary "Sign In with Yoto" button. Clicking the button initiates the PKCE OAuth login redirect via `authService.login()`. It ensures a consistent, accessible authentication prompt across views such as library, editor, and device management.
+
+### 12. Icon Picker Modal (`<yb-icon-picker>`) — `src/widgets/yb-icon-picker.ts`
+The `<yb-icon-picker>` component provides an interactive modal dialog for browsing, filtering, and selecting 16×16 pixel icons from the pre-indexed catalog (Google Noto Emoji and Official Yoto display icons) or uploading custom user PNGs. It leverages the client-side `IconSearchEngine` for instantaneous multi-word prefix matching, AND/OR queries, and title relevance ranking. Filter buttons allow isolating specific icon providers or viewing custom uploaded art. Selecting an icon dispatches a `yb-icon-selected` event containing the full `IconRecord`.
