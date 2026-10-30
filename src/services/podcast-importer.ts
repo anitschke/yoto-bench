@@ -3,6 +3,8 @@
 // See: AGENTS.md, docs/rfcs/009-cors-proxy-for-rss-feeds.md, docs/rfcs/010-podcast-rss-importer-and-card-sync.md
 // ==============================================================================
 
+import { getActiveCorsProxyUrl } from "../config.js";
+
 export interface PodcastEpisode {
   title: string;
   description?: string;
@@ -89,9 +91,8 @@ export async function fetchFeedXml(
   }
 
   // Tier 2: CORS Proxy
-  const proxyTarget = customProxyUrl
-    ? `${customProxyUrl}${encodeURIComponent(feedUrl)}`
-    : `https://corsproxy.io/?url=${encodeURIComponent(feedUrl)}`;
+  const proxyBase = customProxyUrl || getActiveCorsProxyUrl();
+  const proxyTarget = `${proxyBase}${encodeURIComponent(feedUrl)}`;
 
   const proxyResp = await fetch(proxyTarget, {
     signal: AbortSignal.timeout(8000),
