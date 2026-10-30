@@ -231,4 +231,47 @@ describe("<yb-device-view>", () => {
       volume: 7,
     });
   });
+
+  it("renders Offline badge and disables transport controls when player is not turned on (offline)", async () => {
+    authService.isAuthenticated = () => true;
+    authService.getSession = () => ({
+      accessToken: "mock-token",
+      expiresAt: Date.now() + 60000,
+    });
+
+    const offlineDevice: Device = {
+      deviceId: "offline-player-1",
+      name: "Kids Offline Player",
+      deviceType: "v3",
+      online: false,
+      status: {
+        batteryLevel: 30,
+        charging: false,
+        volume: 5,
+      },
+    };
+    yotoApi.listDevices = async () => [offlineDevice];
+
+    const el = await fixture<YbDeviceView>(
+      html`<yb-device-view></yb-device-view>`,
+    );
+
+    // Auto-selected detail view
+    const statusBadge = el.shadowRoot?.querySelector(
+      ".header-bar yb-badge",
+    ) as HTMLElement;
+    expect(statusBadge).to.exist;
+    expect(statusBadge?.textContent?.trim()).to.equal("Offline");
+    expect(statusBadge?.getAttribute("variant")).to.equal("neutral");
+
+    // Transport buttons should be disabled
+    const playBtn = el.shadowRoot?.querySelector(
+      "yb-button[variant='primary']",
+    ) as HTMLElement;
+    expect(playBtn?.hasAttribute("disabled")).to.be.true;
+
+    // Offline guidance message rendered
+    const textContent = el.shadowRoot?.textContent;
+    expect(textContent).to.include("Player is currently offline");
+  });
 });

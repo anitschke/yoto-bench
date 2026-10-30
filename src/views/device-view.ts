@@ -273,13 +273,12 @@ export class YbDeviceView extends LitElement {
   @state() private cards: Card[] = [];
   @state() private cardSearchQuery = "";
   @state() private loading = true;
-  @state() private mqttConnected = false;
+  @state() private liveDeviceOnline = false;
 
   @query("#card-picker-dialog") private cardPickerDialog?: YbDialog;
 
   private isFetching = false;
   private mqttUnsubStatus: (() => void) | null = null;
-  private mqttUnsubConn: (() => void) | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -422,15 +421,18 @@ export class YbDeviceView extends LitElement {
     const session = authService.getSession();
     if (!session || !session.accessToken) return;
 
-    yotoMqtt.connect(deviceId, session.accessToken);
-    this.mqttConnected = yotoMqtt.isConnected(deviceId);
+    this.liveDeviceOnline = false;
 
-    this.mqttUnsubConn = yotoMqtt.onConnectionChange(deviceId, (connected) => {
-      this.mqttConnected = connected;
-    });
+    yotoMqtt.connect(deviceId, session.accessToken);
 
     this.mqttUnsubStatus = yotoMqtt.onStatus(deviceId, (status) => {
+      this.liveDeviceOnline = true;
       this.deviceStatus = { ...status };
+      const d = this.devices.find((dev) => dev.deviceId === deviceId);
+      if (d) {
+        d.online = true;
+        d.status = { ...status };
+      }
     });
   }
 
@@ -439,11 +441,7 @@ export class YbDeviceView extends LitElement {
       this.mqttUnsubStatus();
       this.mqttUnsubStatus = null;
     }
-    if (this.mqttUnsubConn) {
-      this.mqttUnsubConn();
-      this.mqttUnsubConn = null;
-    }
-    this.mqttConnected = false;
+    this.liveDeviceOnline = false;
   }
 
   private handlePlayCard(card: Card) {
@@ -534,9 +532,13 @@ export class YbDeviceView extends LitElement {
     }
   }
 
-  private handleRefreshStatus() {
+  private async handleRefreshStatus() {
     if (!this.selectedDeviceId) return;
     try {
+      if (authService.isAuthenticated()) {
+        const devices = await yotoApi.listDevices();
+        this.devices = devices;
+      }
       yotoMqtt.requestStatus(this.selectedDeviceId);
       dispatchToast(this, {
         type: "info",
@@ -549,6 +551,21 @@ export class YbDeviceView extends LitElement {
         errorDetail: err,
       });
     }
+  }
+
+  private isDeviceOnline(device: Device): boolean {
+    if (this.selectedDeviceId === device.deviceId && this.liveDeviceOnline) {
+      return true;
+    }
+
+    const raw = device.online as unknown;
+    if (typeof raw === "boolean") return raw;
+    if (typeof raw === "string") {
+      const lower = raw.toLowerCase();
+      return lower === "true" || lower === "1";
+    }
+    if (typeof raw === "number") return raw !== 0;
+    return false;
   }
 
   private getActiveCardTitle(): string {
@@ -625,9 +642,15 @@ export class YbDeviceView extends LitElement {
                             ${device.name || "Yoto Player"}
                           </h3>
                           <yb-badge
-                            variant=${device.online ? "success" : "neutral"}
+                            variant=${
+                              this.isDeviceOnline(device)
+                                ? "success"
+                                : "neutral"
+                            }
                           >
-                            ${device.online ? "Online" : "Offline"}
+                            ${
+                              this.isDeviceOnline(device) ? "Online" : "Offline"
+                            }
                           </yb-badge>
                         </div>
                         <div class="meta-row">
@@ -677,7 +700,7 @@ export class YbDeviceView extends LitElement {
   }
 
   private renderDetail(device: Device) {
-    const isOnline = device.online || this.mqttConnected;
+    const isOnline = this.isDeviceOnline(device);
     const batteryLevel =
       this.deviceStatus?.batteryLevel ?? device.status?.batteryLevel ?? 0;
     const isCharging =
@@ -752,6 +775,7 @@ export class YbDeviceView extends LitElement {
                 <yb-button
                   variant="subtle"
                   size="small"
+                  ?disabled=${!isOnline}
                   @click=${() => this.handleAdjustVolume(-1)}
                   aria-label="Decrease Volume"
                 >
@@ -760,6 +784,7 @@ export class YbDeviceView extends LitElement {
                 <yb-button
                   variant="subtle"
                   size="small"
+                  ?disabled=${!isOnline}
                   @click=${() => this.handleAdjustVolume(1)}
                   aria-label="Increase Volume"
                 >
@@ -793,20 +818,43 @@ export class YbDeviceView extends LitElement {
             <div class="transport-controls">
               <yb-button
                 variant="primary"
+                ?disabled=${!isOnline}
                 @click=${() => this.cardPickerDialog?.showModal()}
               >
                 🎵 Play Card on Device
               </yb-button>
-              <yb-button variant="secondary" @click=${this.handlePlayOrResume}>
+              <yb-button
+                variant="secondary"
+                ?disabled=${!isOnline}
+                @click=${this.handlePlayOrResume}
+              >
                 ▶ Play / Resume
               </yb-button>
-              <yb-button variant="subtle" @click=${this.handlePause}>
+              <yb-button
+                variant="subtle"
+                ?disabled=${!isOnline}
+                @click=${this.handlePause}
+              >
                 ⏸ Pause
               </yb-button>
-              <yb-button variant="danger" @click=${this.handleStop}>
+              <yb-button
+                variant="danger"
+                ?disabled=${!isOnline}
+                @click=${this.handleStop}
+              >
                 ⏹ Stop
               </yb-button>
             </div>
+            ${
+              !isOnline
+                ? html`<p
+                    style="margin: 0; font-size: var(--yb-font-size-xs, 0.75rem); color: var(--yb-color-text-muted, #718096);"
+                  >
+                    Player is currently offline. Turn on your Yoto player to
+                    control playback and view live telemetry.
+                  </p>`
+                : ""
+            }
           </div>
 
           <!-- Hardware & Metadata Panel -->
