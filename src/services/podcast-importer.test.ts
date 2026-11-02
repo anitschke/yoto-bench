@@ -1,5 +1,6 @@
 import { expect } from "@open-wc/testing";
 import {
+  fetchFeedXml,
   parsePodcastFeed,
   filterEpisodes,
   extractSyncMetadata,
@@ -40,6 +41,86 @@ const SAMPLE_RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>
 </rss>`;
 
 describe("Podcast Importer Service", () => {
+  describe("fetchFeedXml", () => {
+    let origFetch: typeof globalThis.fetch;
+
+    beforeEach(() => {
+      origFetch = globalThis.fetch;
+    });
+
+    afterEach(() => {
+      globalThis.fetch = origFetch;
+    });
+
+    it("fetches feed XML directly when direct fetch succeeds", async () => {
+      globalThis.fetch = async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
+        if (url === "https://example.com/feed.xml") {
+          return new Response(SAMPLE_RSS_XML, { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      const xml = await fetchFeedXml("https://example.com/feed.xml");
+      expect(xml).to.include("Bedtime Stories for Kids");
+    });
+
+    it("falls back to CORS proxy when direct fetch fails", async () => {
+      let proxyCalled = false;
+      globalThis.fetch = async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
+        if (url === "https://example.com/blocked-by-cors.xml") {
+          throw new TypeError("Failed to fetch (CORS block)");
+        }
+        if (url.includes("corsproxy.io") && url.includes("blocked-by-cors.xml")) {
+          proxyCalled = true;
+          return new Response(SAMPLE_RSS_XML, { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      const xml = await fetchFeedXml("https://example.com/blocked-by-cors.xml");
+      expect(proxyCalled).to.be.true;
+      expect(xml).to.include("Bedtime Stories for Kids");
+    });
+
+    it("uses customProxyUrl when provided", async () => {
+      let customProxyCalled = false;
+      globalThis.fetch = async (input: RequestInfo | URL) => {
+        const url = typeof input === "string" ? input : input.toString();
+        if (url === "https://example.com/feed.xml") {
+          throw new TypeError("CORS block");
+        }
+        if (url.startsWith("https://my-custom-proxy.internal/?target=")) {
+          customProxyCalled = true;
+          return new Response(SAMPLE_RSS_XML, { status: 200 });
+        }
+        return new Response("Not found", { status: 404 });
+      };
+
+      const xml = await fetchFeedXml(
+        "https://example.com/feed.xml",
+        "https://my-custom-proxy.internal/?target=",
+      );
+      expect(customProxyCalled).to.be.true;
+      expect(xml).to.include("Bedtime Stories for Kids");
+    });
+
+    it("throws an error when proxy fetch fails", async () => {
+      globalThis.fetch = async () => {
+        throw new Error("Network offline");
+      };
+
+      let error: Error | null = null;
+      try {
+        await fetchFeedXml("https://example.com/offline.xml");
+      } catch (err) {
+        error = err as Error;
+      }
+      expect(error).to.exist;
+    });
+  });
+
   describe("parsePodcastFeed", () => {
     it("parses feed channel metadata and episodes", () => {
       const parsed = parsePodcastFeed(SAMPLE_RSS_XML);

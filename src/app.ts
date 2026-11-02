@@ -160,6 +160,11 @@ export class YbApp extends LitElement {
         html`<yb-card-view .cardId=${id || ""}></yb-card-view>`,
     },
     {
+      path: "/card/:id",
+      render: ({ id }) =>
+        html`<yb-card-view .cardId=${id || ""}></yb-card-view>`,
+    },
+    {
       path: "/device",
       render: () => html`<yb-device-view></yb-device-view>`,
     },
