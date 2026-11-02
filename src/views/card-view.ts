@@ -238,6 +238,36 @@ export class YbCardView extends LitElement {
     .podcast-ep-row:nth-child(even) {
       background: var(--yb-color-surface-subtle, #f8fafc);
     }
+
+    .podcast-artwork-preview {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--yb-color-surface-subtle, #f8fafc);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 8px);
+      margin-top: 0.5rem;
+    }
+
+    .podcast-artwork-thumbnail {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--yb-radius-sm, 6px);
+      object-fit: cover;
+      background: var(--yb-color-surface-dark, #12161a);
+      flex-shrink: 0;
+    }
+
+    .podcast-artwork-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      color: var(--yb-color-text, #1e293b);
+      cursor: pointer;
+      user-select: none;
+    }
   `;
 
   @consume({ context: authContext, subscribe: true })
@@ -268,6 +298,8 @@ export class YbCardView extends LitElement {
   @state() private podcastRawXml = "";
   @state() private podcastPreviewEpisodes: PodcastEpisode[] = [];
   @state() private isPreviewingPodcast = false;
+  @state() private podcastFeedImageUrl: string | undefined = undefined;
+  @state() private podcastApplyCoverArtwork = true;
 
   private isFetching = false;
 
@@ -643,6 +675,10 @@ export class YbCardView extends LitElement {
         xml = await fetchFeedXml(this.podcastFeedUrl);
       }
       const feed = parsePodcastFeed(xml);
+      this.podcastFeedImageUrl = feed.imageUrl;
+      if (feed.imageUrl) {
+        this.podcastApplyCoverArtwork = true;
+      }
       const filtered = filterEpisodes(feed.episodes, {
         limit: this.podcastLimit,
         minDurationSeconds: this.podcastMinDuration,
@@ -739,8 +775,33 @@ export class YbCardView extends LitElement {
         syncMeta,
       );
 
+      let coverUpdate = {};
+      if (this.podcastApplyCoverArtwork && this.podcastFeedImageUrl) {
+        let coverDataUrl = this.podcastFeedImageUrl;
+        try {
+          const imgResp = await fetch(this.podcastFeedImageUrl);
+          if (imgResp.ok) {
+            const blob = await imgResp.blob();
+            coverDataUrl = await yotoApi.uploadCoverImage(blob);
+          }
+        } catch {
+          // If direct image fetch fails (e.g. CORS), fallback to remote URL
+        }
+
+        coverUpdate = {
+          customCoverArt: coverDataUrl,
+          cover: {
+            ...(this.card.cover || {}),
+            imageL: coverDataUrl,
+            imageM: coverDataUrl,
+            imageS: coverDataUrl,
+          },
+        };
+      }
+
       this.card = {
         ...this.card,
+        ...coverUpdate,
         metadata: {
           ...this.card.metadata,
           description: updatedDescription,
@@ -1123,6 +1184,32 @@ export class YbCardView extends LitElement {
           >
             Fetch & Preview Episodes
           </yb-button>
+
+          ${
+            this.podcastFeedImageUrl
+              ? html`
+                  <div class="podcast-artwork-preview">
+                    <img
+                      class="podcast-artwork-thumbnail"
+                      src=${this.podcastFeedImageUrl}
+                      alt="Podcast Artwork"
+                    />
+                    <label class="podcast-artwork-checkbox-label">
+                      <input
+                        type="checkbox"
+                        .checked=${this.podcastApplyCoverArtwork}
+                        @change=${(e: Event) => {
+                          this.podcastApplyCoverArtwork = (
+                            e.target as HTMLInputElement
+                          ).checked;
+                        }}
+                      />
+                      Set card cover image from podcast artwork
+                    </label>
+                  </div>
+                `
+              : null
+          }
 
           ${
             this.podcastPreviewEpisodes.length > 0
