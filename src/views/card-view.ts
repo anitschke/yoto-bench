@@ -29,6 +29,7 @@ import {
   parsePodcastFeed,
   filterEpisodes,
   extractSyncMetadata,
+  stripSyncMetadata,
   embedSyncMetadata,
   CardSyncMetadata,
   PodcastEpisode,
@@ -106,6 +107,31 @@ export class YbCardView extends LitElement {
       cursor: pointer;
       transition: all 0.2s ease;
       margin-bottom: 1.5rem;
+    }
+
+    .synced-card-banner {
+      background: rgba(255, 85, 0, 0.08);
+      border: 1px solid rgba(255, 85, 0, 0.25);
+      border-radius: var(--yb-radius-md, 10px);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .synced-banner-content {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      color: var(--yb-color-text, #1e293b);
+    }
+
+    .synced-banner-icon {
+      font-size: 1.25rem;
     }
 
     .drop-zone:hover,
@@ -812,6 +838,34 @@ export class YbCardView extends LitElement {
     }
   }
 
+  private async detachPodcastSync() {
+    if (!this.card) return;
+    const cleanDesc = stripSyncMetadata(this.card.metadata?.description);
+    const updatedCard: Card = {
+      ...this.card,
+      metadata: {
+        ...this.card.metadata,
+        description: cleanDesc.length > 0 ? cleanDesc : undefined,
+      },
+    };
+    this.card = updatedCard;
+
+    try {
+      await yotoApi.updateCard(updatedCard);
+      dispatchToast(this, {
+        type: "success",
+        message:
+          "Card detached from podcast sync. Full manual editing unlocked!",
+      });
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to detach card from podcast sync.",
+        errorDetail: err,
+      });
+    }
+  }
+
   // --- Save Card ---
 
   private async saveCardChanges() {
@@ -921,29 +975,58 @@ export class YbCardView extends LitElement {
           </div>
         </div>
 
+        ${
+          syncMeta
+            ? html`
+                <div class="synced-card-banner">
+                  <div class="synced-banner-content">
+                    <span class="synced-banner-icon">ℹ️</span>
+                    <div>
+                      <strong>Podcast Synced Card:</strong> This playlist is automated via podcast sync. Track order and deletion are locked to prevent sync conflicts, but icons can still be customized.
+                    </div>
+                  </div>
+                  <yb-button
+                    class="detach-sync-btn"
+                    variant="secondary"
+                    size="small"
+                    @click=${this.detachPodcastSync}
+                  >
+                    Detach from Podcast Sync
+                  </yb-button>
+                </div>
+              `
+            : null
+        }
+
         <!-- Drag & Drop Audio Zone -->
-        <div
-          class="drop-zone ${this.isDraggingOver ? "dragover" : ""}"
-          @click=${this.handleDropZoneClick}
-          @dragover=${this.handleDragOver}
-          @dragleave=${this.handleDragLeave}
-          @drop=${this.handleDrop}
-        >
-          <div class="drop-zone-text">
-            📁 Drag & drop audio files, folders, or ZIP archives here
-          </div>
-          <div class="drop-zone-hint">
-            Supports MP3 and M4A. Audio will be staged in OPFS and uploaded with
-            Web Crypto SHA-256 deduplication.
-          </div>
-          <input
-            type="file"
-            class="hidden-file-input"
-            multiple
-            accept="audio/mp3,audio/mpeg,audio/m4a,application/zip"
-            @change=${this.handleFileInput}
-          />
-        </div>
+        ${
+          !syncMeta
+            ? html`
+                <div
+                  class="drop-zone ${this.isDraggingOver ? "dragover" : ""}"
+                  @click=${this.handleDropZoneClick}
+                  @dragover=${this.handleDragOver}
+                  @dragleave=${this.handleDragLeave}
+                  @drop=${this.handleDrop}
+                >
+                  <div class="drop-zone-text">
+                    📁 Drag & drop audio files, folders, or ZIP archives here
+                  </div>
+                  <div class="drop-zone-hint">
+                    Supports MP3 and M4A. Audio will be staged in OPFS and
+                    uploaded with Web Crypto SHA-256 deduplication.
+                  </div>
+                  <input
+                    type="file"
+                    class="hidden-file-input"
+                    multiple
+                    accept="audio/mp3,audio/mpeg,audio/m4a,application/zip"
+                    @change=${this.handleFileInput}
+                  />
+                </div>
+              `
+            : null
+        }
 
         <!-- Upload Progress Indicator -->
         ${
@@ -994,6 +1077,7 @@ export class YbCardView extends LitElement {
                           type="text"
                           class="track-title-input"
                           .value=${chap.title}
+                          ?disabled=${!!syncMeta}
                           @change=${(e: Event) =>
                             this.handleTitleChange(
                               index,
@@ -1009,31 +1093,39 @@ export class YbCardView extends LitElement {
                             : ""
                         }
 
-                        <div class="track-actions">
-                          <yb-button
-                            variant="subtle"
-                            size="small"
-                            ?disabled=${index === 0}
-                            @click=${() => this.handleMoveTrack(index, index - 1)}
-                          >
-                            ↑
-                          </yb-button>
-                          <yb-button
-                            variant="subtle"
-                            size="small"
-                            ?disabled=${index === chapters.length - 1}
-                            @click=${() => this.handleMoveTrack(index, index + 1)}
-                          >
-                            ↓
-                          </yb-button>
-                          <yb-button
-                            variant="danger"
-                            size="small"
-                            @click=${() => this.handleDeleteTrack(index)}
-                          >
-                            ✕
-                          </yb-button>
-                        </div>
+                        ${
+                          !syncMeta
+                            ? html`
+                                <div class="track-actions">
+                                  <yb-button
+                                    variant="subtle"
+                                    size="small"
+                                    ?disabled=${index === 0}
+                                    @click=${() =>
+                                      this.handleMoveTrack(index, index - 1)}
+                                  >
+                                    ↑
+                                  </yb-button>
+                                  <yb-button
+                                    variant="subtle"
+                                    size="small"
+                                    ?disabled=${index === chapters.length - 1}
+                                    @click=${() =>
+                                      this.handleMoveTrack(index, index + 1)}
+                                  >
+                                    ↓
+                                  </yb-button>
+                                  <yb-button
+                                    variant="danger"
+                                    size="small"
+                                    @click=${() => this.handleDeleteTrack(index)}
+                                  >
+                                    ✕
+                                  </yb-button>
+                                </div>
+                              `
+                            : null
+                        }
                       </div>
                     `,
                   )}
