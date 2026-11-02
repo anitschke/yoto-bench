@@ -97,6 +97,110 @@ export class YbCardView extends LitElement {
       align-items: center;
     }
 
+    .cover-section {
+      display: flex;
+      gap: 1.5rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      background: var(--yb-color-surface-subtle, #f8fafc);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 12px);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .cover-preview-box {
+      width: 120px;
+      height: 120px;
+      min-width: 120px;
+      border-radius: var(--yb-radius-md, 10px);
+      overflow: hidden;
+      border: 2px dashed var(--yb-color-border, #cbd5e1);
+      background: var(--yb-color-surface-dark, #12161a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition:
+        border-color 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .cover-preview-box.dragover {
+      border-color: var(--yb-color-primary, #ff5500);
+      background: rgba(255, 85, 0, 0.08);
+    }
+
+    .cover-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .cover-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      color: var(--yb-color-text-muted, #718096);
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    .cover-placeholder-icon {
+      font-size: 1.75rem;
+    }
+
+    .cover-placeholder-text {
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      line-height: 1.1;
+    }
+
+    .cover-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .cover-controls-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+
+    .cover-controls-title {
+      font-weight: 600;
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      color: var(--yb-color-text, #1e293b);
+    }
+
+    .cover-controls-hint {
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      color: var(--yb-color-text-muted, #718096);
+    }
+
+    .cover-actions-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .cover-url-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      max-width: 500px;
+    }
+
+    .cover-url-row yb-text-input {
+      flex: 1;
+    }
+
     .drop-zone {
       border: 2px dashed var(--yb-color-border, #cbd5e1);
       border-radius: var(--yb-radius-md, 10px);
@@ -259,6 +363,11 @@ export class YbCardView extends LitElement {
   // Icon Picker
   @state() private iconPickerOpen = false;
   @state() private activeChapterIndex: number | null = null;
+
+  // Cover Artwork
+  @state() private coverUrlInput = "";
+  @state() private isCoverDraggingOver = false;
+  @state() private isUploadingCover = false;
 
   // Podcast Dialog
   @state() private podcastDialogOpen = false;
@@ -812,6 +921,109 @@ export class YbCardView extends LitElement {
     }
   }
 
+  // --- Cover Artwork Management ---
+
+  private getActiveCoverUrl(): string {
+    if (!this.card) return "";
+    return (
+      this.card.cover?.imageL ||
+      this.card.cover?.imageM ||
+      this.card.cover?.imageS ||
+      this.card.customCoverArt ||
+      ""
+    );
+  }
+
+  private setCoverUrl(url: string) {
+    if (!this.card) return;
+    const cleanUrl = url.trim();
+    if (!cleanUrl) return;
+
+    this.card = {
+      ...this.card,
+      customCoverArt: cleanUrl,
+      cover: {
+        ...(this.card.cover || {}),
+        imageL: cleanUrl,
+        imageM: cleanUrl,
+        imageS: cleanUrl,
+      },
+    };
+    this.coverUrlInput = "";
+    dispatchToast(this, {
+      type: "success",
+      message: "Cover artwork updated. Click 'Save Card' to persist changes.",
+    });
+  }
+
+  private removeCover() {
+    if (!this.card) return;
+    const updated = { ...this.card };
+    delete updated.customCoverArt;
+    delete updated.cover;
+    this.card = updated;
+    dispatchToast(this, {
+      type: "info",
+      message: "Cover artwork removed. Click 'Save Card' to persist changes.",
+    });
+  }
+
+  private async handleCoverFileInput(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    await this.processCoverFile(file);
+    input.value = "";
+  }
+
+  private async processCoverFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Selected file is not an image (PNG, JPEG, WebP required).",
+      });
+      return;
+    }
+    this.isUploadingCover = true;
+    try {
+      const dataUrl = await yotoApi.uploadCoverImage(file);
+      this.setCoverUrl(dataUrl);
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to process cover image.",
+        errorDetail: err,
+      });
+    } finally {
+      this.isUploadingCover = false;
+    }
+  }
+
+  private handleCoverDragOver(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.isCoverDraggingOver = true;
+  }
+
+  private handleCoverDragLeave(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.isCoverDraggingOver = false;
+  }
+
+  private async handleCoverDrop(e: DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    this.isCoverDraggingOver = false;
+    const files = e.dataTransfer?.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      if (file) {
+        await this.processCoverFile(file);
+      }
+    }
+  }
+
   // --- Save Card ---
 
   private async saveCardChanges() {
@@ -918,6 +1130,108 @@ export class YbCardView extends LitElement {
             >
               ← Back to Library
             </yb-button>
+          </div>
+        </div>
+
+        <!-- Card Cover Artwork Section -->
+        <div class="cover-section">
+          <div
+            class="cover-preview-box ${this.isCoverDraggingOver ? "dragover" : ""}"
+            @dragover=${this.handleCoverDragOver}
+            @dragleave=${this.handleCoverDragLeave}
+            @drop=${this.handleCoverDrop}
+          >
+            ${(() => {
+              const activeCover = this.getActiveCoverUrl();
+              return activeCover
+                ? html`<img
+                    class="cover-image"
+                    src=${activeCover}
+                    alt="${this.card.title} cover"
+                  />`
+                : html`
+                    <div class="cover-placeholder">
+                      <span class="cover-placeholder-icon">🖼️</span>
+                      <span class="cover-placeholder-text"
+                        >No cover artwork</span
+                      >
+                    </div>
+                  `;
+            })()}
+          </div>
+          <div class="cover-controls">
+            <div class="cover-controls-header">
+              <span class="cover-controls-title">Card Cover Artwork</span>
+              <span class="cover-controls-hint"
+                >Upload an image (PNG, JPEG, WebP) or enter an image URL.</span
+              >
+            </div>
+            <div class="cover-actions-row">
+              <yb-button
+                class="cover-upload-btn"
+                variant="secondary"
+                size="small"
+                ?loading=${this.isUploadingCover}
+                @click=${() =>
+                  this.shadowRoot
+                    ?.querySelector<HTMLInputElement>("#cover-file-input")
+                    ?.click()}
+              >
+                📁 Upload Image
+              </yb-button>
+              <input
+                id="cover-file-input"
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                style="display: none;"
+                @change=${this.handleCoverFileInput}
+              />
+              ${this.getActiveCoverUrl()
+                ? html`
+                    <yb-button
+                      class="cover-remove-btn"
+                      variant="danger"
+                      size="small"
+                      @click=${this.removeCover}
+                    >
+                      Remove Cover
+                    </yb-button>
+                  `
+                : null}
+            </div>
+            <div class="cover-url-row">
+              <yb-text-input
+                class="cover-url-input"
+                placeholder="https://example.com/cover.jpg"
+                .value=${this.coverUrlInput}
+                @input=${(e: Event) => {
+                  const detail = (e as CustomEvent<{ value: string }>).detail;
+                  const target = e.target as HTMLInputElement | { value: string };
+                  this.coverUrlInput =
+                    detail?.value !== undefined
+                      ? detail.value
+                      : (target?.value ?? "");
+                }}
+                @yb-input=${(e: CustomEvent<{ value: string }>) => {
+                  if (e.detail?.value !== undefined) {
+                    this.coverUrlInput = e.detail.value;
+                  }
+                }}
+                @keydown=${(e: KeyboardEvent) => {
+                  if (e.key === "Enter") {
+                    this.setCoverUrl(this.coverUrlInput);
+                  }
+                }}
+              ></yb-text-input>
+              <yb-button
+                class="cover-set-url-btn"
+                variant="secondary"
+                size="small"
+                @click=${() => this.setCoverUrl(this.coverUrlInput)}
+              >
+                Set URL
+              </yb-button>
+            </div>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 import { expect } from "@open-wc/testing";
-import { sanitizeCardForApi } from "./client.js";
+import { sanitizeCardForApi, yotoApi } from "./client.js";
 import { Card } from "../models/index.js";
 
 describe("sanitizeCardForApi", () => {
@@ -90,5 +90,14 @@ describe("sanitizeCardForApi", () => {
     expect(sanitized.customCoverArt).to.equal("https://example.com/cover.png");
     expect(sanitized.ambientLighting).to.deep.equal({ color: "#ff00ff" });
     expect(sanitized.content?.chapters[0]?.customChapterField).to.equal(42);
+  });
+
+  describe("uploadCoverImage", () => {
+    it("encodes blob as base64 data URL", async () => {
+      const blob = new Blob(["fake-image-bytes"], { type: "image/png" });
+      const dataUrl = await yotoApi.uploadCoverImage(blob);
+      expect(dataUrl).to.be.a("string");
+      expect(dataUrl).to.match(/^data:image\/png;base64,/);
+    });
   });
 });
