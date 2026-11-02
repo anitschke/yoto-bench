@@ -6,6 +6,10 @@ import { yotoApi } from "../api/client.js";
 import { authContext } from "../context/index.js";
 import { AuthSession, Card } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
+import {
+  extractSyncMetadata,
+  syncAllPodcastCards,
+} from "../services/podcast-importer.js";
 import "../widgets/yb-button.js";
 import "../widgets/yb-badge.js";
 import "../widgets/yb-pixel-icon.js";
@@ -39,8 +43,9 @@ export class YbLibraryView extends LitElement {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      max-width: 480px;
+      max-width: 680px;
       width: 100%;
+      flex-wrap: wrap;
     }
 
     .search-filter yb-text-input {
@@ -120,6 +125,7 @@ export class YbLibraryView extends LitElement {
   @state() private createDialogOpen = false;
   @state() private newCardTitle = "";
   @state() private isCreating = false;
+  @state() private isSyncingAll = false;
 
   override willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has("authSession")) {
@@ -211,6 +217,51 @@ export class YbLibraryView extends LitElement {
     }
   }
 
+  private async syncAllPodcasts() {
+    const syncedCards = this.cards.filter((c) =>
+      extractSyncMetadata(c.metadata?.description),
+    );
+    if (syncedCards.length === 0 || this.isSyncingAll) return;
+
+    this.isSyncingAll = true;
+    try {
+      const results = await syncAllPodcastCards(this.cards);
+      const updatedCards = results.filter((r) => r.updated);
+      const totalNewEpisodes = results.reduce(
+        (sum, r) => sum + r.newEpisodesCount,
+        0,
+      );
+      const errors = results.filter((r) => r.error);
+
+      if (errors.length > 0) {
+        dispatchToast(this, {
+          type: "warning",
+          message: `Synced ${syncedCards.length} podcast card${syncedCards.length === 1 ? "" : "s"}: ${updatedCards.length} updated (${totalNewEpisodes} new episode${totalNewEpisodes === 1 ? "" : "s"}), ${errors.length} failed.`,
+        });
+      } else if (updatedCards.length > 0) {
+        dispatchToast(this, {
+          type: "success",
+          message: `Synced ${syncedCards.length} podcast card${syncedCards.length === 1 ? "" : "s"}: ${updatedCards.length} updated with ${totalNewEpisodes} new episode${totalNewEpisodes === 1 ? "" : "s"}!`,
+        });
+      } else {
+        dispatchToast(this, {
+          type: "info",
+          message: `All ${syncedCards.length} podcast card${syncedCards.length === 1 ? "" : "s"} are already up to date!`,
+        });
+      }
+
+      await this.loadCards();
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to sync podcast cards.",
+        errorDetail: err,
+      });
+    } finally {
+      this.isSyncingAll = false;
+    }
+  }
+
   override render() {
     const isAuthed = !!this.authSession && authService.isAuthenticated();
     if (!isAuthed) {
@@ -229,6 +280,9 @@ export class YbLibraryView extends LitElement {
     const filtered = this.cards.filter((c) =>
       (c.title || "").toLowerCase().includes(this.searchQuery),
     );
+    const syncedCardsCount = this.cards.filter((c) =>
+      extractSyncMetadata(c.metadata?.description),
+    ).length;
 
     return html`
       <div>
@@ -242,6 +296,20 @@ export class YbLibraryView extends LitElement {
               clearable
               @input=${this.onSearch}
             ></yb-text-input>
+            ${
+              syncedCardsCount > 0
+                ? html`
+                    <yb-button
+                      class="sync-all-podcasts-btn"
+                      variant="secondary"
+                      ?loading=${this.isSyncingAll}
+                      @click=${this.syncAllPodcasts}
+                    >
+                      🔄 Sync All Podcasts (${syncedCardsCount})
+                    </yb-button>
+                  `
+                : null
+            }
             <yb-button variant="primary" @click=${this.openCreateDialog}>
               + New Card
             </yb-button>

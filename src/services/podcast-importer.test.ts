@@ -6,9 +6,12 @@ import {
   extractSyncMetadata,
   embedSyncMetadata,
   stripSyncMetadata,
+  syncPodcastCard,
+  syncAllPodcastCards,
   CardSyncMetadata,
   PodcastEpisode,
 } from "./podcast-importer.js";
+import { Card } from "../models/index.js";
 
 const SAMPLE_RSS_XML = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
@@ -210,6 +213,55 @@ describe("Podcast Importer Service", () => {
       expect(stripSyncMetadata("Just normal text")).to.equal(
         "Just normal text",
       );
+    });
+  });
+
+  describe("syncPodcastCard and syncAllPodcastCards", () => {
+    it("returns updated: false when card has no sync metadata", async () => {
+      const card: Card = {
+        cardId: "card_normal",
+        title: "Normal MYO Card",
+        metadata: { description: "Just audio tracks" },
+        content: { chapters: [] },
+      };
+
+      const result = await syncPodcastCard(card);
+      expect(result.updated).to.be.false;
+      expect(result.newEpisodesCount).to.equal(0);
+    });
+
+    it("syncAllPodcastCards only processes cards with sync metadata", async () => {
+      const normalCard: Card = {
+        cardId: "card_1",
+        title: "Normal Card",
+        metadata: { description: "Regular card" },
+      };
+      const syncedCard: Card = {
+        cardId: "card_2",
+        title: "Synced Podcast Card",
+        metadata: {
+          description:
+            '<!-- yoto-bench:sync\n{\n  "version": 1,\n  "sourceType": "podcast-rss",\n  "feedUrl": "https://example.com/rss.xml",\n  "filter": {}\n}\n-->',
+        },
+      };
+
+      // Mock fetch for RSS
+      const origFetch = globalThis.fetch;
+      globalThis.fetch = async (input: RequestInfo | URL) => {
+        const urlStr = String(input);
+        if (urlStr.includes("rss.xml")) {
+          return new Response(SAMPLE_RSS_XML, { status: 200 });
+        }
+        return new Response("OK", { status: 200 });
+      };
+
+      try {
+        const results = await syncAllPodcastCards([normalCard, syncedCard]);
+        expect(results.length).to.equal(1);
+        expect(results[0]?.cardId).to.equal("card_2");
+      } finally {
+        globalThis.fetch = origFetch;
+      }
     });
   });
 });
