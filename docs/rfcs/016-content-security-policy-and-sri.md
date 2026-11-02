@@ -1,7 +1,7 @@
 # RFC 016: Content Security Policy (CSP) & Subresource Integrity (SRI)
 
 - **Date:** 2026-09-18
-- **Status:** Accepted
+- **Status:** Implemented
 - **Author:** Antigravity Agent & Andrew Nitschke
 
 ---

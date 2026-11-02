@@ -1,7 +1,7 @@
 # RFC 017: Typography, Self-Hosted Roboto Font, and WOFF2 Bundling
 
 - **Date:** 2026-09-18
-- **Status:** Accepted
+- **Status:** Implemented
 - **Author:** Antigravity Agent & Andrew Nitschke
 
 ---

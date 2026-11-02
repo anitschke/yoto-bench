@@ -1,7 +1,7 @@
 # RFC: Asset Bundling, Content-Addressable Hashing, and Cache Busting
 
 - **Date:** 2026-09-17
-- **Status:** Accepted
+- **Status:** Implemented
 - **Author:** Antigravity Agent & Andrew Nitschke
 
 ---
