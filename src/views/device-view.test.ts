@@ -274,4 +274,46 @@ describe("<yb-device-view>", () => {
     const textContent = el.shadowRoot?.textContent;
     expect(textContent).to.include("Player is currently offline");
   });
+
+  it("renders percentage scale (/ 100) when volume > 16 without userVolume", async () => {
+    authService.isAuthenticated = () => true;
+    authService.getSession = () => ({
+      accessToken: "mock-token",
+      expiresAt: Date.now() + 60000,
+    });
+
+    const percentDevice: Device = {
+      deviceId: "dev-percent",
+      name: "Gen3 Player",
+      deviceType: "v3",
+      online: true,
+      status: {
+        batteryLevel: 90,
+        charging: false,
+        volume: 55,
+      },
+    };
+    yotoApi.listDevices = async () => [percentDevice];
+
+    const el = await fixture<YbDeviceView>(
+      html`<yb-device-view></yb-device-view>`,
+    );
+
+    const volumePanel = el.shadowRoot?.querySelector(
+      ".volume-controls",
+    )?.closest(".panel");
+    const statNumber = volumePanel?.querySelector(".stat-number");
+    const statUnit = volumePanel?.querySelector(".stat-unit");
+
+    expect(statNumber?.textContent?.trim()).to.equal("55");
+    expect(statUnit?.textContent?.trim()).to.equal("/ 100");
+
+    // Stepper + button should increase by 5 on a percentage scale
+    const incBtn = volumePanel?.querySelectorAll(".volume-stepper yb-button")?.[1] as HTMLElement;
+    expect(incBtn).to.exist;
+    incBtn.click();
+    await el.updateComplete;
+
+    expect(statNumber?.textContent?.trim()).to.equal("60");
+  });
 });
