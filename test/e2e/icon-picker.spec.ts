@@ -156,4 +156,38 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     await expect(emptyState).toBeVisible();
     await expect(emptyState).toContainText("No matching icons found");
   });
+
+  test("displays attribution note and opens about sources & licensing modal", async ({
+    page,
+  }) => {
+    await page.locator('[data-testid="open-icon-picker-btn"]').click();
+
+    const picker = page.locator("yb-icon-picker");
+    const attributionStrip = picker.locator(".attribution-strip");
+    await expect(attributionStrip).toBeVisible();
+    await expect(attributionStrip).toContainText("Google Noto Emoji");
+    await expect(attributionStrip).toContainText("Official Yoto");
+
+    // Click "About sources & licensing" button
+    const aboutBtn = picker.locator('[data-testid="about-sources-button"]');
+    await expect(aboutBtn).toBeVisible();
+    await aboutBtn.click();
+
+    // Verify About Icon Sources modal opens
+    const sourcesContent = picker.locator(".sources-content");
+    await expect(sourcesContent).toBeVisible();
+    await expect(sourcesContent).toContainText("Google Noto Emoji");
+    await expect(sourcesContent).toContainText("Apache 2.0 License");
+    await expect(sourcesContent).toContainText("Official Yoto Icons");
+    await expect(sourcesContent).toContainText("Pixel Display & Contrast");
+
+    // Close the sources dialog
+    const gotItBtn = picker.locator("yb-button", { hasText: "Got It" });
+    await expect(gotItBtn).toBeVisible();
+    await gotItBtn.click();
+
+    // Sources dialog should be closed while the main icon picker remains open
+    await expect(sourcesContent).not.toBeVisible();
+    await expect(picker).toHaveAttribute("open", "");
+  });
 });

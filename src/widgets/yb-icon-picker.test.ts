@@ -65,4 +65,40 @@ describe("yb-icon-picker", () => {
     expect(selectedIcon).to.not.be.null;
     expect(el.open).to.be.false;
   });
+
+  it("renders attribution note and opens about icon sources modal", async () => {
+    const el = await fixture<YbIconPicker>(
+      html`<yb-icon-picker open></yb-icon-picker>`,
+    );
+    await el.updateComplete;
+
+    // Check attribution link or button exists
+    const aboutBtn = el.shadowRoot?.querySelector<HTMLButtonElement>(
+      ".about-sources-btn, [data-testid='about-sources-button']",
+    );
+    expect(aboutBtn, "about sources button should exist").to.exist;
+
+    // Initially sources dialog/panel is not open
+    expect(el.shadowRoot?.querySelector(".sources-content")).to.not.exist;
+
+    // Click about button
+    aboutBtn?.click();
+    await el.updateComplete;
+
+    // Dialog/content explaining sources should now be visible
+    const sourcesContent = el.shadowRoot?.querySelector(".sources-content");
+    expect(sourcesContent, "sources content should be displayed").to.exist;
+    expect(sourcesContent?.textContent).to.include("Google Noto Emoji");
+    expect(sourcesContent?.textContent).to.include("Apache 2.0");
+    expect(sourcesContent?.textContent).to.include("Official Yoto");
+    expect(sourcesContent?.textContent).to.include("Custom");
+
+    // Close the sources dialog
+    const gotItBtn = el.shadowRoot?.querySelector<HTMLButtonElement>(
+      "yb-dialog yb-button[variant='primary']",
+    );
+    gotItBtn?.click();
+    await el.updateComplete;
+    expect(el.shadowRoot?.querySelector(".sources-content")).to.not.exist;
+  });
 });

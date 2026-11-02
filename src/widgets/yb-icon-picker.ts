@@ -126,6 +126,91 @@ export class YbIconPicker extends LitElement {
       padding: var(--yb-spacing-xs, 0.25rem);
     }
 
+    .attribution-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--yb-spacing-xs, 0.25rem);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      color: var(--yb-color-text-muted, #718096);
+      border-top: 1px solid var(--yb-color-border, #e2e8f0);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .about-sources-btn {
+      background: none;
+      border: none;
+      color: var(--yb-color-primary, #ff5c35);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .about-sources-btn:hover {
+      color: var(--yb-color-primary-hover, #e04b25);
+    }
+
+    .dialog-footer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      gap: 0.5rem;
+    }
+
+    .sources-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 60vh;
+      overflow-y: auto;
+      color: var(--yb-color-text, #1a202c);
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      line-height: 1.5;
+    }
+
+    .source-section {
+      border-bottom: 1px solid var(--yb-color-border, #e2e8f0);
+      padding-bottom: 0.75rem;
+    }
+
+    .source-section:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .source-section h4 {
+      margin: 0 0 0.25rem 0;
+      font-size: var(--yb-font-size-md, 1rem);
+      color: var(--yb-color-text, #1a202c);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .source-section p {
+      margin: 0;
+      color: var(--yb-color-text-muted, #718096);
+    }
+
+    .source-section code {
+      font-family: var(--yb-font-family-mono, monospace);
+      font-size: 0.8em;
+      background: var(--yb-color-surface-subtle, #f8f9fa);
+      padding: 0.1rem 0.3rem;
+      border-radius: var(--yb-radius-sm, 4px);
+    }
+
+    .source-section a {
+      color: var(--yb-color-primary, #ff5c35);
+      text-decoration: underline;
+    }
+
     .hidden-file-input {
       display: none;
     }
@@ -154,6 +239,9 @@ export class YbIconPicker extends LitElement {
 
   @state()
   private customIcons: IconRecord[] = [];
+
+  @state()
+  private showSourcesDialog = false;
 
   private yotoIconsSynced = false;
 
@@ -473,14 +561,99 @@ export class YbIconPicker extends LitElement {
                 `
               : null
           }
+
+          <div class="attribution-strip">
+            <span>Icons: Google Noto Emoji (Apache 2.0) & Official Yoto</span>
+            <button
+              type="button"
+              class="about-sources-btn"
+              data-testid="about-sources-button"
+              @click=${() => (this.showSourcesDialog = true)}
+            >
+              About sources & licensing ℹ️
+            </button>
+          </div>
         </div>
 
-        <div slot="footer">
+        <div slot="footer" class="dialog-footer-row">
+          <button
+            type="button"
+            class="about-sources-btn"
+            @click=${() => (this.showSourcesDialog = true)}
+          >
+            About icon sources & licensing
+          </button>
           <yb-button variant="subtle" @click=${this.handleClose}
             >Cancel</yb-button
           >
         </div>
       </yb-dialog>
+
+      ${this.showSourcesDialog
+        ? html`
+            <yb-dialog
+              ?open=${this.showSourcesDialog}
+              @yb-dialog-close=${() => (this.showSourcesDialog = false)}
+            >
+              <span slot="header">About Icon Sources & Licensing</span>
+              <div class="sources-content">
+                <div class="source-section">
+                  <h4>Google Noto Emoji</h4>
+                  <p>
+                    Over 3,700 color emoji icons downscaled to 16×16 pixel art.
+                    Noto Emoji is open-source software licensed under the
+                    <a
+                      href="https://www.apache.org/licenses/LICENSE-2.0"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      >Apache 2.0 License</a
+                    >. Unicode CLDR classifications and keywords provide rich
+                    multi-word search capabilities.
+                  </p>
+                </div>
+
+                <div class="source-section">
+                  <h4>Official Yoto Icons</h4>
+                  <p>
+                    Original pixel icons sourced from Yoto's official display
+                    library. Synchronized directly from the Yoto API for use on
+                    your personal Yoto cards and players.
+                  </p>
+                </div>
+
+                <div class="source-section">
+                  <h4>Custom Uploads</h4>
+                  <p>
+                    Upload custom PNG, JPEG, or WebP images. Images are
+                    automatically downscaled client-side to 16×16 pixels using
+                    HTML canvas and uploaded directly to your private Yoto account
+                    library.
+                  </p>
+                </div>
+
+                <div class="source-section">
+                  <h4>Pixel Display & Contrast</h4>
+                  <p>
+                    Yoto Player displays use a 16×16 RGB LED pixel matrix. Icons
+                    are optimized with high-contrast dark backgrounds and
+                    rendered with nearest-neighbor interpolation
+                    (<code>image-rendering: pixelated</code>) for crisp fidelity
+                    on physical hardware.
+                  </p>
+                </div>
+              </div>
+
+              <div slot="footer">
+                <yb-button
+                  variant="primary"
+                  @click=${() => (this.showSourcesDialog = false)}
+                >
+                  Got It
+                </yb-button>
+              </div>
+            </yb-dialog>
+          `
+        : null}
     `;
   }
 }
