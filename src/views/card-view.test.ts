@@ -121,6 +121,95 @@ describe("yb-card-view", () => {
         b.textContent?.includes("Sync New Episodes"),
       );
       expect(syncBtn).to.exist;
+
+      const settingsBtn = buttons.find((b) =>
+        b.textContent?.includes("Sync Settings"),
+      );
+      expect(settingsBtn, "Sync Settings button should be rendered").to.exist;
+    });
+
+    it("opens sync settings dialog with pre-populated values and updates card on save", async () => {
+      let savedCard: Card | null = null;
+      const origUpdateCard = yotoApi.updateCard;
+      yotoApi.updateCard = async (c: Card) => {
+        savedCard = c;
+      };
+
+      try {
+        const el = await fixture<YbCardView>(
+          html`<yb-card-view cardId="card_123"></yb-card-view>`,
+        );
+        el.authSession = {
+          accessToken: "mock",
+          refreshToken: "mock",
+          expiresAt: Date.now() + 10000,
+        };
+        await el.updateComplete;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        await el.updateComplete;
+
+        const buttons = Array.from(
+          el.shadowRoot?.querySelectorAll("yb-button") || [],
+        );
+        const settingsBtn = buttons.find((b) =>
+          b.textContent?.includes("Sync Settings"),
+        );
+        expect(settingsBtn).to.exist;
+        settingsBtn?.click();
+        await el.updateComplete;
+
+        const dialog = el.shadowRoot?.querySelector(
+          ".sync-settings-dialog",
+        ) as HTMLElement & { open: boolean };
+        expect(dialog).to.exist;
+        expect(dialog.open).to.be.true;
+
+        const feedInput = el.shadowRoot?.querySelector(
+          ".sync-feed-url-input",
+        ) as HTMLElement & { value: string };
+        expect(feedInput).to.exist;
+        expect(feedInput.value).to.equal("https://example.com/rss.xml");
+
+        // Modify feed URL and episode limit
+        feedInput.dispatchEvent(
+          new CustomEvent("yb-input", {
+            detail: { value: "https://newhost.example.com/feed.xml" },
+          }),
+        );
+        const limitInput = el.shadowRoot?.querySelector(
+          ".sync-limit-input",
+        ) as HTMLElement & { value: number };
+        limitInput.dispatchEvent(
+          new CustomEvent("yb-input", {
+            detail: { value: 25 },
+          }),
+        );
+        await el.updateComplete;
+
+        // Click Save Settings
+        const saveBtn = el.shadowRoot?.querySelector(
+          ".sync-save-settings-btn",
+        ) as HTMLElement;
+        expect(saveBtn).to.exist;
+        saveBtn.click();
+        await el.updateComplete;
+        await new Promise((resolve) => setTimeout(resolve, 50));
+        await el.updateComplete;
+
+        expect(savedCard, "yotoApi.updateCard should have been called").to.exist;
+        const savedMeta = JSON.parse(
+          (savedCard as unknown as Card).metadata?.description?.match(
+            /<!--\s*yoto-bench:sync\s*\n([\s\S]*?)\n-->/,
+          )?.[1] || "{}",
+        );
+        expect(savedMeta.feedUrl).to.equal(
+          "https://newhost.example.com/feed.xml",
+        );
+        expect(savedMeta.filter?.limit).to.equal(25);
+        expect(dialog.open).to.be.false;
+      } finally {
+        yotoApi.updateCard = origUpdateCard;
+      }
     });
 
     it("renders drop zone for audio ingestion", async () => {
