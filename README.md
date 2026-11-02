@@ -35,7 +35,7 @@ A modern, responsive, client-side web application built with [Lit](https://lit.d
 
 ---
 
-## ✨ Planned Features
+## ✨ Core Features
 
 ### 🎧 Card & Playlist Management
 - **Visual Card Editor:** Inspect, create, and modify Make-Your-Own (MYO) playlist tracks and chapters.
@@ -110,3 +110,5 @@ A modern, responsive, client-side web application built with [Lit](https://lit.d
   - [RFC 019: Secrets Management, CI/CD Credentials, & Client-Side Token Security](docs/rfcs/019-secrets-management-and-ci-cd-credentials.md)
   - [RFC 020: Pre-Implementation Maintainer Manual Setup Checklist](docs/rfcs/020-pre-implementation-manual-setup-checklist.md)
   - [RFC 021: Project Rebranding & Naming Strategy](docs/rfcs/021-project-rebranding-and-naming-strategy.md)
+  - [RFC 022: Developer Tools & Widget Component Gallery](docs/rfcs/022-devtools-and-widget-gallery.md)
+  - [RFC Guidelines & Lifecycle Policy](docs/rfcs/AGENTS.md)

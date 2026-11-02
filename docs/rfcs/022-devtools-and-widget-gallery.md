@@ -1,7 +1,7 @@
 # RFC 022: Developer Tools & Widget Component Gallery ("Devtools")
 
 - **Date:** 2026-10-30
-- **Status:** Proposed
+- **Status:** Implemented
 - **Author:** Antigravity Agent & Andrew Nitschke
 - **Related RFCs:**
   - [RFC 003: Client-Side Single-Page Application (SPA) & Routing Strategy](file:///home/anitschk/sandbox/yoto-bench/docs/rfcs/003-client-spa-and-routing-strategy.md)

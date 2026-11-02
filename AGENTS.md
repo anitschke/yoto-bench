@@ -51,6 +51,9 @@ Welcome to `yoto-bench` (YotoBench)! This document serves as the central guide f
     - All HTTP requests to Yoto REST APIs and Auth services must flow strictly through `YotoApiClient` (and its internal `request()` pipeline).
     - **Never invoke raw ad-hoc `fetch()` calls** to Yoto APIs from views, widgets, or business logic services.
     - **Rationale:** The centralized `YotoApiClient` guarantees automatic Authorization header injection, seamless 401 silent token refreshes via `authService.refreshToken()`, structured error parsing, and consistent user-facing error toast dispatching per RFC 006.
+11. **RFC Management, Format & Lifecycle Tracking ([`docs/rfcs/AGENTS.md`](docs/rfcs/AGENTS.md)):**
+    - **Architecture & Template Standards:** Every major architectural subsystem, protocol, and convention must have a corresponding RFC in `docs/rfcs/` following the format and naming conventions defined in [`docs/rfcs/AGENTS.md`](docs/rfcs/AGENTS.md).
+    - **Mandatory Status Transition to `Implemented`:** RFCs follow the lifecycle `Proposed` $\rightarrow$ `Accepted` $\rightarrow$ `Implemented` (or `Rejected` / `Superseded`). Once an RFC's code has been implemented, verified with unit/E2E tests, and merged into the `main` branch, contributors and AI agents **MUST update its status header (`- **Status:** Implemented`)** in `docs/rfcs/NNN-*.md`.
 
 ---
 
