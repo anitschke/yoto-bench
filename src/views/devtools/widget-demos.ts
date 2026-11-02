@@ -9,6 +9,7 @@ import "../../widgets/yb-progress-bar.js";
 import "../../widgets/yb-pixel-icon.js";
 import "../../widgets/yb-toast.js";
 import "../../widgets/yb-please-sign-in.js";
+import "../../widgets/yb-duration.js";
 import "./demo-icon-picker.js";
 import { dispatchToast } from "../../widgets/events.js";
 
@@ -541,6 +542,30 @@ export const WIDGET_DEMOS: WidgetDemoItem[] = [
             ctx.logEvent("yb-icon-selected", e.detail.icon)}
           @yb-dialog-close=${() => ctx.logEvent("yb-dialog-close", "Closed")}
         ></yb-demo-icon-picker>
+      </div>
+    `,
+  },
+  {
+    id: "duration",
+    title: "Duration Display",
+    tag: "<yb-duration>",
+    description:
+      "Semantic time element for audio tracks and podcast durations, formatting seconds into MM:SS, H:MM:SS, or human-readable formats with standard ISO 8601 datetime attributes.",
+    renderDemo: () => html`
+      <div class="demo-section">
+        <h4>Standard Clock Formatting (MM:SS / H:MM:SS)</h4>
+        <div class="demo-row">
+          <div><yb-duration .seconds=${45}></yb-duration> (45s)</div>
+          <div><yb-duration .seconds=${185}></yb-duration> (185s)</div>
+          <div><yb-duration .seconds=${4530}></yb-duration> (4530s)</div>
+        </div>
+
+        <h4>Humanized Compact Formatting</h4>
+        <div class="demo-row">
+          <div><yb-duration .seconds=${45} format="human"></yb-duration> (45s)</div>
+          <div><yb-duration .seconds=${185} format="human"></yb-duration> (185s)</div>
+          <div><yb-duration .seconds=${4530} format="human"></yb-duration> (4530s)</div>
+        </div>
       </div>
     `,
   },
