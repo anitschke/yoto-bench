@@ -257,8 +257,60 @@ export class YbLibraryView extends LitElement {
                 <div class="card-grid">
                   ${filtered.map((card) => {
                     const firstChapter = card.content?.chapters?.[0];
-                    const iconUrl = firstChapter?.display?.icon16x16 || "";
-                    const trackCount = card.content?.chapters?.length || 0;
+                    const iconUrl =
+                      (card.display as { icon16x16?: string } | undefined)
+                        ?.icon16x16 ||
+                      firstChapter?.display?.icon16x16 ||
+                      "";
+
+                    // Determine track/chapter count if available from content or metadata
+                    let trackCount: number | undefined = undefined;
+                    if (
+                      card.content?.chapters &&
+                      card.content.chapters.length > 0
+                    ) {
+                      trackCount = card.content.chapters.length;
+                    } else if (
+                      typeof card.trackCount === "number" &&
+                      card.trackCount > 0
+                    ) {
+                      trackCount = card.trackCount;
+                    } else {
+                      const meta = card.metadata as
+                        | Record<string, unknown>
+                        | undefined;
+                      if (
+                        typeof meta?.trackCount === "number" &&
+                        meta.trackCount > 0
+                      ) {
+                        trackCount = meta.trackCount;
+                      } else if (
+                        typeof (
+                          meta?.media as Record<string, unknown> | undefined
+                        )?.trackCount === "number"
+                      ) {
+                        const count = (
+                          meta!.media as Record<string, unknown>
+                        ).trackCount as number;
+                        if (count > 0) trackCount = count;
+                      }
+                    }
+
+                    // Format metadata text: show track count if available, otherwise show updated date or omit
+                    let metaText = "";
+                    if (trackCount !== undefined) {
+                      metaText = `${trackCount} ${trackCount === 1 ? "track" : "tracks"}`;
+                    } else if (card.updatedAt) {
+                      try {
+                        const d = new Date(card.updatedAt);
+                        metaText = `Updated ${d.toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}`;
+                      } catch {
+                        metaText = "";
+                      }
+                    }
 
                     return html`
                       <div class="card-item">
@@ -270,10 +322,9 @@ export class YbLibraryView extends LitElement {
                           ></yb-pixel-icon>
                           <div style="flex: 1; min-width: 0;">
                             <h4 class="card-title">${card.title}</h4>
-                            <span class="card-meta"
-                              >${trackCount}
-                              ${trackCount === 1 ? "track" : "tracks"}</span
-                            >
+                            ${metaText
+                              ? html`<span class="card-meta">${metaText}</span>`
+                              : null}
                           </div>
                         </div>
                         <div class="card-actions">

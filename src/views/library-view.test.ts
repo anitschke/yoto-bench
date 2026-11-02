@@ -153,5 +153,35 @@ describe("yb-library-view", () => {
       expect(nativeInput.value).to.equal("Bedtime Stories Podcast");
       expect(textInput.value).to.equal("Bedtime Stories Podcast");
     });
+
+    it("renders accurate track count when chapters are present, and does not show misleading 0 tracks when unavailable", async () => {
+      const el = await fixture<YbLibraryView>(
+        html`<yb-library-view></yb-library-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const cardItems = el.shadowRoot?.querySelectorAll(".card-item");
+      expect(cardItems?.length).to.equal(2);
+      if (!cardItems) throw new Error("card items not found");
+
+      // Card 1 has 1 chapter -> should show "1 track"
+      const meta1 = cardItems[0]!.querySelector(".card-meta");
+      expect(meta1?.textContent?.trim()).to.equal("1 track");
+
+      // Card 2 has no chapters/tracks data -> should NOT show "0 tracks"
+      const meta2 = cardItems[1]!.querySelector(".card-meta");
+      if (meta2) {
+        expect(meta2.textContent || "").to.not.include("0 tracks");
+      } else {
+        expect(meta2).to.not.exist;
+      }
+    });
   });
 });
