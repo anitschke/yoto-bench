@@ -139,5 +139,81 @@ describe("yb-card-view", () => {
       const dropZone = el.shadowRoot?.querySelector(".drop-zone");
       expect(dropZone).to.exist;
     });
+
+    it("applies advanced filter options (keyword filter and max duration) in podcast import modal", async () => {
+      const el = await fixture<YbCardView>(
+        html`<yb-card-view cardId="card_123"></yb-card-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      // Open podcast import dialog
+      (el as unknown as { podcastDialogOpen: boolean }).podcastDialogOpen =
+        true;
+      (el as unknown as { podcastRawXml: string }).podcastRawXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <title>Kids Stories</title>
+    <item>
+      <title>Story 1: The Magic Mountain</title>
+      <itunes:duration>300</itunes:duration>
+      <enclosure url="https://example.com/1.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <title>Story 2: Bonus Marathon</title>
+      <itunes:duration>7200</itunes:duration>
+      <enclosure url="https://example.com/2.mp3" type="audio/mpeg"/>
+    </item>
+    <item>
+      <title>Interview with Author</title>
+      <itunes:duration>600</itunes:duration>
+      <enclosure url="https://example.com/3.mp3" type="audio/mpeg"/>
+    </item>
+  </channel>
+</rss>`;
+      await el.updateComplete;
+
+      const includeInput = el.shadowRoot?.querySelector(
+        ".podcast-include-keywords-input",
+      ) as HTMLElement & { value: string };
+      expect(includeInput, "include keywords input should exist").to.exist;
+      includeInput.dispatchEvent(
+        new CustomEvent("yb-input", { detail: { value: "Story" } }),
+      );
+
+      const maxDurationInput = el.shadowRoot?.querySelector(
+        ".podcast-max-duration-input",
+      ) as HTMLElement & { value: number };
+      expect(maxDurationInput, "max duration input should exist").to.exist;
+      maxDurationInput.dispatchEvent(
+        new CustomEvent("yb-input", { detail: { value: 3600 } }),
+      );
+      await el.updateComplete;
+
+      // Trigger preview
+      const previewBtn = Array.from(
+        el.shadowRoot?.querySelectorAll("yb-button") || [],
+      ).find((b) => b.textContent?.includes("Fetch & Preview Episodes"));
+      previewBtn?.click();
+
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const previewRows = el.shadowRoot?.querySelectorAll(".podcast-ep-row");
+      expect(
+        previewRows?.length,
+        "only Story 1 matches Story keyword and max duration <= 3600s",
+      ).to.equal(1);
+      expect(previewRows?.[0]?.textContent).to.include(
+        "Story 1: The Magic Mountain",
+      );
+    });
   });
 });

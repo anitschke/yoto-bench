@@ -175,6 +175,57 @@ describe("Podcast Importer Service", () => {
       expect(filtered[0]?.title).to.equal("Short Promo");
       expect(filtered[2]?.title).to.equal("New Episode");
     });
+
+    it("filters by maxDurationSeconds", () => {
+      const filtered = filterEpisodes(episodes, { maxDurationSeconds: 400 });
+      expect(filtered.length).to.equal(2);
+      expect(filtered.some((e) => e.title === "New Episode")).to.be.false;
+    });
+
+    it("filters by includeKeywords and excludeKeywords", () => {
+      const moreEpisodes: PodcastEpisode[] = [
+        { title: "Story: The Dragon", enclosureUrl: "https://example.com/1.mp3" },
+        { title: "Story: The Bonus Tale", enclosureUrl: "https://example.com/2.mp3" },
+        { title: "Host Q&A Special", enclosureUrl: "https://example.com/3.mp3" },
+      ];
+
+      const onlyStories = filterEpisodes(moreEpisodes, {
+        includeKeywords: ["Story"],
+        excludeKeywords: ["Bonus"],
+      });
+      expect(onlyStories.length).to.equal(1);
+      expect(onlyStories[0]?.title).to.equal("Story: The Dragon");
+    });
+
+    it("filters by excludeExplicit", () => {
+      const mixedEpisodes: PodcastEpisode[] = [
+        { title: "Clean Story", enclosureUrl: "https://example.com/1.mp3", explicit: false },
+        { title: "Explicit Story", enclosureUrl: "https://example.com/2.mp3", explicit: true },
+      ];
+
+      const clean = filterEpisodes(mixedEpisodes, { excludeExplicit: true });
+      expect(clean.length).to.equal(1);
+      expect(clean[0]?.title).to.equal("Clean Story");
+    });
+
+    it("filters by season and episode range", () => {
+      const numberedEpisodes: PodcastEpisode[] = [
+        { title: "S1E1", enclosureUrl: "https://example.com/1.mp3", season: 1, episode: 1 },
+        { title: "S1E2", enclosureUrl: "https://example.com/2.mp3", season: 1, episode: 2 },
+        { title: "S2E1", enclosureUrl: "https://example.com/3.mp3", season: 2, episode: 1 },
+      ];
+
+      const season1 = filterEpisodes(numberedEpisodes, { season: 1 });
+      expect(season1.length).to.equal(2);
+
+      const epRange = filterEpisodes(numberedEpisodes, {
+        season: 1,
+        minEpisodeNumber: 2,
+        maxEpisodeNumber: 2,
+      });
+      expect(epRange.length).to.equal(1);
+      expect(epRange[0]?.title).to.equal("S1E2");
+    });
   });
 
   describe("Card Sync Metadata", () => {
