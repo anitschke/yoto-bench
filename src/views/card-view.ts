@@ -45,6 +45,21 @@ import "../widgets/yb-progress-bar.js";
 import "../widgets/yb-please-sign-in.js";
 import "../widgets/yb-icon-picker.js";
 
+export interface ActiveImportItem {
+  id: string;
+  title: string;
+  status:
+    | "pending"
+    | "downloading"
+    | "hashing"
+    | "uploading"
+    | "transcoding"
+    | "complete"
+    | "error";
+  progress?: number;
+  error?: string;
+}
+
 interface WebkitEntry {
   isFile: boolean;
   isDirectory: boolean;
@@ -131,6 +146,48 @@ export class YbCardView extends LitElement {
       border: 1px solid var(--yb-color-border, #e2e8f0);
       border-radius: var(--yb-radius-md, 8px);
       background: var(--yb-color-surface, #ffffff);
+    }
+
+    .import-items-list {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-height: 260px;
+      overflow-y: auto;
+      border-top: 1px solid var(--yb-color-border, #e2e8f0);
+      padding-top: 0.75rem;
+    }
+
+    .import-item-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      padding: 0.4rem 0.5rem;
+      border-radius: var(--yb-radius-sm, 6px);
+      background: var(--yb-color-surface-subtle, #f8f9fa);
+    }
+
+    .import-item-number {
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      font-weight: 600;
+      color: var(--yb-color-text-muted, #718096);
+      min-width: 1.5rem;
+    }
+
+    .import-item-title {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 500;
+      color: var(--yb-color-text, #1a202c);
+    }
+
+    .import-item-status {
+      display: flex;
+      align-items: center;
     }
 
     .track-list {
@@ -255,6 +312,7 @@ export class YbCardView extends LitElement {
   @state() private isUploading = false;
   @state() private uploadProgressPercent = 0;
   @state() private uploadProgressText = "";
+  @state() private activeImportItems: ActiveImportItem[] = [];
 
   // Icon Picker
   @state() private iconPickerOpen = false;
@@ -664,6 +722,11 @@ export class YbCardView extends LitElement {
     if (!this.card || this.podcastPreviewEpisodes.length === 0) return;
     this.isUploading = true;
     this.podcastDialogOpen = false;
+    this.activeImportItems = this.podcastPreviewEpisodes.map((ep, i) => ({
+      id: `ep-${i}`,
+      title: ep.title,
+      status: "pending",
+    }));
 
     try {
       const audioPayloads = [];
@@ -673,9 +736,19 @@ export class YbCardView extends LitElement {
         const ep = this.podcastPreviewEpisodes[i]!;
         this.uploadProgressText = `Fetching episode ${i + 1}/${total}: ${ep.title}...`;
         this.uploadProgressPercent = Math.round(((i + 1) / total) * 30);
+        this.activeImportItems = this.activeImportItems.map((item, idx) =>
+          idx === i ? { ...item, status: "downloading" } : item,
+        );
 
         const resp = await fetch(ep.enclosureUrl);
-        if (!resp.ok) continue;
+        if (!resp.ok) {
+          this.activeImportItems = this.activeImportItems.map((item, idx) =>
+            idx === i
+              ? { ...item, status: "error", error: "Download failed" }
+              : item,
+          );
+          continue;
+        }
         const blob = await resp.blob();
 
         const filename = `${ep.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.mp3`;
@@ -711,6 +784,21 @@ export class YbCardView extends LitElement {
           this.uploadProgressPercent =
             30 + Math.round((completed / count) * 70);
           this.uploadProgressText = `Uploading & transcoding ${completed}/${count} episodes...`;
+
+          this.activeImportItems = this.activeImportItems.map((importItem) => {
+            const queueMatch = items.find(
+              (q) => q.metadata?.title === importItem.title,
+            );
+            if (queueMatch) {
+              return {
+                ...importItem,
+                status: queueMatch.status,
+                progress: queueMatch.progress,
+                error: queueMatch.error,
+              };
+            }
+            return importItem;
+          });
         },
       );
 
@@ -834,6 +922,26 @@ export class YbCardView extends LitElement {
     }
   }
 
+  private renderImportStatusBadge(status: ActiveImportItem["status"]) {
+    switch (status) {
+      case "complete":
+        return html`<yb-badge variant="success">✓ Complete</yb-badge>`;
+      case "error":
+        return html`<yb-badge variant="danger">Failed</yb-badge>`;
+      case "downloading":
+        return html`<yb-badge variant="warning">Downloading</yb-badge>`;
+      case "hashing":
+        return html`<yb-badge variant="warning">Hashing</yb-badge>`;
+      case "uploading":
+        return html`<yb-badge variant="warning">Uploading</yb-badge>`;
+      case "transcoding":
+        return html`<yb-badge variant="warning">Transcoding</yb-badge>`;
+      case "pending":
+      default:
+        return html`<yb-badge variant="neutral">Pending</yb-badge>`;
+    }
+  }
+
   override render() {
     const isAuthed = !!this.authSession && authService.isAuthenticated();
     if (!isAuthed) {
@@ -954,6 +1062,35 @@ export class YbCardView extends LitElement {
                     .value=${this.uploadProgressPercent}
                     .label=${this.uploadProgressText}
                   ></yb-progress-bar>
+
+                  ${
+                    this.activeImportItems.length > 0
+                      ? html`
+                          <div class="import-items-list">
+                            ${this.activeImportItems.map(
+                              (item, idx) => html`
+                                <div
+                                  class="import-item-row"
+                                  data-status=${item.status}
+                                >
+                                  <span class="import-item-number"
+                                    >${idx + 1}</span
+                                  >
+                                  <span
+                                    class="import-item-title"
+                                    title=${item.title}
+                                    >${item.title}</span
+                                  >
+                                  <span class="import-item-status">
+                                    ${this.renderImportStatusBadge(item.status)}
+                                  </span>
+                                </div>
+                              `,
+                            )}
+                          </div>
+                        `
+                      : null
+                  }
                 </div>
               `
             : null
