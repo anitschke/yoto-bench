@@ -56,7 +56,7 @@ test.describe("Podcast RSS Feed Importer (E2E)", () => {
       .filter({ hasText: "Import Podcast RSS Feed" });
     await expect(podcastDialog).toHaveAttribute("open", "");
 
-    const urlInput = podcastDialog.locator("yb-text-input input");
+    const urlInput = podcastDialog.locator("yb-text-input input").first();
     await expect(urlInput).toBeVisible();
     await urlInput.fill(FEED_URL);
 

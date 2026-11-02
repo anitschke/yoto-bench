@@ -265,9 +265,29 @@ export class YbCardView extends LitElement {
   @state() private podcastFeedUrl = "";
   @state() private podcastLimit = 10;
   @state() private podcastMinDuration = 120;
+  @state() private podcastMaxDuration = 0;
+  @state() private podcastOrder: "newest" | "oldest" = "newest";
+  @state() private podcastIncludeKeywords = "";
+  @state() private podcastExcludeKeywords = "";
+  @state() private podcastExcludeExplicit = false;
+  @state() private podcastSeason: number | undefined = undefined;
   @state() private podcastRawXml = "";
   @state() private podcastPreviewEpisodes: PodcastEpisode[] = [];
   @state() private isPreviewingPodcast = false;
+
+  // Podcast Sync Settings Dialog
+  @state() private syncSettingsDialogOpen = false;
+  @state() private editSyncFeedUrl = "";
+  @state() private editSyncLimit = 10;
+  @state() private editSyncMinDuration = 120;
+  @state() private editSyncMaxDuration = 0;
+  @state() private editSyncOrder: "newest" | "oldest" = "newest";
+  @state() private editSyncIncludeKeywords = "";
+  @state() private editSyncExcludeKeywords = "";
+  @state() private editSyncExcludeExplicit = false;
+  @state() private editSyncSeason: number | undefined = undefined;
+  @state() private editSyncLastSynced = "";
+  @state() private isSavingSyncSettings = false;
 
   private isFetching = false;
 
@@ -643,9 +663,32 @@ export class YbCardView extends LitElement {
         xml = await fetchFeedXml(this.podcastFeedUrl);
       }
       const feed = parsePodcastFeed(xml);
+      const includeKeywords = this.podcastIncludeKeywords
+        ? this.podcastIncludeKeywords
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined;
+      const excludeKeywords = this.podcastExcludeKeywords
+        ? this.podcastExcludeKeywords
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined;
+
       const filtered = filterEpisodes(feed.episodes, {
         limit: this.podcastLimit,
         minDurationSeconds: this.podcastMinDuration,
+        maxDurationSeconds:
+          this.podcastMaxDuration > 0 ? this.podcastMaxDuration : undefined,
+        order: this.podcastOrder,
+        includeKeywords,
+        excludeKeywords,
+        excludeExplicit: this.podcastExcludeExplicit,
+        season:
+          this.podcastSeason !== undefined && this.podcastSeason > 0
+            ? this.podcastSeason
+            : undefined,
       });
       this.podcastPreviewEpisodes = filtered;
     } catch (err) {
@@ -722,6 +765,19 @@ export class YbCardView extends LitElement {
         ...newChapters,
       ]);
 
+      const includeKeywords = this.podcastIncludeKeywords
+        ? this.podcastIncludeKeywords
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined;
+      const excludeKeywords = this.podcastExcludeKeywords
+        ? this.podcastExcludeKeywords
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean)
+        : undefined;
+
       // Embed sync metadata into card description
       const syncMeta: CardSyncMetadata = {
         version: 1,
@@ -730,6 +786,16 @@ export class YbCardView extends LitElement {
         filter: {
           limit: this.podcastLimit,
           minDurationSeconds: this.podcastMinDuration,
+          maxDurationSeconds:
+            this.podcastMaxDuration > 0 ? this.podcastMaxDuration : undefined,
+          order: this.podcastOrder,
+          includeKeywords,
+          excludeKeywords,
+          excludeExplicit: this.podcastExcludeExplicit,
+          season:
+            this.podcastSeason !== undefined && this.podcastSeason > 0
+              ? this.podcastSeason
+              : undefined,
         },
         lastSynced: new Date().toISOString(),
       };
@@ -775,10 +841,7 @@ export class YbCardView extends LitElement {
     try {
       const xml = await fetchFeedXml(syncMeta.feedUrl);
       const feed = parsePodcastFeed(xml);
-      const filtered = filterEpisodes(feed.episodes, {
-        limit: syncMeta.filter?.limit || 10,
-        minDurationSeconds: syncMeta.filter?.minDurationSeconds || 120,
-      });
+      const filtered = filterEpisodes(feed.episodes, syncMeta.filter || {});
 
       // Existing titles set
       const existingTitles = new Set(
@@ -809,6 +872,99 @@ export class YbCardView extends LitElement {
       });
     } finally {
       this.isSyncingPodcast = false;
+    }
+  }
+
+  // --- Podcast Sync Settings ---
+
+  private openSyncSettingsDialog() {
+    const syncMeta = extractSyncMetadata(this.card?.metadata?.description);
+    if (!syncMeta) return;
+    this.editSyncFeedUrl = syncMeta.feedUrl;
+    this.editSyncLimit = syncMeta.filter?.limit ?? 10;
+    this.editSyncMinDuration = syncMeta.filter?.minDurationSeconds ?? 120;
+    this.editSyncMaxDuration = syncMeta.filter?.maxDurationSeconds ?? 0;
+    this.editSyncOrder = syncMeta.filter?.order ?? "newest";
+    this.editSyncIncludeKeywords = (
+      syncMeta.filter?.includeKeywords || []
+    ).join(", ");
+    this.editSyncExcludeKeywords = (
+      syncMeta.filter?.excludeKeywords || []
+    ).join(", ");
+    this.editSyncExcludeExplicit = !!syncMeta.filter?.excludeExplicit;
+    this.editSyncSeason = syncMeta.filter?.season;
+    this.editSyncLastSynced = syncMeta.lastSynced ?? "";
+    this.syncSettingsDialogOpen = true;
+  }
+
+  private async saveSyncSettings() {
+    if (!this.card) return;
+    const currentSyncMeta = extractSyncMetadata(
+      this.card.metadata?.description,
+    );
+    if (!currentSyncMeta) return;
+
+    const includeKeywords = this.editSyncIncludeKeywords
+      ? this.editSyncIncludeKeywords
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : undefined;
+    const excludeKeywords = this.editSyncExcludeKeywords
+      ? this.editSyncExcludeKeywords
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : undefined;
+
+    const updatedMeta: CardSyncMetadata = {
+      ...currentSyncMeta,
+      feedUrl: this.editSyncFeedUrl.trim(),
+      filter: {
+        limit: this.editSyncLimit,
+        minDurationSeconds: this.editSyncMinDuration,
+        maxDurationSeconds:
+          this.editSyncMaxDuration > 0 ? this.editSyncMaxDuration : undefined,
+        order: this.editSyncOrder,
+        includeKeywords,
+        excludeKeywords,
+        excludeExplicit: this.editSyncExcludeExplicit,
+        season:
+          this.editSyncSeason !== undefined && this.editSyncSeason > 0
+            ? this.editSyncSeason
+            : undefined,
+      },
+    };
+
+    const updatedDescription = embedSyncMetadata(
+      this.card.metadata?.description,
+      updatedMeta,
+    );
+
+    this.card = {
+      ...this.card,
+      metadata: {
+        ...this.card.metadata,
+        description: updatedDescription,
+      },
+    };
+
+    this.isSavingSyncSettings = true;
+    try {
+      await yotoApi.updateCard(this.card);
+      this.syncSettingsDialogOpen = false;
+      dispatchToast(this, {
+        type: "success",
+        message: "Podcast sync settings updated and saved to Yoto!",
+      });
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to save sync settings.",
+        errorDetail: err,
+      });
+    } finally {
+      this.isSavingSyncSettings = false;
     }
   }
 
@@ -868,8 +1024,13 @@ export class YbCardView extends LitElement {
               ${
                 syncMeta
                   ? html`
-                      <yb-badge variant="neutral">
-                        Podcast Sync Active
+                      <yb-badge
+                        variant="neutral"
+                        style="cursor: pointer;"
+                        title="Click to view sync settings"
+                        @click=${this.openSyncSettingsDialog}
+                      >
+                        Podcast Sync Active ⚙️
                       </yb-badge>
                     `
                   : null
@@ -881,6 +1042,12 @@ export class YbCardView extends LitElement {
             ${
               syncMeta
                 ? html`
+                    <yb-button
+                      variant="secondary"
+                      @click=${this.openSyncSettingsDialog}
+                    >
+                      ⚙️ Sync Settings
+                    </yb-button>
                     <yb-button
                       variant="secondary"
                       ?loading=${this.isSyncingPodcast}
@@ -1063,6 +1230,7 @@ export class YbCardView extends LitElement {
 
         <div class="podcast-form">
           <yb-text-input
+            class="podcast-feed-url-input"
             label="Podcast RSS Feed URL"
             placeholder="https://feeds.example.com/podcast.xml"
             .value=${this.podcastFeedUrl}
@@ -1115,6 +1283,143 @@ export class YbCardView extends LitElement {
               }}
             ></yb-number-input>
           </div>
+
+          <div class="podcast-order-group">
+            <label
+              style="font-size: var(--yb-font-size-sm, 0.875rem); font-weight: 500; color: var(--yb-color-text, #1e293b);"
+            >
+              Episode Ordering
+            </label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="podcastOrder"
+                  value="newest"
+                  .checked=${this.podcastOrder === "newest"}
+                  @change=${() => {
+                    this.podcastOrder = "newest";
+                  }}
+                />
+                Newest First
+              </label>
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="podcastOrder"
+                  value="oldest"
+                  .checked=${this.podcastOrder === "oldest"}
+                  @change=${() => {
+                    this.podcastOrder = "oldest";
+                  }}
+                />
+                Oldest First (Chronological)
+              </label>
+            </div>
+          </div>
+
+          <details class="podcast-advanced-filters" style="margin-top: 0.5rem;">
+            <summary
+              style="cursor: pointer; font-size: var(--yb-font-size-sm, 0.875rem); color: var(--yb-color-primary, #ff5500); font-weight: 500;"
+            >
+              ⚙️ Advanced Filter Options
+            </summary>
+            <div
+              style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 0.5rem; padding: 0.75rem; background: var(--yb-color-surface-subtle, #f8fafc); border-radius: var(--yb-radius-md, 8px);"
+            >
+              <div style="display: flex; gap: 1rem;">
+                <yb-number-input
+                  class="podcast-max-duration-input"
+                  label="Max Duration (s, 0 = no limit)"
+                  .value=${this.podcastMaxDuration}
+                  .min=${0}
+                  @change=${(e: CustomEvent<{ value: number }>) => {
+                    if (e.detail?.value !== undefined) {
+                      this.podcastMaxDuration = e.detail.value;
+                    }
+                  }}
+                  @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                    if (e.detail?.value !== undefined) {
+                      this.podcastMaxDuration = e.detail.value;
+                    }
+                  }}
+                ></yb-number-input>
+
+                <yb-number-input
+                  class="podcast-season-input"
+                  label="Season Number (optional)"
+                  .value=${this.podcastSeason ?? 0}
+                  .min=${0}
+                  @change=${(e: CustomEvent<{ value: number }>) => {
+                    this.podcastSeason = e.detail?.value || undefined;
+                  }}
+                  @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                    this.podcastSeason = e.detail?.value || undefined;
+                  }}
+                ></yb-number-input>
+              </div>
+
+              <yb-text-input
+                class="podcast-include-keywords-input"
+                label="Only include titles matching keywords (comma-separated)"
+                placeholder="Story, Chapter, Bedtime"
+                .value=${this.podcastIncludeKeywords}
+                @input=${(e: Event) => {
+                  const detail = (e as CustomEvent<{ value: string }>).detail;
+                  const target = e.target as HTMLInputElement | { value: string };
+                  this.podcastIncludeKeywords =
+                    detail?.value !== undefined
+                      ? detail.value
+                      : (target?.value ?? "");
+                }}
+                @yb-input=${(e: CustomEvent<{ value: string }>) => {
+                  if (e.detail?.value !== undefined) {
+                    this.podcastIncludeKeywords = e.detail.value;
+                  }
+                }}
+              ></yb-text-input>
+
+              <yb-text-input
+                class="podcast-exclude-keywords-input"
+                label="Exclude titles matching keywords (comma-separated)"
+                placeholder="Bonus, Q&amp;A, Trailer"
+                .value=${this.podcastExcludeKeywords}
+                @input=${(e: Event) => {
+                  const detail = (e as CustomEvent<{ value: string }>).detail;
+                  const target = e.target as HTMLInputElement | { value: string };
+                  this.podcastExcludeKeywords =
+                    detail?.value !== undefined
+                      ? detail.value
+                      : (target?.value ?? "");
+                }}
+                @yb-input=${(e: CustomEvent<{ value: string }>) => {
+                  if (e.detail?.value !== undefined) {
+                    this.podcastExcludeKeywords = e.detail.value;
+                  }
+                }}
+              ></yb-text-input>
+
+              <label
+                style="display: flex; align-items: center; gap: 0.5rem; font-size: var(--yb-font-size-sm, 0.875rem); cursor: pointer; user-select: none;"
+              >
+                <input
+                  type="checkbox"
+                  class="podcast-exclude-explicit-checkbox"
+                  .checked=${this.podcastExcludeExplicit}
+                  @change=${(e: Event) => {
+                    this.podcastExcludeExplicit = (
+                      e.target as HTMLInputElement
+                    ).checked;
+                  }}
+                />
+                Exclude explicit content (filter out explicit episodes)
+              </label>
+            </div>
+          </details>
 
           <yb-button
             variant="secondary"
@@ -1173,6 +1478,229 @@ export class YbCardView extends LitElement {
             @click=${this.importPodcastEpisodes}
           >
             Import ${this.podcastPreviewEpisodes.length} Episodes
+          </yb-button>
+        </div>
+      </yb-dialog>
+
+      <!-- Podcast Sync Settings Dialog -->
+      <yb-dialog
+        class="sync-settings-dialog"
+        ?open=${this.syncSettingsDialogOpen}
+        @close=${() => {
+          this.syncSettingsDialogOpen = false;
+        }}
+      >
+        <span slot="header">Podcast Sync Settings</span>
+
+        <div class="podcast-form">
+          <yb-text-input
+            class="sync-feed-url-input"
+            label="Podcast RSS Feed URL"
+            .value=${this.editSyncFeedUrl}
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.editSyncFeedUrl =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
+            }}
+            @yb-input=${(e: CustomEvent<{ value: string }>) => {
+              if (e.detail?.value !== undefined) {
+                this.editSyncFeedUrl = e.detail.value;
+              }
+            }}
+          ></yb-text-input>
+
+          <div style="display: flex; gap: 1rem;">
+            <yb-number-input
+              class="sync-limit-input"
+              label="Episode Limit"
+              .value=${this.editSyncLimit}
+              .min=${1}
+              .max=${100}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncLimit = e.detail.value;
+                }
+              }}
+              @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncLimit = e.detail.value;
+                }
+              }}
+            ></yb-number-input>
+
+            <yb-number-input
+              class="sync-min-duration-input"
+              label="Min Duration (s)"
+              .value=${this.editSyncMinDuration}
+              .min=${0}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncMinDuration = e.detail.value;
+                }
+              }}
+              @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncMinDuration = e.detail.value;
+                }
+              }}
+            ></yb-number-input>
+          </div>
+
+          <div style="display: flex; gap: 1rem;">
+            <yb-number-input
+              class="sync-max-duration-input"
+              label="Max Duration (s, 0 = no limit)"
+              .value=${this.editSyncMaxDuration}
+              .min=${0}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncMaxDuration = e.detail.value;
+                }
+              }}
+              @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncMaxDuration = e.detail.value;
+                }
+              }}
+            ></yb-number-input>
+
+            <yb-number-input
+              class="sync-season-input"
+              label="Season Number (optional)"
+              .value=${this.editSyncSeason ?? 0}
+              .min=${0}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                this.editSyncSeason = e.detail?.value || undefined;
+              }}
+              @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                this.editSyncSeason = e.detail?.value || undefined;
+              }}
+            ></yb-number-input>
+          </div>
+
+          <yb-text-input
+            class="sync-include-keywords-input"
+            label="Only include titles matching keywords (comma-separated)"
+            placeholder="Story, Chapter, Bedtime"
+            .value=${this.editSyncIncludeKeywords}
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.editSyncIncludeKeywords =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
+            }}
+            @yb-input=${(e: CustomEvent<{ value: string }>) => {
+              if (e.detail?.value !== undefined) {
+                this.editSyncIncludeKeywords = e.detail.value;
+              }
+            }}
+          ></yb-text-input>
+
+          <yb-text-input
+            class="sync-exclude-keywords-input"
+            label="Exclude titles matching keywords (comma-separated)"
+            placeholder="Bonus, Q&amp;A, Trailer"
+            .value=${this.editSyncExcludeKeywords}
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.editSyncExcludeKeywords =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
+            }}
+            @yb-input=${(e: CustomEvent<{ value: string }>) => {
+              if (e.detail?.value !== undefined) {
+                this.editSyncExcludeKeywords = e.detail.value;
+              }
+            }}
+          ></yb-text-input>
+
+          <div class="sync-order-group">
+            <label
+              style="font-size: var(--yb-font-size-sm, 0.875rem); font-weight: 500; color: var(--yb-color-text, #1e293b);"
+            >
+              Episode Ordering
+            </label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="editSyncOrder"
+                  value="newest"
+                  .checked=${this.editSyncOrder === "newest"}
+                  @change=${() => {
+                    this.editSyncOrder = "newest";
+                  }}
+                />
+                Newest First
+              </label>
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="editSyncOrder"
+                  value="oldest"
+                  .checked=${this.editSyncOrder === "oldest"}
+                  @change=${() => {
+                    this.editSyncOrder = "oldest";
+                  }}
+                />
+                Oldest First (Chronological)
+              </label>
+            </div>
+          </div>
+
+          <label
+            style="display: flex; align-items: center; gap: 0.5rem; font-size: var(--yb-font-size-sm, 0.875rem); cursor: pointer; user-select: none;"
+          >
+            <input
+              type="checkbox"
+              class="sync-exclude-explicit-checkbox"
+              .checked=${this.editSyncExcludeExplicit}
+              @change=${(e: Event) => {
+                this.editSyncExcludeExplicit = (
+                  e.target as HTMLInputElement
+                ).checked;
+              }}
+            />
+            Exclude explicit content (filter out explicit episodes)
+          </label>
+
+          <div
+            class="sync-meta-info"
+            style="font-size: 0.8rem; color: var(--yb-color-text-muted, #718096); padding: 0.5rem; background: var(--yb-color-surface-subtle, #f8fafc); border-radius: var(--yb-radius-sm, 6px);"
+          >
+            ${this.editSyncLastSynced
+              ? `Last synced: ${new Date(this.editSyncLastSynced).toLocaleString()}`
+              : "Last synced: Never"}
+          </div>
+        </div>
+
+        <div slot="footer">
+          <yb-button
+            variant="subtle"
+            @click=${() => {
+              this.syncSettingsDialogOpen = false;
+            }}
+          >
+            Cancel
+          </yb-button>
+          <yb-button
+            class="sync-save-settings-btn"
+            variant="primary"
+            ?loading=${this.isSavingSyncSettings}
+            @click=${this.saveSyncSettings}
+          >
+            Save Settings
           </yb-button>
         </div>
       </yb-dialog>

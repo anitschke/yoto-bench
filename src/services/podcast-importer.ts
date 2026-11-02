@@ -12,6 +12,8 @@ export interface PodcastEpisode {
   duration?: number; // in seconds
   enclosureUrl: string;
   explicit?: boolean;
+  season?: number;
+  episode?: number;
 }
 
 export interface ParsedPodcastFeed {
@@ -25,18 +27,20 @@ export interface EpisodeFilterOptions {
   limit?: number;
   order?: "newest" | "oldest";
   minDurationSeconds?: number;
+  maxDurationSeconds?: number;
+  includeKeywords?: string[];
+  excludeKeywords?: string[];
   excludeExplicit?: boolean;
+  season?: number;
+  minEpisodeNumber?: number;
+  maxEpisodeNumber?: number;
 }
 
 export interface CardSyncMetadata {
   version: number;
   sourceType: "podcast-rss";
   feedUrl: string;
-  filter: {
-    limit?: number;
-    order?: "newest" | "oldest";
-    minDurationSeconds?: number;
-  };
+  filter: EpisodeFilterOptions;
   lastSynced?: string;
 }
 
@@ -163,6 +167,17 @@ export function parsePodcastFeed(xmlText: string): ParsedPodcastFeed {
     const explicitText = explicitEl?.textContent?.toLowerCase().trim();
     const explicit = explicitText === "yes" || explicitText === "true";
 
+    // Season & Episode: <itunes:season>, <itunes:episode>
+    const seasonEl = item.getElementsByTagName("itunes:season")[0];
+    const season = seasonEl?.textContent
+      ? parseInt(seasonEl.textContent.trim(), 10)
+      : undefined;
+
+    const episodeEl = item.getElementsByTagName("itunes:episode")[0];
+    const episode = episodeEl?.textContent
+      ? parseInt(episodeEl.textContent.trim(), 10)
+      : undefined;
+
     episodes.push({
       title: epTitle,
       description: epDesc,
@@ -170,6 +185,8 @@ export function parsePodcastFeed(xmlText: string): ParsedPodcastFeed {
       duration,
       enclosureUrl,
       explicit,
+      season: isNaN(season ?? NaN) ? undefined : season,
+      episode: isNaN(episode ?? NaN) ? undefined : episode,
     });
   }
 
@@ -203,6 +220,62 @@ export function filterEpisodes(
     filtered = filtered.filter(
       (ep) =>
         ep.duration === undefined || ep.duration >= options.minDurationSeconds!,
+    );
+  }
+
+  // Maximum duration filter (e.g. exclude multi-hour compilations)
+  if (
+    options.maxDurationSeconds !== undefined &&
+    options.maxDurationSeconds > 0
+  ) {
+    filtered = filtered.filter(
+      (ep) =>
+        ep.duration === undefined || ep.duration <= options.maxDurationSeconds!,
+    );
+  }
+
+  // Title keyword inclusion filter (must contain at least one keyword)
+  if (options.includeKeywords && options.includeKeywords.length > 0) {
+    const kws = options.includeKeywords
+      .map((k) => k.toLowerCase().trim())
+      .filter(Boolean);
+    if (kws.length > 0) {
+      filtered = filtered.filter((ep) => {
+        const title = ep.title.toLowerCase();
+        return kws.some((kw) => title.includes(kw));
+      });
+    }
+  }
+
+  // Title keyword exclusion filter (must not contain any keyword)
+  if (options.excludeKeywords && options.excludeKeywords.length > 0) {
+    const kws = options.excludeKeywords
+      .map((k) => k.toLowerCase().trim())
+      .filter(Boolean);
+    if (kws.length > 0) {
+      filtered = filtered.filter((ep) => {
+        const title = ep.title.toLowerCase();
+        return !kws.some((kw) => title.includes(kw));
+      });
+    }
+  }
+
+  // Season filter
+  if (options.season !== undefined) {
+    filtered = filtered.filter((ep) => ep.season === options.season);
+  }
+
+  // Episode range filter
+  if (options.minEpisodeNumber !== undefined) {
+    filtered = filtered.filter(
+      (ep) =>
+        ep.episode === undefined || ep.episode >= options.minEpisodeNumber!,
+    );
+  }
+  if (options.maxEpisodeNumber !== undefined) {
+    filtered = filtered.filter(
+      (ep) =>
+        ep.episode === undefined || ep.episode <= options.maxEpisodeNumber!,
     );
   }
 
