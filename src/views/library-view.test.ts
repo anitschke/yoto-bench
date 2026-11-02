@@ -153,5 +153,58 @@ describe("yb-library-view", () => {
       expect(nativeInput.value).to.equal("Bedtime Stories Podcast");
       expect(textInput.value).to.equal("Bedtime Stories Podcast");
     });
+
+    it("does not render Sync All Podcasts button when no cards have podcast sync metadata", async () => {
+      const el = await fixture<YbLibraryView>(
+        html`<yb-library-view></yb-library-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const syncAllBtn = el.shadowRoot?.querySelector(
+        ".sync-all-podcasts-btn",
+      );
+      expect(syncAllBtn).to.not.exist;
+    });
+
+    it("renders Sync All Podcasts button when synced cards are present in library", async () => {
+      const cardsWithPodcast: Card[] = [
+        ...mockCards,
+        {
+          cardId: "card_podcast_1",
+          title: "Daily News Podcast",
+          metadata: {
+            description:
+              '<!-- yoto-bench:sync\n{\n  "version": 1,\n  "sourceType": "podcast-rss",\n  "feedUrl": "https://example.com/rss.xml",\n  "filter": {}\n}\n-->',
+          },
+          content: { chapters: [] },
+        },
+      ];
+      yotoApi.listCards = async () => Promise.resolve(cardsWithPodcast);
+
+      const el = await fixture<YbLibraryView>(
+        html`<yb-library-view></yb-library-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const syncAllBtn = el.shadowRoot?.querySelector(
+        ".sync-all-podcasts-btn",
+      ) as HTMLElement;
+      expect(syncAllBtn, "Sync All button should exist").to.exist;
+      expect(syncAllBtn.textContent).to.include("Sync All Podcasts");
+    });
   });
 });

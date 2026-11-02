@@ -4,6 +4,10 @@
 // ==============================================================================
 
 import { getActiveCorsProxyUrl } from "../config.js";
+import { Card } from "../models/index.js";
+import { yotoApi } from "../api/client.js";
+import { opfsService } from "./opfs.js";
+import { AudioUploadQueue, reorderPlaylist } from "./upload-queue.js";
 
 export interface PodcastEpisode {
   title: string;
@@ -276,4 +280,186 @@ export function embedSyncMetadata(
 export function stripSyncMetadata(description?: string): string {
   if (!description) return "";
   return description.replace(SYNC_BLOCK_REGEX, "").trim();
+}
+
+export interface PodcastSyncResult {
+  cardId: string;
+  cardTitle: string;
+  newEpisodesCount: number;
+  updated: boolean;
+  error?: string;
+}
+
+/**
+ * Synchronizes new episodes for a single podcast-linked card.
+ * Downloads missing enclosures, stages them in OPFS, uploads via queue,
+ * appends new chapters, updates the lastSynced timestamp, and saves to the API.
+ */
+export async function syncPodcastCard(
+  card: Card,
+  onProgress?: (message: string, percent: number) => void,
+): Promise<PodcastSyncResult> {
+  const syncMeta = extractSyncMetadata(card.metadata?.description);
+  if (!syncMeta) {
+    return {
+      cardId: card.cardId,
+      cardTitle: card.title,
+      newEpisodesCount: 0,
+      updated: false,
+    };
+  }
+
+  try {
+    onProgress?.(`Fetching feed for "${card.title}"...`, 10);
+    const xml = await fetchFeedXml(syncMeta.feedUrl);
+    const feed = parsePodcastFeed(xml);
+    const filtered = filterEpisodes(feed.episodes, {
+      limit: syncMeta.filter?.limit || 10,
+      order: syncMeta.filter?.order || "newest",
+      minDurationSeconds: syncMeta.filter?.minDurationSeconds || 120,
+    });
+
+    const existingTitles = new Set(
+      (card.content?.chapters || []).map((c) => c.title.toLowerCase().trim()),
+    );
+
+    const newEpisodes = filtered.filter(
+      (ep) => !existingTitles.has(ep.title.toLowerCase().trim()),
+    );
+
+    if (newEpisodes.length === 0) {
+      return {
+        cardId: card.cardId,
+        cardTitle: card.title,
+        newEpisodesCount: 0,
+        updated: false,
+      };
+    }
+
+    const total = newEpisodes.length;
+    const audioPayloads: Array<{
+      blob: Blob;
+      filename: string;
+      title: string;
+      duration?: number;
+    }> = [];
+
+    for (let i = 0; i < total; i++) {
+      const ep = newEpisodes[i]!;
+      onProgress?.(
+        `Fetching episode ${i + 1}/${total} for "${card.title}"...`,
+        10 + Math.round(((i + 1) / total) * 30),
+      );
+
+      const resp = await fetch(ep.enclosureUrl);
+      if (!resp.ok) continue;
+      const blob = await resp.blob();
+
+      const filename = `${ep.title.replace(/[^a-zA-Z0-9_-]/g, "_")}.mp3`;
+      await opfsService.saveFile(card.cardId, filename, blob);
+
+      audioPayloads.push({
+        blob,
+        filename,
+        title: ep.title,
+        duration: ep.duration,
+      });
+    }
+
+    const filesToProcess = audioPayloads.map((a) => ({
+      name: a.filename,
+      blob: a.blob,
+      metadata: {
+        title: a.title,
+        duration: a.duration,
+      },
+    }));
+
+    const queue = new AudioUploadQueue(3);
+    const newChapters = await queue.processQueue(
+      filesToProcess,
+      (items) => {
+        const completed = items.filter((it) => it.status === "complete").length;
+        const count = items.length;
+        onProgress?.(
+          `Uploading & transcoding ${completed}/${count} episodes for "${card.title}"...`,
+          40 + Math.round((completed / count) * 55),
+        );
+      },
+    );
+
+    await opfsService.cleanSession(card.cardId);
+
+    const mergedChapters = reorderPlaylist([
+      ...(card.content?.chapters || []),
+      ...newChapters,
+    ]);
+
+    const updatedSyncMeta: CardSyncMetadata = {
+      ...syncMeta,
+      lastSynced: new Date().toISOString(),
+    };
+
+    const updatedDescription = embedSyncMetadata(
+      card.metadata?.description,
+      updatedSyncMeta,
+    );
+
+    const updatedCard: Card = {
+      ...card,
+      metadata: {
+        ...card.metadata,
+        description: updatedDescription,
+      },
+      content: {
+        ...card.content,
+        chapters: mergedChapters,
+      },
+    };
+
+    await yotoApi.updateCard(updatedCard);
+    onProgress?.(`Completed sync for "${card.title}"!`, 100);
+
+    return {
+      cardId: card.cardId,
+      cardTitle: card.title,
+      newEpisodesCount: newChapters.length,
+      updated: true,
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    return {
+      cardId: card.cardId,
+      cardTitle: card.title,
+      newEpisodesCount: 0,
+      updated: false,
+      error: errorMsg,
+    };
+  }
+}
+
+/**
+ * Synchronizes all podcast-linked cards in the library.
+ */
+export async function syncAllPodcastCards(
+  cards: Card[],
+  onProgress?: (cardIndex: number, totalCards: number, message: string) => void,
+): Promise<PodcastSyncResult[]> {
+  const syncedCards = cards.filter((c) =>
+    extractSyncMetadata(c.metadata?.description),
+  );
+  const results: PodcastSyncResult[] = [];
+
+  for (let i = 0; i < syncedCards.length; i++) {
+    const card = syncedCards[i]!;
+    onProgress?.(
+      i + 1,
+      syncedCards.length,
+      `Syncing card ${i + 1}/${syncedCards.length}: ${card.title}...`,
+    );
+    const res = await syncPodcastCard(card);
+    results.push(res);
+  }
+
+  return results;
 }
