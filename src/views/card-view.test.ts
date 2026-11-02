@@ -139,5 +139,53 @@ describe("yb-card-view", () => {
       const dropZone = el.shadowRoot?.querySelector(".drop-zone");
       expect(dropZone).to.exist;
     });
+
+    it("renders itemized episode list with status badges when importing podcast episodes", async () => {
+      const el = await fixture<YbCardView>(
+        html`<yb-card-view cardId="card_123"></yb-card-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      // Simulate active podcast upload state
+      // @ts-expect-error accessing private property for testing state rendering
+      el.isUploading = true;
+      // @ts-expect-error accessing private property
+      el.uploadProgressPercent = 45;
+      // @ts-expect-error accessing private property
+      el.uploadProgressText = "Uploading 1/2 episodes...";
+      // @ts-expect-error accessing private property
+      el.activeImportItems = [
+        {
+          id: "ep-0",
+          title: "Episode 1: The Magic Tree",
+          status: "complete",
+        },
+        {
+          id: "ep-1",
+          title: "Episode 2: The Starlight River",
+          status: "uploading",
+        },
+      ];
+      await el.updateComplete;
+
+      const importList = el.shadowRoot?.querySelector(".import-items-list");
+      expect(importList, "import items list should exist").to.exist;
+
+      const itemRows = el.shadowRoot?.querySelectorAll(".import-item-row");
+      expect(itemRows?.length).to.equal(2);
+
+      expect(itemRows?.[0]?.textContent).to.include("Episode 1: The Magic Tree");
+      expect(itemRows?.[0]?.textContent).to.include("Complete");
+
+      expect(itemRows?.[1]?.textContent).to.include("Episode 2: The Starlight River");
+      expect(itemRows?.[1]?.textContent).to.include("Uploading");
+    });
   });
 });
