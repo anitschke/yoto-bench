@@ -55,3 +55,6 @@ The `<yb-please-sign-in>` component renders a standardized empty-state prompt di
 
 ### 12. Icon Picker Modal (`<yb-icon-picker>`) — `src/widgets/yb-icon-picker.ts`
 The `<yb-icon-picker>` component provides an interactive modal dialog for browsing, filtering, and selecting 16×16 pixel icons from the pre-indexed catalog (Google Noto Emoji and Official Yoto display icons) or uploading custom user PNGs. It leverages the client-side `IconSearchEngine` for instantaneous multi-word prefix matching, AND/OR queries, and title relevance ranking. Filter buttons allow isolating specific icon providers or viewing custom uploaded art. Selecting an icon dispatches a `yb-icon-selected` event containing the full `IconRecord`.
+
+### 13. Duration Display (`<yb-duration>`) — `src/widgets/yb-duration.ts`
+The `<yb-duration>` element provides semantic, accessible duration formatting for audio tracks, podcast episodes, and playback timers. It converts numeric seconds into standard clock formatting (`MM:SS` or `H:MM:SS`) or humanized compact text (`1h 15m`, `3m 5s`, `42s`). To ensure full WAI-ARIA and screen reader accessibility, output is encapsulated in a semantic `<time>` element featuring an ISO 8601 duration attribute (e.g. `datetime="PT1H15M30S"`). Tabular numerals are enforced for aligned numerical displays across tables and playlists.

@@ -44,6 +44,7 @@ import "../widgets/yb-dialog.js";
 import "../widgets/yb-progress-bar.js";
 import "../widgets/yb-please-sign-in.js";
 import "../widgets/yb-icon-picker.js";
+import "../widgets/yb-duration.js";
 
 interface WebkitEntry {
   isFile: boolean;
@@ -1003,9 +1004,10 @@ export class YbCardView extends LitElement {
 
                         ${
                           chap.duration
-                            ? html`<small style="color: #64748b;"
-                                >${Math.floor(chap.duration)}s</small
-                              >`
+                            ? html`<yb-duration
+                                .seconds=${chap.duration}
+                                style="color: var(--yb-color-text-muted, #64748b); font-size: var(--yb-font-size-xs, 0.75rem);"
+                              ></yb-duration>`
                             : ""
                         }
 
@@ -1132,9 +1134,15 @@ export class YbCardView extends LitElement {
                       (ep) => html`
                         <div class="podcast-ep-row">
                           <span>${ep.title}</span>
-                          <small style="color: #64748b;">
-                            ${ep.duration ? `${Math.floor(ep.duration / 60)}m` : ""}
-                          </small>
+                          ${
+                            ep.duration
+                              ? html`<yb-duration
+                                  .seconds=${ep.duration}
+                                  format="human"
+                                  style="color: var(--yb-color-text-muted, #64748b); font-size: var(--yb-font-size-xs, 0.75rem);"
+                                ></yb-duration>`
+                              : ""
+                          }
                         </div>
                       `,
                     )}
