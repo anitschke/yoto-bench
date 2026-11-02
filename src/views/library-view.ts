@@ -57,10 +57,9 @@ export class YbLibraryView extends LitElement {
       background: var(--yb-color-surface, #ffffff);
       border: 1px solid var(--yb-color-border, #e2e8f0);
       border-radius: var(--yb-radius-lg, 16px);
-      padding: 1.25rem;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
       box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
       transition:
         box-shadow var(--yb-transition-fast, 150ms),
@@ -70,6 +69,54 @@ export class YbLibraryView extends LitElement {
     .card-item:hover {
       box-shadow: var(--yb-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
       transform: translateY(-2px);
+    }
+
+    .card-cover {
+      width: 100%;
+      height: 140px;
+      overflow: hidden;
+      background: var(--yb-color-surface-dark, #12161a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .card-cover img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-cover-placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      background: var(--yb-color-surface-dark, #12161a);
+      color: var(--yb-color-text-muted, #718096);
+    }
+
+    .card-cover-placeholder .fallback-icon {
+      font-size: 2.5rem;
+    }
+
+    .card-body {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      flex: 1;
+    }
+
+    .card-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+      flex: 1;
     }
 
     .card-top {
@@ -257,42 +304,81 @@ export class YbLibraryView extends LitElement {
                 <div class="card-grid">
                   ${filtered.map((card) => {
                     const firstChapter = card.content?.chapters?.[0];
-                    const iconUrl = firstChapter?.display?.icon16x16 || "";
+                    const iconUrl =
+                      (card.display as { icon16x16?: string } | undefined)
+                        ?.icon16x16 ||
+                      firstChapter?.display?.icon16x16 ||
+                      "";
+
+                    const coverUrl =
+                      card.cover?.imageL ||
+                      card.cover?.imageM ||
+                      card.cover?.imageS ||
+                      card.customCoverArt ||
+                      "";
+
                     const trackCount = card.content?.chapters?.length || 0;
 
                     return html`
                       <div class="card-item">
-                        <div class="card-top">
-                          <yb-pixel-icon
-                            src=${iconUrl}
-                            alt=${card.title}
-                            size="md"
-                          ></yb-pixel-icon>
-                          <div style="flex: 1; min-width: 0;">
-                            <h4 class="card-title">${card.title}</h4>
-                            <span class="card-meta"
-                              >${trackCount}
-                              ${trackCount === 1 ? "track" : "tracks"}</span
-                            >
-                          </div>
+                        <div class="card-cover">
+                          ${
+                            coverUrl
+                              ? html`<img
+                                  src=${coverUrl}
+                                  alt="${card.title} cover"
+                                  loading="lazy"
+                                />`
+                              : html`
+                                  <div class="card-cover-placeholder">
+                                    ${
+                                      iconUrl
+                                        ? html`<yb-pixel-icon
+                                            src=${iconUrl}
+                                            alt=${card.title}
+                                            size="lg"
+                                          ></yb-pixel-icon>`
+                                        : html`<span class="fallback-icon"
+                                            >🎵</span
+                                          >`
+                                    }
+                                  </div>
+                                `
+                          }
                         </div>
-                        <div class="card-actions">
-                          <yb-button
-                            variant="subtle"
-                            size="small"
-                            @click=${() => {
-                              window.history.pushState(
-                                null,
-                                "",
-                                `/cards/${card.cardId}`,
-                              );
-                              window.dispatchEvent(
-                                new PopStateEvent("popstate"),
-                              );
-                            }}
-                          >
-                            Edit
-                          </yb-button>
+                        <div class="card-body">
+                          <div class="card-top">
+                            <yb-pixel-icon
+                              src=${iconUrl}
+                              alt=${card.title}
+                              size="md"
+                            ></yb-pixel-icon>
+                            <div class="card-info">
+                              <h4 class="card-title">${card.title}</h4>
+                              <span class="card-meta"
+                                >${trackCount}
+                                ${trackCount === 1 ? "track" : "tracks"}</span
+                              >
+                            </div>
+                          </div>
+                          <div class="card-actions">
+                            <yb-button
+                              variant="subtle"
+                              size="small"
+                              @click=${() => {
+                                window.history.pushState(
+                                  null,
+                                  "",
+                                  `/cards/${card.cardId}`,
+                                );
+                                window.dispatchEvent(
+                                  new PopStateEvent("popstate"),
+                                );
+                              }}
+                            >
+                              Edit
+                            </yb-button>
+                          </div>
                         </div>
                       </div>
                     `;

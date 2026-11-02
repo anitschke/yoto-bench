@@ -29,6 +29,16 @@ const mockCards: Card[] = [
       chapters: [],
     },
   },
+  {
+    cardId: "card_3",
+    title: "Enchanted Forest",
+    cover: {
+      imageL: "https://example.com/cover-large.jpg",
+    },
+    content: {
+      chapters: [],
+    },
+  },
 ];
 
 describe("yb-library-view", () => {
@@ -152,6 +162,34 @@ describe("yb-library-view", () => {
 
       expect(nativeInput.value).to.equal("Bedtime Stories Podcast");
       expect(textInput.value).to.equal("Bedtime Stories Podcast");
+    });
+
+    it("renders card cover artwork when present and falls back gracefully", async () => {
+      const el = await fixture<YbLibraryView>(
+        html`<yb-library-view></yb-library-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const cardItems = el.shadowRoot?.querySelectorAll(".card-item");
+      expect(cardItems?.length).to.equal(3);
+      if (!cardItems) throw new Error("cardItems not found");
+
+      // Card 3 has cover.imageL -> should render cover image
+      const coverImg = cardItems[2]!.querySelector(".card-cover img") as HTMLImageElement;
+      expect(coverImg, "cover image should exist for Card 3").to.exist;
+      expect(coverImg.src).to.equal("https://example.com/cover-large.jpg");
+      expect(coverImg.getAttribute("loading")).to.equal("lazy");
+
+      // Card 2 has no cover -> should render placeholder
+      const placeholder = cardItems[1]!.querySelector(".card-cover-placeholder");
+      expect(placeholder, "placeholder should exist for Card 2").to.exist;
     });
   });
 });
