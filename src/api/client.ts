@@ -187,6 +187,31 @@ export class YotoApiClient {
     return iconId;
   }
 
+  // --- Card Cover Artwork ---
+
+  /**
+   * Uploads or encodes a card cover artwork image (PNG, JPEG, WebP).
+   * Encodes the image binary as a Base64 data URL suitable for embedding
+   * directly into card.cover and card.customCoverArt.
+   * See: docs/rfcs/016-content-security-policy-and-sri.md
+   */
+  public async uploadCoverImage(file: Blob | File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+        } else {
+          reject(new Error("Failed to encode cover image as data URL."));
+        }
+      };
+      reader.onerror = () => {
+        reject(reader.error || new Error("Failed to read cover image file."));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   // --- Audio Uploads & Transcoding (RFC 008) ---
 
   /**
