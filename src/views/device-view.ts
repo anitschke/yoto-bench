@@ -509,15 +509,61 @@ export class YbDeviceView extends LitElement {
     }
   }
 
+  /**
+   * Resolves the volume readout and bounds based on player status.
+   * Gen 3 and Mini models or newer firmware may report volume as 0-100 or provide userVolume (1-16).
+   */
+  private getVolumeInfo(device?: Device): {
+    volume: number;
+    max: number;
+    unit: string;
+    step: number;
+  } {
+    const status = this.deviceStatus ?? device?.status;
+    const userVolume = status?.userVolume;
+    const rawVolume = status?.volume ?? 8;
+
+    if (typeof userVolume === "number") {
+      return {
+        volume: userVolume,
+        max: 16,
+        unit: "/ 16",
+        step: 1,
+      };
+    }
+
+    if (rawVolume > 16) {
+      return {
+        volume: rawVolume,
+        max: 100,
+        unit: "/ 100",
+        step: 5,
+      };
+    }
+
+    return {
+      volume: rawVolume,
+      max: 16,
+      unit: "/ 16",
+      step: 1,
+    };
+  }
+
   private handleAdjustVolume(delta: number) {
     if (!this.selectedDeviceId) return;
-    const current = this.deviceStatus?.volume ?? 8;
-    const max = current > 16 ? 100 : 16;
-    const next = Math.max(0, Math.min(max, current + delta));
+    const activeDevice = this.devices.find(
+      (d) => d.deviceId === this.selectedDeviceId,
+    );
+    const { volume, max, step } = this.getVolumeInfo(activeDevice);
+    const next = Math.max(0, Math.min(max, volume + delta * step));
     try {
       yotoMqtt.setVolume(this.selectedDeviceId, next);
       if (this.deviceStatus) {
-        this.deviceStatus = { ...this.deviceStatus, volume: next };
+        if (typeof this.deviceStatus.userVolume === "number") {
+          this.deviceStatus = { ...this.deviceStatus, userVolume: next };
+        } else {
+          this.deviceStatus = { ...this.deviceStatus, volume: next };
+        }
       }
       dispatchToast(this, {
         type: "info",
@@ -705,7 +751,7 @@ export class YbDeviceView extends LitElement {
       this.deviceStatus?.batteryLevel ?? device.status?.batteryLevel ?? 0;
     const isCharging =
       this.deviceStatus?.charging ?? device.status?.charging ?? false;
-    const volume = this.deviceStatus?.volume ?? device.status?.volume ?? 8;
+    const volInfo = this.getVolumeInfo(device);
     const activeCardTitle = this.getActiveCardTitle();
 
     const filteredCards = this.cards.filter((c) =>
@@ -767,8 +813,8 @@ export class YbDeviceView extends LitElement {
               <span>Volume</span>
             </div>
             <div class="stat-readout">
-              <span class="stat-number">${volume}</span>
-              <span class="stat-unit">/ 16</span>
+              <span class="stat-number">${volInfo.volume}</span>
+              <span class="stat-unit">${volInfo.unit}</span>
             </div>
             <div class="volume-controls">
               <div class="volume-stepper">
