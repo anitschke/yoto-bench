@@ -1,5 +1,5 @@
 import { expect } from "@open-wc/testing";
-import { YotoMqttClient } from "./client.js";
+import { YotoMqttClient, normalizeCardUri } from "./client.js";
 import { DeviceStatus } from "../models/index.js";
 
 describe("YotoMqttClient", () => {
@@ -155,7 +155,30 @@ describe("YotoMqttClient", () => {
 
       client.playCard("dev123", "card-999");
       expect(publishedTopic).to.equal("device/dev123/command/card/start");
-      expect(JSON.parse(publishedPayload)).to.deep.equal({ uri: "card-999" });
+      expect(JSON.parse(publishedPayload)).to.deep.equal({
+        uri: "yoto://card/card-999",
+      });
+
+      // Also supports options
+      client.playCard("dev123", "yoto://card/card-999", {
+        chapterKey: "ch_1",
+        secondsIn: 30,
+      });
+      expect(JSON.parse(publishedPayload)).to.deep.equal({
+        uri: "yoto://card/card-999",
+        chapterKey: "ch_1",
+        secondsIn: 30,
+      });
+    });
+
+    it("normalizes card URIs into canonical yoto://card/<id> scheme", () => {
+      expect(normalizeCardUri("card-123")).to.equal("yoto://card/card-123");
+      expect(normalizeCardUri("card/card-123")).to.equal("yoto://card/card-123");
+      expect(normalizeCardUri("yoto://card/card-123")).to.equal(
+        "yoto://card/card-123",
+      );
+      expect(normalizeCardUri("yoto://custom/abc")).to.equal("yoto://custom/abc");
+      expect(normalizeCardUri("")).to.equal("");
     });
 
     it("publishes setVolume command with rounded volume", () => {

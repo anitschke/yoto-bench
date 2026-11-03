@@ -260,10 +260,21 @@ export class YotoMqttClient {
     }
   }
 
-  public playCard(deviceId: string, cardId: string): void {
+  public playCard(
+    deviceId: string,
+    cardId: string,
+    options?: { chapterKey?: string; trackKey?: string; secondsIn?: number },
+  ): void {
     const conn = this.connections.get(deviceId);
     if (conn && conn.client && conn.isConnected) {
-      const payload = JSON.stringify({ uri: cardId });
+      const uri = normalizeCardUri(cardId);
+      const payloadObj: Record<string, unknown> = { uri };
+      if (options?.chapterKey) payloadObj.chapterKey = options.chapterKey;
+      if (options?.trackKey) payloadObj.trackKey = options.trackKey;
+      if (typeof options?.secondsIn === "number")
+        payloadObj.secondsIn = options.secondsIn;
+
+      const payload = JSON.stringify(payloadObj);
       conn.client.publish(`device/${deviceId}/command/card/start`, payload);
     }
   }
@@ -303,3 +314,25 @@ export class YotoMqttClient {
 }
 
 export const yotoMqtt = new YotoMqttClient();
+
+/**
+ * Normalizes a card identifier into the canonical Yoto card URI format expected
+ * by physical Yoto player hardware over MQTT (`yoto://card/<cardId>`).
+ * Plain card IDs (e.g. `card_123` or UUIDs) cause physical players to announce
+ * "your player can't recognize that card" if sent without the `yoto://card/` scheme.
+ * See: docs/rfcs/018-device-management-and-remote-control.md
+ */
+export function normalizeCardUri(cardIdOrUri: string): string {
+  if (!cardIdOrUri) return "";
+  const trimmed = cardIdOrUri.trim();
+  if (trimmed.startsWith("yoto://card/")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("yoto://")) {
+    return trimmed;
+  }
+  if (trimmed.startsWith("card/")) {
+    return `yoto://${trimmed}`;
+  }
+  return `yoto://card/${trimmed}`;
+}
