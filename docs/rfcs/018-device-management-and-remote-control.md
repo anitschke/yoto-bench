@@ -72,9 +72,9 @@ Users can trigger card playback directly onto the active device:
 3. **WebSocket Communication (AWS IoT Core):**
    - Communication is conducted via MQTT over WebSockets (`wss://aqrphjqbp3u2z-ats.iot.eu-west-2.amazonaws.com/mqtt`) using the user's authenticated Yoto bearer token:
      ```typescript
-     // Publish playback command
+     // Publish playback command with canonical yoto://card/<cardId> URI scheme
      const topic = `device/${deviceId}/command/card/start`;
-     const payload = JSON.stringify({ uri: cardId });
+     const payload = JSON.stringify({ uri: `yoto://card/${cardId}` });
      mqttClient.publish(topic, payload);
      ```
    - Control commands conform to the proven MQTT protocol implemented in `yotocli` (`pkg/yoto/mqtt_client.go`).
