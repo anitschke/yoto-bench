@@ -8,7 +8,7 @@ describe("yb-about-icons-view", () => {
       html`<yb-about-icons-view></yb-about-icons-view>`,
     );
 
-    expect(el.shadowRoot?.querySelector("h2")?.textContent).to.include(
+    expect(el.shadowRoot?.querySelector("h1")?.textContent).to.include(
       "About Icon Sources & Licensing",
     );
 
