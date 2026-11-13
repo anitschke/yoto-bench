@@ -66,39 +66,47 @@ describe("yb-icon-picker", () => {
     expect(el.open).to.be.false;
   });
 
-  it("renders attribution note and opens about icon sources modal", async () => {
+  it("renders single attribution link pointing to /about-icons in a new window", async () => {
     const el = await fixture<YbIconPicker>(
       html`<yb-icon-picker open></yb-icon-picker>`,
     );
     await el.updateComplete;
 
-    // Check attribution link or button exists
-    const aboutBtn = el.shadowRoot?.querySelector<HTMLButtonElement>(
-      ".about-sources-btn, [data-testid='about-sources-button']",
+    // Check attribution link exists and has target="_blank"
+    const aboutLink = el.shadowRoot?.querySelector<HTMLAnchorElement>(
+      "[data-testid='about-sources-link']",
     );
-    expect(aboutBtn, "about sources button should exist").to.exist;
+    expect(aboutLink, "about sources link should exist").to.exist;
+    expect(aboutLink?.getAttribute("href")).to.equal("/about-icons");
+    expect(aboutLink?.getAttribute("target")).to.equal("_blank");
+    expect(aboutLink?.getAttribute("rel")).to.include("noopener");
 
-    // Initially sources dialog/panel is not open
-    expect(el.shadowRoot?.querySelector(".sources-content")).to.not.exist;
+    // Verify there are no duplicate about buttons/links in the footer
+    const allAboutLinks = el.shadowRoot?.querySelectorAll(
+      ".about-sources-link, .about-sources-btn",
+    );
+    expect(allAboutLinks?.length, "should have exactly one about link").to.equal(
+      1,
+    );
+  });
 
-    // Click about button
-    aboutBtn?.click();
+  it("renders yb-icon-attribution-popover on each icon item with metadata", async () => {
+    const el = await fixture<YbIconPicker>(
+      html`<yb-icon-picker open></yb-icon-picker>`,
+    );
+    while (
+      el.shadowRoot?.querySelector(".empty-state")?.textContent?.includes("Loading")
+    ) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
     await el.updateComplete;
 
-    // Dialog/content explaining sources should now be visible
-    const sourcesContent = el.shadowRoot?.querySelector(".sources-content");
-    expect(sourcesContent, "sources content should be displayed").to.exist;
-    expect(sourcesContent?.textContent).to.include("Google Noto Emoji");
-    expect(sourcesContent?.textContent).to.include("Apache 2.0");
-    expect(sourcesContent?.textContent).to.include("Official Yoto");
-    expect(sourcesContent?.textContent).to.include("Custom");
+    const firstIcon = el.shadowRoot?.querySelector<HTMLButtonElement>(".icon-item");
+    expect(firstIcon).to.exist;
 
-    // Close the sources dialog
-    const gotItBtn = el.shadowRoot?.querySelector<HTMLButtonElement>(
-      "yb-dialog yb-button[variant='primary']",
-    );
-    gotItBtn?.click();
-    await el.updateComplete;
-    expect(el.shadowRoot?.querySelector(".sources-content")).to.not.exist;
+    const popover = firstIcon?.querySelector("yb-icon-attribution-popover");
+    expect(popover, "popover should be attached to icon item").to.exist;
+    expect(popover?.iconTitle).to.be.a("string");
+    expect(popover?.provider).to.be.a("string");
   });
 });

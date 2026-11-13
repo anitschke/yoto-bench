@@ -157,7 +157,7 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     await expect(emptyState).toContainText("No matching icons found");
   });
 
-  test("displays attribution note and opens about sources & licensing modal", async ({
+  test("displays attribution link pointing to /about-icons and shows per-icon popover", async ({
     page,
   }) => {
     await page.locator('[data-testid="open-icon-picker-btn"]').click();
@@ -165,29 +165,36 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     const picker = page.locator("yb-icon-picker");
     const attributionStrip = picker.locator(".attribution-strip");
     await expect(attributionStrip).toBeVisible();
-    await expect(attributionStrip).toContainText("Google Noto Emoji");
-    await expect(attributionStrip).toContainText("Official Yoto");
+    // Verify "About icon sources & licensing" link is present and opens /about-icons in a new window
+    const aboutLink = picker.locator('[data-testid="about-sources-link"]');
+    await expect(aboutLink).toBeVisible();
+    await expect(aboutLink).toHaveAttribute("href", "/about-icons");
+    await expect(aboutLink).toHaveAttribute("target", "_blank");
 
-    // Click "About sources & licensing" button
-    const aboutBtn = picker.locator('[data-testid="about-sources-button"]');
-    await expect(aboutBtn).toBeVisible();
-    await aboutBtn.click();
+    // Verify per-icon attribution popover is present on icon items
+    const firstIcon = picker.locator(".icon-item").first();
+    await expect(firstIcon).toBeVisible();
+    const popover = firstIcon.locator("yb-icon-attribution-popover");
+    await expect(popover).toBeAttached();
 
-    // Verify About Icon Sources modal opens
-    const sourcesContent = picker.locator(".sources-content");
-    await expect(sourcesContent).toBeVisible();
-    await expect(sourcesContent).toContainText("Google Noto Emoji");
-    await expect(sourcesContent).toContainText("Apache 2.0 License");
-    await expect(sourcesContent).toContainText("Official Yoto Icons");
-    await expect(sourcesContent).toContainText("Pixel Display & Contrast");
+    // Hover over the first icon to trigger popover
+    await firstIcon.hover();
+    const popoverContent = popover.locator(".popover-content");
+    await expect(popoverContent).toBeVisible();
+    await expect(popoverContent.locator(".badge")).toBeVisible();
+  });
 
-    // Close the sources dialog
-    const gotItBtn = picker.locator("yb-button", { hasText: "Got It" });
-    await expect(gotItBtn).toBeVisible();
-    await gotItBtn.click();
+  test("loads dedicated /about-icons top-level page", async ({ page }) => {
+    await page.goto("/about-icons");
 
-    // Sources dialog should be closed while the main icon picker remains open
-    await expect(sourcesContent).not.toBeVisible();
-    await expect(picker).toHaveAttribute("open", "");
+    const pageHeading = page.locator("yb-about-icons-view h1");
+    await expect(pageHeading).toBeVisible();
+    await expect(pageHeading).toContainText("About Icon Sources & Licensing");
+
+    // Check key licensing sections
+    await expect(page.locator("text=Google Noto Emoji")).toBeVisible();
+    await expect(page.locator("text=Apache 2.0 License")).toBeVisible();
+    await expect(page.locator("text=Official Yoto Display Art")).toBeVisible();
+    await expect(page.locator("text=Hardware LED Matrix & Contrast")).toBeVisible();
   });
 });

@@ -17,6 +17,7 @@ import "./yb-button.js";
 import "./yb-text-input.js";
 import "./yb-pixel-icon.js";
 import "./yb-badge.js";
+import "./yb-icon-attribution-popover.js";
 
 export interface IconSelectedDetail {
   icon: IconRecord;
@@ -138,45 +139,17 @@ export class YbIconPicker extends LitElement {
       gap: 0.5rem;
     }
 
-    .about-sources-btn {
-      background: none;
-      border: none;
+    .about-sources-link {
       color: var(--yb-color-primary, #ff5c35);
       font-size: var(--yb-font-size-xs, 0.75rem);
-      cursor: pointer;
-      padding: 0;
       text-decoration: underline;
       display: inline-flex;
       align-items: center;
       gap: 0.25rem;
     }
 
-    .about-sources-btn:hover {
+    .about-sources-link:hover {
       color: var(--yb-color-primary-hover, #e04b25);
-    }
-
-    .dialog-footer-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      gap: 0.5rem;
-    }
-
-    .sources-content {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-height: 60vh;
-      overflow-y: auto;
-      color: var(--yb-color-text, #1a202c);
-      font-size: var(--yb-font-size-sm, 0.875rem);
-      line-height: 1.5;
-    }
-
-    .source-section {
-      border-bottom: 1px solid var(--yb-color-border, #e2e8f0);
-      padding-bottom: 0.75rem;
     }
 
     .source-section:last-child {
@@ -239,9 +212,6 @@ export class YbIconPicker extends LitElement {
 
   @state()
   private customIcons: IconRecord[] = [];
-
-  @state()
-  private showSourcesDialog = false;
 
   private yotoIconsSynced = false;
 
@@ -531,7 +501,8 @@ export class YbIconPicker extends LitElement {
                         type="button"
                         role="option"
                         aria-selected=${this.selectedIconId === icon.id}
-                        title="${icon.title}${icon.tags?.length ? ` (${icon.tags.slice(0, 3).join(", ")})` : ""}"
+                        aria-label="${icon.title}${icon.tags?.length ? ` (${icon.tags.slice(0, 3).join(", ")})` : ""}"
+                        title=${icon.title}
                         class="icon-item ${this.selectedIconId === icon.id ? "selected" : ""}"
                         @click=${() => this.handleIconClick(icon)}
                       >
@@ -540,6 +511,11 @@ export class YbIconPicker extends LitElement {
                           alt=${icon.title}
                           size="md"
                         ></yb-pixel-icon>
+                        <yb-icon-attribution-popover
+                          .iconTitle=${icon.title}
+                          .provider=${icon.provider}
+                          .author=${icon.author || ""}
+                        ></yb-icon-attribution-popover>
                       </button>
                     `,
                   )
@@ -563,97 +539,25 @@ export class YbIconPicker extends LitElement {
           }
 
           <div class="attribution-strip">
-            <span>Icons: Google Noto Emoji (Apache 2.0) & Official Yoto</span>
-            <button
-              type="button"
-              class="about-sources-btn"
-              data-testid="about-sources-button"
-              @click=${() => (this.showSourcesDialog = true)}
+            <span>Google Noto Emoji (Apache 2.0) &amp; Official Yoto</span>
+            <a
+              href="/about-icons"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="about-sources-link"
+              data-testid="about-sources-link"
             >
-              About sources & licensing ℹ️
-            </button>
+              About icon sources &amp; licensing ↗
+            </a>
           </div>
         </div>
 
-        <div slot="footer" class="dialog-footer-row">
-          <button
-            type="button"
-            class="about-sources-btn"
-            @click=${() => (this.showSourcesDialog = true)}
-          >
-            About icon sources & licensing
-          </button>
+        <div slot="footer">
           <yb-button variant="subtle" @click=${this.handleClose}
             >Cancel</yb-button
           >
         </div>
       </yb-dialog>
-
-      ${this.showSourcesDialog
-        ? html`
-            <yb-dialog
-              ?open=${this.showSourcesDialog}
-              @yb-dialog-close=${() => (this.showSourcesDialog = false)}
-            >
-              <span slot="header">About Icon Sources & Licensing</span>
-              <div class="sources-content">
-                <div class="source-section">
-                  <h4>Google Noto Emoji</h4>
-                  <p>
-                    Over 3,700 color emoji icons downscaled to 16×16 pixel art.
-                    Noto Emoji is open-source software licensed under the
-                    <a
-                      href="https://www.apache.org/licenses/LICENSE-2.0"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      >Apache 2.0 License</a
-                    >. Unicode CLDR classifications and keywords provide rich
-                    multi-word search capabilities.
-                  </p>
-                </div>
-
-                <div class="source-section">
-                  <h4>Official Yoto Icons</h4>
-                  <p>
-                    Original pixel icons sourced from Yoto's official display
-                    library. Synchronized directly from the Yoto API for use on
-                    your personal Yoto cards and players.
-                  </p>
-                </div>
-
-                <div class="source-section">
-                  <h4>Custom Uploads</h4>
-                  <p>
-                    Upload custom PNG, JPEG, or WebP images. Images are
-                    automatically downscaled client-side to 16×16 pixels using
-                    HTML canvas and uploaded directly to your private Yoto account
-                    library.
-                  </p>
-                </div>
-
-                <div class="source-section">
-                  <h4>Pixel Display & Contrast</h4>
-                  <p>
-                    Yoto Player displays use a 16×16 RGB LED pixel matrix. Icons
-                    are optimized with high-contrast dark backgrounds and
-                    rendered with nearest-neighbor interpolation
-                    (<code>image-rendering: pixelated</code>) for crisp fidelity
-                    on physical hardware.
-                  </p>
-                </div>
-              </div>
-
-              <div slot="footer">
-                <yb-button
-                  variant="primary"
-                  @click=${() => (this.showSourcesDialog = false)}
-                >
-                  Got It
-                </yb-button>
-              </div>
-            </yb-dialog>
-          `
-        : null}
     `;
   }
 }
