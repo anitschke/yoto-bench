@@ -17,6 +17,7 @@ import "./yb-button.js";
 import "./yb-text-input.js";
 import "./yb-pixel-icon.js";
 import "./yb-badge.js";
+import { YbIconAttributionPopover } from "./yb-icon-attribution-popover.js";
 
 export interface IconSelectedDetail {
   icon: IconRecord;
@@ -124,6 +125,63 @@ export class YbIconPicker extends LitElement {
       display: flex;
       justify-content: center;
       padding: var(--yb-spacing-xs, 0.25rem);
+    }
+
+    .attribution-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: var(--yb-spacing-xs, 0.25rem);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      color: var(--yb-color-text-muted, #718096);
+      border-top: 1px solid var(--yb-color-border, #e2e8f0);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .about-sources-link {
+      color: var(--yb-color-primary, #ff5c35);
+      font-size: var(--yb-font-size-xs, 0.75rem);
+      text-decoration: underline;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .about-sources-link:hover {
+      color: var(--yb-color-primary-hover, #e04b25);
+    }
+
+    .source-section:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .source-section h4 {
+      margin: 0 0 0.25rem 0;
+      font-size: var(--yb-font-size-md, 1rem);
+      color: var(--yb-color-text, #1a202c);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .source-section p {
+      margin: 0;
+      color: var(--yb-color-text-muted, #718096);
+    }
+
+    .source-section code {
+      font-family: var(--yb-font-family-mono, monospace);
+      font-size: 0.8em;
+      background: var(--yb-color-surface-subtle, #f8f9fa);
+      padding: 0.1rem 0.3rem;
+      border-radius: var(--yb-radius-sm, 4px);
+    }
+
+    .source-section a {
+      color: var(--yb-color-primary, #ff5c35);
+      text-decoration: underline;
     }
 
     .hidden-file-input {
@@ -270,6 +328,7 @@ export class YbIconPicker extends LitElement {
       path: resolvedPath,
     };
     this.selectedIconId = icon.id;
+    YbIconAttributionPopover.hideActive();
     this.dispatchEvent(
       new CustomEvent<IconSelectedDetail>("yb-icon-selected", {
         detail: { icon: normalizedIcon },
@@ -281,6 +340,7 @@ export class YbIconPicker extends LitElement {
   }
 
   private handleClose(): void {
+    YbIconAttributionPopover.hideActive();
     this.open = false;
     this.dispatchEvent(
       new CustomEvent("yb-dialog-close", { bubbles: true, composed: true }),
@@ -425,6 +485,7 @@ export class YbIconPicker extends LitElement {
             class="icon-grid"
             role="listbox"
             aria-label="Available pixel icons"
+            @scroll=${() => YbIconAttributionPopover.hideActive()}
           >
             ${
               visibleIcons.length === 0
@@ -443,7 +504,8 @@ export class YbIconPicker extends LitElement {
                         type="button"
                         role="option"
                         aria-selected=${this.selectedIconId === icon.id}
-                        title="${icon.title}${icon.tags?.length ? ` (${icon.tags.slice(0, 3).join(", ")})` : ""}"
+                        aria-label="${icon.title}${icon.tags?.length ? ` (${icon.tags.slice(0, 3).join(", ")})` : ""}"
+                        data-title=${icon.title}
                         class="icon-item ${this.selectedIconId === icon.id ? "selected" : ""}"
                         @click=${() => this.handleIconClick(icon)}
                       >
@@ -452,6 +514,11 @@ export class YbIconPicker extends LitElement {
                           alt=${icon.title}
                           size="md"
                         ></yb-pixel-icon>
+                        <yb-icon-attribution-popover
+                          .iconTitle=${icon.title}
+                          .provider=${icon.provider}
+                          .author=${icon.author || ""}
+                        ></yb-icon-attribution-popover>
                       </button>
                     `,
                   )
@@ -473,6 +540,19 @@ export class YbIconPicker extends LitElement {
                 `
               : null
           }
+
+          <div class="attribution-strip">
+            <span>Google Noto Emoji (Apache 2.0) &amp; Official Yoto</span>
+            <a
+              href="/about-icons"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="about-sources-link"
+              data-testid="about-sources-link"
+            >
+              About icon sources &amp; licensing ↗
+            </a>
+          </div>
         </div>
 
         <div slot="footer">

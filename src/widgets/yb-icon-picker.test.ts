@@ -65,4 +65,48 @@ describe("yb-icon-picker", () => {
     expect(selectedIcon).to.not.be.null;
     expect(el.open).to.be.false;
   });
+
+  it("renders single attribution link pointing to /about-icons in a new window", async () => {
+    const el = await fixture<YbIconPicker>(
+      html`<yb-icon-picker open></yb-icon-picker>`,
+    );
+    await el.updateComplete;
+
+    // Check attribution link exists and has target="_blank"
+    const aboutLink = el.shadowRoot?.querySelector<HTMLAnchorElement>(
+      "[data-testid='about-sources-link']",
+    );
+    expect(aboutLink, "about sources link should exist").to.exist;
+    expect(aboutLink?.getAttribute("href")).to.equal("/about-icons");
+    expect(aboutLink?.getAttribute("target")).to.equal("_blank");
+    expect(aboutLink?.getAttribute("rel")).to.include("noopener");
+
+    // Verify there are no duplicate about buttons/links in the footer
+    const allAboutLinks = el.shadowRoot?.querySelectorAll(
+      ".about-sources-link, .about-sources-btn",
+    );
+    expect(allAboutLinks?.length, "should have exactly one about link").to.equal(
+      1,
+    );
+  });
+
+  it("renders yb-icon-attribution-popover on each icon item with metadata", async () => {
+    const el = await fixture<YbIconPicker>(
+      html`<yb-icon-picker open></yb-icon-picker>`,
+    );
+    while (
+      el.shadowRoot?.querySelector(".empty-state")?.textContent?.includes("Loading")
+    ) {
+      await new Promise((r) => setTimeout(r, 20));
+    }
+    await el.updateComplete;
+
+    const firstIcon = el.shadowRoot?.querySelector<HTMLButtonElement>(".icon-item");
+    expect(firstIcon).to.exist;
+
+    const popover = firstIcon?.querySelector("yb-icon-attribution-popover");
+    expect(popover, "popover should be attached to icon item").to.exist;
+    expect(popover?.iconTitle).to.be.a("string");
+    expect(popover?.provider).to.be.a("string");
+  });
 });
