@@ -19,6 +19,7 @@ export class YbIconAttributionPopover extends LitElement {
   static override styles = css`
     :host {
       display: inline;
+      pointer-events: none;
     }
 
     .popover-container,
@@ -35,7 +36,7 @@ export class YbIconAttributionPopover extends LitElement {
       font-family: inherit;
       font-size: var(--yb-font-size-xs, 0.75rem);
       line-height: 1.35;
-      pointer-events: none;
+      pointer-events: none !important;
       z-index: 10000;
       max-width: 240px;
       width: max-content;
@@ -46,6 +47,11 @@ export class YbIconAttributionPopover extends LitElement {
       white-space: normal;
     }
 
+    .popover-container *,
+    .popover-content * {
+      pointer-events: none !important;
+    }
+
     .popover-container[popover],
     .popover-content[popover] {
       inset: auto auto auto auto;
@@ -54,7 +60,7 @@ export class YbIconAttributionPopover extends LitElement {
 
     .popover-container:popover-open,
     .popover-content:popover-open {
-      display: flex;
+      display: flex !important;
     }
 
     .icon-title {
@@ -122,32 +128,66 @@ export class YbIconAttributionPopover extends LitElement {
   @query(".popover-container") private popoverEl?: HTMLElement;
 
   private parentEl: HTMLElement | null = null;
+  private static activePopover: YbIconAttributionPopover | null = null;
+
+  /**
+   * Closes any currently active icon attribution popover.
+   * Useful when closing the dialog or scrolling the icon list.
+   */
+  public static hideActive(): void {
+    if (YbIconAttributionPopover.activePopover) {
+      YbIconAttributionPopover.activePopover.hide();
+      YbIconAttributionPopover.activePopover = null;
+    }
+  }
 
   override connectedCallback(): void {
     super.connectedCallback();
+    this.setupListeners();
+  }
+
+  override firstUpdated(): void {
+    if (!this.parentEl) {
+      this.setupListeners();
+    }
+    // If the cursor is already hovering the anchor when mounted, show immediately
+    if (this.parentEl?.matches(":hover")) {
+      void this.show(this.parentEl);
+    }
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.teardownListeners();
+    this.hide();
+  }
+
+  private setupListeners(): void {
+    if (this.parentEl) return;
     this.parentEl = this.parentElement;
     if (this.parentEl) {
       this.parentEl.addEventListener("mouseenter", this.handleMouseEnter);
       this.parentEl.addEventListener("mouseleave", this.handleMouseLeave);
       this.parentEl.addEventListener("focusin", this.handleMouseEnter);
       this.parentEl.addEventListener("focusout", this.handleMouseLeave);
+      this.parentEl.addEventListener("click", this.handleMouseLeave);
     }
   }
 
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
+  private teardownListeners(): void {
     if (this.parentEl) {
       this.parentEl.removeEventListener("mouseenter", this.handleMouseEnter);
       this.parentEl.removeEventListener("mouseleave", this.handleMouseLeave);
       this.parentEl.removeEventListener("focusin", this.handleMouseEnter);
       this.parentEl.removeEventListener("focusout", this.handleMouseLeave);
+      this.parentEl.removeEventListener("click", this.handleMouseLeave);
+      this.parentEl = null;
     }
-    this.hide();
   }
 
   private handleMouseEnter = (): void => {
     if (this.parentEl) {
-      this.show(this.parentEl);
+      void this.show(this.parentEl);
     }
   };
 
@@ -155,8 +195,23 @@ export class YbIconAttributionPopover extends LitElement {
     this.hide();
   };
 
-  public show(anchor: HTMLElement): void {
+  public async show(anchor: HTMLElement): Promise<void> {
+    if (!this.popoverEl) {
+      await this.updateComplete;
+    }
     if (!this.popoverEl) return;
+
+    // Dismiss any previously open popover to guarantee only one popover shows at a time
+    if (
+      YbIconAttributionPopover.activePopover &&
+      YbIconAttributionPopover.activePopover !== this
+    ) {
+      YbIconAttributionPopover.activePopover.hide();
+    }
+    YbIconAttributionPopover.activePopover = this;
+
+    // Reset inline display style before opening
+    this.popoverEl.style.display = "";
 
     if ("showPopover" in HTMLElement.prototype) {
       try {
@@ -174,6 +229,10 @@ export class YbIconAttributionPopover extends LitElement {
   }
 
   public hide(): void {
+    if (YbIconAttributionPopover.activePopover === this) {
+      YbIconAttributionPopover.activePopover = null;
+    }
+
     if (!this.popoverEl) return;
 
     if ("hidePopover" in HTMLElement.prototype) {
@@ -182,10 +241,17 @@ export class YbIconAttributionPopover extends LitElement {
           this.popoverEl.hidePopover();
         }
       } catch {
-        this.popoverEl.style.display = "none";
+        // Fallback below
       }
     }
-    this.popoverEl.style.display = "none";
+
+    // Clear inline display style when native popover is supported,
+    // only set display: none in non-popover fallback environments
+    if (!("showPopover" in HTMLElement.prototype)) {
+      this.popoverEl.style.display = "none";
+    } else {
+      this.popoverEl.style.display = "";
+    }
   }
 
   private positionPopover(anchor: HTMLElement): void {

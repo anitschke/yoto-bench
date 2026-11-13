@@ -100,5 +100,86 @@ describe("yb-icon-attribution-popover", () => {
     if ("hidePopover" in HTMLElement.prototype) {
       expect(innerPopover?.matches(":popover-open")).to.be.false;
     }
+
+    // Show again (re-hovering after moving cursor back)
+    popover.show(anchor);
+    await popover.updateComplete;
+    if ("showPopover" in HTMLElement.prototype) {
+      expect(innerPopover?.matches(":popover-open")).to.be.true;
+    }
+    expect(window.getComputedStyle(innerPopover!).display).to.not.equal("none");
+
+    YbIconAttributionPopover.hideActive();
+    await popover.updateComplete;
+    if ("hidePopover" in HTMLElement.prototype) {
+      expect(innerPopover?.matches(":popover-open")).to.be.false;
+    }
+  });
+
+  it("handles moving cursor between multiple icons smoothly without collision", async () => {
+    const container = await fixture<HTMLDivElement>(html`
+      <div style="display: flex; gap: 10px;">
+        <button id="btn1" style="width: 40px; height: 40px;">
+          <yb-icon-attribution-popover
+            id="pop1"
+            iconTitle="First Icon"
+            provider="noto-emoji"
+          ></yb-icon-attribution-popover>
+        </button>
+        <button id="btn2" style="width: 40px; height: 40px;">
+          <yb-icon-attribution-popover
+            id="pop2"
+            iconTitle="Second Icon"
+            provider="yoto"
+          ></yb-icon-attribution-popover>
+        </button>
+      </div>
+    `);
+
+    const btn1 = container.querySelector<HTMLButtonElement>("#btn1")!;
+    const btn2 = container.querySelector<HTMLButtonElement>("#btn2")!;
+    const pop1 = container.querySelector<YbIconAttributionPopover>("#pop1")!;
+    const pop2 = container.querySelector<YbIconAttributionPopover>("#pop2")!;
+
+    await pop1.updateComplete;
+    await pop2.updateComplete;
+
+    const inner1 = pop1.shadowRoot?.querySelector<HTMLElement>(".popover-container");
+    const inner2 = pop2.shadowRoot?.querySelector<HTMLElement>(".popover-container");
+
+    // 1. Move into button 1
+    btn1.dispatchEvent(new MouseEvent("mouseenter"));
+    await pop1.updateComplete;
+    if ("showPopover" in HTMLElement.prototype) {
+      expect(inner1?.matches(":popover-open")).to.be.true;
+    }
+
+    // 2. Move directly into button 2
+    btn1.dispatchEvent(new MouseEvent("mouseleave"));
+    btn2.dispatchEvent(new MouseEvent("mouseenter"));
+    await pop1.updateComplete;
+    await pop2.updateComplete;
+    if ("showPopover" in HTMLElement.prototype) {
+      expect(inner1?.matches(":popover-open")).to.be.false;
+      expect(inner2?.matches(":popover-open")).to.be.true;
+    }
+
+    // 3. Move back into button 1
+    btn2.dispatchEvent(new MouseEvent("mouseleave"));
+    btn1.dispatchEvent(new MouseEvent("mouseenter"));
+    await pop1.updateComplete;
+    await pop2.updateComplete;
+    if ("showPopover" in HTMLElement.prototype) {
+      expect(inner2?.matches(":popover-open")).to.be.false;
+      expect(inner1?.matches(":popover-open")).to.be.true;
+      expect(window.getComputedStyle(inner1!).display).to.not.equal("none");
+    }
+
+    // 4. Click button 1
+    btn1.dispatchEvent(new MouseEvent("click"));
+    await pop1.updateComplete;
+    if ("hidePopover" in HTMLElement.prototype) {
+      expect(inner1?.matches(":popover-open")).to.be.false;
+    }
   });
 });

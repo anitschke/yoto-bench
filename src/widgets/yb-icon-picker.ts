@@ -17,7 +17,7 @@ import "./yb-button.js";
 import "./yb-text-input.js";
 import "./yb-pixel-icon.js";
 import "./yb-badge.js";
-import "./yb-icon-attribution-popover.js";
+import { YbIconAttributionPopover } from "./yb-icon-attribution-popover.js";
 
 export interface IconSelectedDetail {
   icon: IconRecord;
@@ -328,6 +328,7 @@ export class YbIconPicker extends LitElement {
       path: resolvedPath,
     };
     this.selectedIconId = icon.id;
+    YbIconAttributionPopover.hideActive();
     this.dispatchEvent(
       new CustomEvent<IconSelectedDetail>("yb-icon-selected", {
         detail: { icon: normalizedIcon },
@@ -339,6 +340,7 @@ export class YbIconPicker extends LitElement {
   }
 
   private handleClose(): void {
+    YbIconAttributionPopover.hideActive();
     this.open = false;
     this.dispatchEvent(
       new CustomEvent("yb-dialog-close", { bubbles: true, composed: true }),
@@ -483,6 +485,7 @@ export class YbIconPicker extends LitElement {
             class="icon-grid"
             role="listbox"
             aria-label="Available pixel icons"
+            @scroll=${() => YbIconAttributionPopover.hideActive()}
           >
             ${
               visibleIcons.length === 0
@@ -502,7 +505,7 @@ export class YbIconPicker extends LitElement {
                         role="option"
                         aria-selected=${this.selectedIconId === icon.id}
                         aria-label="${icon.title}${icon.tags?.length ? ` (${icon.tags.slice(0, 3).join(", ")})` : ""}"
-                        title=${icon.title}
+                        data-title=${icon.title}
                         class="icon-item ${this.selectedIconId === icon.id ? "selected" : ""}"
                         @click=${() => this.handleIconClick(icon)}
                       >

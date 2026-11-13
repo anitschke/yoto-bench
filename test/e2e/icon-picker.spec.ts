@@ -57,7 +57,9 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     await expect(iconItems.first()).toBeVisible();
 
     // Check title of first matching result
-    const title = await iconItems.first().getAttribute("title");
+    const title =
+      (await iconItems.first().getAttribute("data-title")) ||
+      (await iconItems.first().getAttribute("title"));
     expect(title?.toLowerCase()).toContain("star");
   });
 
@@ -74,7 +76,10 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     const iconItems = picker.locator(".icon-item");
     await expect(iconItems.first()).toBeVisible();
 
-    const chosenTitle = (await iconItems.first().getAttribute("title")) || "";
+    const chosenTitle =
+      (await iconItems.first().getAttribute("data-title")) ||
+      (await iconItems.first().getAttribute("title")) ||
+      "";
     await iconItems.first().click();
 
     // Modal should close
@@ -182,6 +187,20 @@ test.describe("Icon Picker Modal & Search Sandbox (E2E)", () => {
     const popoverContent = popover.locator(".popover-content");
     await expect(popoverContent).toBeVisible();
     await expect(popoverContent.locator(".badge")).toBeVisible();
+
+    // Move cursor to second icon: popover 2 opens, popover 1 closes
+    const secondIcon = picker.locator(".icon-item").nth(1);
+    await secondIcon.hover();
+    const secondPopover = secondIcon.locator(
+      "yb-icon-attribution-popover .popover-content",
+    );
+    await expect(secondPopover).toBeVisible();
+    await expect(popoverContent).not.toBeVisible();
+
+    // Move cursor back to first icon and ensure popover re-opens cleanly
+    await firstIcon.hover();
+    await expect(popoverContent).toBeVisible();
+    await expect(secondPopover).not.toBeVisible();
   });
 
   test("loads dedicated /about-icons top-level page", async ({ page }) => {
