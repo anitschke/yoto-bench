@@ -1,5 +1,5 @@
-import { LitElement, html, css } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, state, query } from "lit/decorators.js";
 import { ToastNotificationEvent, ToastOptions } from "./events.js";
 import "./yb-toast.js";
 
@@ -10,6 +10,8 @@ interface QueuedToast extends ToastOptions {
 /**
  * <yb-toast-manager>
  * Top-level notification queue listener and renderer.
+ * Utilizes the HTML Popover API (popover="manual") to elevate toast notifications
+ * into the browser's top layer, ensuring error toasts remain visible above modal dialog backdrops.
  * See: docs/rfcs/005-widgets-and-component-library.md
  *      docs/rfcs/006-error-handling-and-toast-notifications.md
  */
@@ -17,6 +19,10 @@ interface QueuedToast extends ToastOptions {
 export class YbToastManager extends LitElement {
   static override styles = css`
     :host {
+      display: contents;
+    }
+
+    .toast-container {
       position: fixed;
       bottom: 1.5rem;
       right: 1.5rem;
@@ -25,6 +31,26 @@ export class YbToastManager extends LitElement {
       flex-direction: column;
       gap: 0.75rem;
       pointer-events: none;
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      overflow: visible;
+      inset: auto 1.5rem 1.5rem auto;
+    }
+
+    /* Popover styles for top-layer elevation above native dialog backdrops */
+    .toast-container[popover] {
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      overflow: visible;
+      inset: auto 1.5rem 1.5rem auto;
+    }
+
+    .toast-container:popover-open {
+      display: flex;
     }
 
     yb-toast {
@@ -33,6 +59,7 @@ export class YbToastManager extends LitElement {
   `;
 
   @state() private toasts: QueuedToast[] = [];
+  @query(".toast-container") private containerEl?: HTMLElement;
 
   override connectedCallback(): void {
     super.connectedCallback();
@@ -48,6 +75,41 @@ export class YbToastManager extends LitElement {
       ToastNotificationEvent.EVENT_NAME,
       this.handleToastEvent as EventListener,
     );
+    if (this.containerEl && "hidePopover" in HTMLElement.prototype) {
+      try {
+        if (this.containerEl.matches(":popover-open")) {
+          this.containerEl.hidePopover();
+        }
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+  }
+
+  override updated(changedProperties: PropertyValues<this>): void {
+    super.updated(changedProperties);
+
+    if (this.containerEl && "showPopover" in HTMLElement.prototype) {
+      if (this.toasts.length > 0) {
+        try {
+          // Promote to the top of the top-layer stack (above open modal dialogs)
+          if (this.containerEl.matches(":popover-open")) {
+            this.containerEl.hidePopover();
+          }
+          this.containerEl.showPopover();
+        } catch (err) {
+          console.warn("[YbToastManager] Failed to elevate popover:", err);
+        }
+      } else {
+        try {
+          if (this.containerEl.matches(":popover-open")) {
+            this.containerEl.hidePopover();
+          }
+        } catch {
+          // Ignore
+        }
+      }
+    }
   }
 
   private handleToastEvent = (e: CustomEvent<ToastOptions>) => {
@@ -92,7 +154,12 @@ export class YbToastManager extends LitElement {
 
   override render() {
     return html`
-      <div role="status" aria-live="polite">
+      <div
+        class="toast-container"
+        popover="manual"
+        role="status"
+        aria-live="polite"
+      >
         ${this.toasts.map(
           (t) => html`
             <yb-toast
