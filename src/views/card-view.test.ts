@@ -321,6 +321,5 @@ describe("yb-card-view", () => {
         globalThis.fetch = origFetch;
       }
     });
-    });
   });
 });
