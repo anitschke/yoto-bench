@@ -5,10 +5,11 @@
 
 export interface IconRecord {
   id: string;
-  provider: string; // 'yoto' | 'noto-emoji' | 'custom'
+  provider: string; // 'yoto' | 'noto-emoji' | 'custom' | 'yotoicons'
   title: string;
   path: string; // Relative asset path, e.g. 'icons/a1b2c3d4.png' or full URL
   tags: string[];
+  author?: string; // Author attribution (e.g. for future yotoicons.com user)
   mediaId?: string;
   displayIconId?: string;
 }
