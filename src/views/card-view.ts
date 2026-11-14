@@ -11,7 +11,7 @@ import { consume } from "@lit/context";
 import { authService } from "../api/auth.js";
 import { yotoApi } from "../api/client.js";
 import { authContext } from "../context/index.js";
-import { AuthSession, Card } from "../models/index.js";
+import { AuthSession, Card, Cover } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
 import { opfsService } from "../services/opfs.js";
 import {
@@ -776,26 +776,36 @@ export class YbCardView extends LitElement {
       );
 
       let coverUpdate = {};
+      let coverObj: Cover | undefined;
       if (this.podcastApplyCoverArtwork && this.podcastFeedImageUrl) {
-        let coverDataUrl = this.podcastFeedImageUrl;
+        let coverUrl = this.podcastFeedImageUrl;
         try {
           const imgResp = await fetch(this.podcastFeedImageUrl);
           if (imgResp.ok) {
             const blob = await imgResp.blob();
-            coverDataUrl = await yotoApi.uploadCoverImage(blob);
+            coverUrl = await yotoApi.uploadCoverImage(blob);
+          } else {
+            coverUrl = await yotoApi.uploadCoverImage(this.podcastFeedImageUrl);
           }
         } catch {
-          // If direct image fetch fails (e.g. CORS), fallback to remote URL
+          // If direct image fetch fails (e.g. CORS), fallback to uploadCoverImage with remote URL
+          try {
+            coverUrl = await yotoApi.uploadCoverImage(this.podcastFeedImageUrl);
+          } catch {
+            // fallback to original remote url
+          }
         }
 
+        coverObj = {
+          ...(this.card.metadata?.cover || this.card.cover || {}),
+          imageL: coverUrl,
+          imageM: coverUrl,
+          imageS: coverUrl,
+        };
+
         coverUpdate = {
-          customCoverArt: coverDataUrl,
-          cover: {
-            ...(this.card.cover || {}),
-            imageL: coverDataUrl,
-            imageM: coverDataUrl,
-            imageS: coverDataUrl,
-          },
+          customCoverArt: coverUrl,
+          cover: coverObj,
         };
       }
 
@@ -805,6 +815,7 @@ export class YbCardView extends LitElement {
         metadata: {
           ...this.card.metadata,
           description: updatedDescription,
+          ...(coverObj ? { cover: coverObj } : {}),
         },
         content: {
           ...this.card.content,

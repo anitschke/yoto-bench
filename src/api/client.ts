@@ -190,12 +190,52 @@ export class YotoApiClient {
   // --- Card Cover Artwork ---
 
   /**
-   * Uploads or encodes a card cover artwork image (PNG, JPEG, WebP).
-   * Encodes the image binary as a Base64 data URL suitable for embedding
-   * directly into card.cover and card.customCoverArt.
-   * See: docs/rfcs/016-content-security-policy-and-sri.md
+   * Uploads or encodes a card cover artwork image (PNG, JPEG, WebP) or remote image URL.
+   * Interacts with Yoto's POST /media/coverImage/user/me/upload endpoint with autoconvert=true.
+   * If remote upload fails or offline, falls back to a Base64 data URL or remote URL.
+   * See: docs/rfcs/016-content-security-policy-and-sri.md, https://yoto.dev
    */
-  public async uploadCoverImage(file: Blob | File): Promise<string> {
+  public async uploadCoverImage(
+    source: Blob | File | string,
+  ): Promise<string> {
+    try {
+      const query = new URLSearchParams({
+        autoconvert: "true",
+        coverType: "default",
+      });
+
+      if (typeof source === "string") {
+        query.set("imageUrl", source);
+        const res = await this.request<{
+          coverImage?: { mediaId?: string; mediaUrl?: string };
+          mediaUrl?: string;
+        }>(`/media/coverImage/user/me/upload?${query.toString()}`, {
+          method: "POST",
+        });
+        const mediaUrl = res.coverImage?.mediaUrl || res.mediaUrl;
+        if (mediaUrl) return mediaUrl;
+      } else {
+        const res = await this.request<{
+          coverImage?: { mediaId?: string; mediaUrl?: string };
+          mediaUrl?: string;
+        }>(`/media/coverImage/user/me/upload?${query.toString()}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": source.type || "image/jpeg",
+          },
+          body: source,
+        });
+        const mediaUrl = res.coverImage?.mediaUrl || res.mediaUrl;
+        if (mediaUrl) return mediaUrl;
+      }
+    } catch {
+      // Fallback below if API endpoint is unavailable (e.g. offline or unmocked unit tests)
+    }
+
+    if (typeof source === "string") {
+      return source;
+    }
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -208,7 +248,7 @@ export class YotoApiClient {
       reader.onerror = () => {
         reject(reader.error || new Error("Failed to read cover image file."));
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(source);
     });
   }
 
@@ -330,50 +370,72 @@ export const yotoApi = new YotoApiClient();
 
 /**
  * Sanitizes a card object before sending it to Yoto's POST /content endpoint.
- * Yoto's API strictly requires chapter and track display.icon16x16 to be in the
- * format "yoto:#{mediaId}" where mediaId is 43 characters, and rejects raw CDN
- * HTTPS URLs or local asset paths.
- * See: docs/rfcs/013-yoto-official-icon-provider.md
+ * 1. Yoto's API strictly requires chapter and track display.icon16x16 to be in the
+ *    format "yoto:#{mediaId}" where mediaId is 43 characters, and rejects raw CDN
+ *    HTTPS URLs or local asset paths (See: docs/rfcs/013-yoto-official-icon-provider.md).
+ * 2. Yoto's POST /content endpoint rejects unrecognized top-level keys like "cover"
+ *    and "customCoverArt" ("body: Unrecognized keys: \"customCoverArt\", \"cover\"").
+ *    Cover art must be positioned inside metadata.cover: { imageL: ... } (See: https://yoto.dev).
  */
 export function sanitizeCardForApi<T extends Partial<Card>>(card: T): T {
-  if (!card.content || !card.content.chapters) return card;
+  // Strip unrecognized top-level cover keys for POST /content
+  const { cover, customCoverArt, ...cleanCard } = card as Card;
 
-  const chapters = card.content.chapters.map((chapter) => {
-    let chapDisplay = chapter.display ? { ...chapter.display } : undefined;
-    if (chapDisplay?.icon16x16) {
-      const normalized = normalizeIconRef(chapDisplay.icon16x16);
-      if (normalized) {
-        chapDisplay = { ...chapDisplay, icon16x16: normalized };
-      }
-    }
+  let metadata = cleanCard.metadata ? { ...cleanCard.metadata } : undefined;
+  const coverObj =
+    metadata?.cover ||
+    cover ||
+    (customCoverArt ? { imageL: customCoverArt } : undefined);
 
-    const tracks = chapter.tracks?.map((track) => {
-      let trackDisplay = track.display ? { ...track.display } : undefined;
-      if (trackDisplay?.icon16x16) {
-        const normalized = normalizeIconRef(trackDisplay.icon16x16);
+  if (coverObj) {
+    metadata = {
+      ...metadata,
+      cover: coverObj,
+    };
+  }
+
+  let content = cleanCard.content;
+  if (content?.chapters) {
+    const chapters = content.chapters.map((chapter) => {
+      let chapDisplay = chapter.display ? { ...chapter.display } : undefined;
+      if (chapDisplay?.icon16x16) {
+        const normalized = normalizeIconRef(chapDisplay.icon16x16);
         if (normalized) {
-          trackDisplay = { ...trackDisplay, icon16x16: normalized };
+          chapDisplay = { ...chapDisplay, icon16x16: normalized };
         }
       }
+
+      const tracks = chapter.tracks?.map((track) => {
+        let trackDisplay = track.display ? { ...track.display } : undefined;
+        if (trackDisplay?.icon16x16) {
+          const normalized = normalizeIconRef(trackDisplay.icon16x16);
+          if (normalized) {
+            trackDisplay = { ...trackDisplay, icon16x16: normalized };
+          }
+        }
+        return {
+          ...track,
+          type: track.type || "audio",
+          display: trackDisplay,
+        };
+      });
+
       return {
-        ...track,
-        type: track.type || "audio",
-        display: trackDisplay,
+        ...chapter,
+        display: chapDisplay,
+        tracks,
       };
     });
 
-    return {
-      ...chapter,
-      display: chapDisplay,
-      tracks,
+    content = {
+      ...content,
+      chapters,
     };
-  });
+  }
 
   return {
-    ...card,
-    content: {
-      ...card.content,
-      chapters,
-    },
-  };
+    ...cleanCard,
+    ...(metadata ? { metadata } : {}),
+    ...(content ? { content } : {}),
+  } as T;
 }

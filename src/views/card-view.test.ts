@@ -249,6 +249,7 @@ describe("yb-card-view", () => {
         expect(viewAny.card.cover).to.exist;
         expect(viewAny.card.cover?.imageL).to.match(/^data:image\/jpeg;base64,/);
         expect(viewAny.card.customCoverArt).to.match(/^data:image\/jpeg;base64,/);
+        expect(viewAny.card.metadata?.cover?.imageL).to.match(/^data:image\/jpeg;base64,/);
       } finally {
         globalThis.fetch = origFetch;
       }

@@ -58,6 +58,7 @@ export interface Display {
 export interface Metadata {
   author?: string;
   description?: string;
+  cover?: Cover;
   media?: Media;
   [key: string]: unknown;
 }
