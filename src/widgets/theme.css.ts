@@ -45,6 +45,10 @@ export const themeStyles = css`
     --yb-font-size-xl: 1.25rem;
     --yb-font-size-2xl: 1.5rem;
 
+    /* Aspect Ratios & Card Dimensions (ISO/IEC 7810 ID-1 / NFC Card vs Track Square) */
+    --yb-aspect-ratio-card: 54 / 85.6; /* Standard credit / NFC card portrait */
+    --yb-aspect-ratio-track: 1 / 1; /* Track artwork is square */
+
     /* Radii */
     --yb-radius-sm: 6px;
     --yb-radius-md: 10px;

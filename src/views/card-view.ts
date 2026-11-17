@@ -110,10 +110,10 @@ export class YbCardView extends LitElement {
     }
 
     .cover-preview-box {
-      width: 120px;
-      height: 120px;
-      min-width: 120px;
-      border-radius: var(--yb-radius-md, 10px);
+      width: 108px;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
+      min-width: 108px;
+      border-radius: var(--yb-radius-md, 8px);
       overflow: hidden;
       border: 2px dashed var(--yb-color-border, #cbd5e1);
       background: var(--yb-color-surface-dark, #12161a);
@@ -121,6 +121,7 @@ export class YbCardView extends LitElement {
       align-items: center;
       justify-content: center;
       position: relative;
+      box-shadow: var(--yb-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
       transition:
         border-color 0.2s ease,
         background 0.2s ease;
@@ -134,6 +135,7 @@ export class YbCardView extends LitElement {
     .cover-image {
       width: 100%;
       height: 100%;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
       object-fit: cover;
       display: block;
     }
@@ -355,8 +357,8 @@ export class YbCardView extends LitElement {
     }
 
     .podcast-artwork-thumbnail {
-      width: 56px;
-      height: 56px;
+      width: 44px;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
       border-radius: var(--yb-radius-sm, 6px);
       object-fit: cover;
       background: var(--yb-color-surface-dark, #12161a);

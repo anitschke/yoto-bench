@@ -155,6 +155,8 @@ describe("yb-card-view", () => {
 
       const coverSection = el.shadowRoot?.querySelector(".cover-section");
       expect(coverSection, "cover-section should exist").to.exist;
+      const previewBox = el.shadowRoot?.querySelector(".cover-preview-box");
+      expect(previewBox, "cover-preview-box should exist").to.exist;
       const placeholder = el.shadowRoot?.querySelector(".cover-placeholder");
       expect(placeholder, "placeholder should exist").to.exist;
       expect(el.shadowRoot?.querySelector(".cover-image")).to.not.exist;
