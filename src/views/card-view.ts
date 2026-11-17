@@ -11,7 +11,7 @@ import { consume } from "@lit/context";
 import { authService } from "../api/auth.js";
 import { yotoApi } from "../api/client.js";
 import { authContext } from "../context/index.js";
-import { AuthSession, Card } from "../models/index.js";
+import { AuthSession, Card, Cover } from "../models/index.js";
 import { dispatchToast } from "../widgets/events.js";
 import { opfsService } from "../services/opfs.js";
 import {
@@ -342,6 +342,36 @@ export class YbCardView extends LitElement {
     .podcast-ep-row:nth-child(even) {
       background: var(--yb-color-surface-subtle, #f8fafc);
     }
+
+    .podcast-artwork-preview {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--yb-color-surface-subtle, #f8fafc);
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      border-radius: var(--yb-radius-md, 8px);
+      margin-top: 0.5rem;
+    }
+
+    .podcast-artwork-thumbnail {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--yb-radius-sm, 6px);
+      object-fit: cover;
+      background: var(--yb-color-surface-dark, #12161a);
+      flex-shrink: 0;
+    }
+
+    .podcast-artwork-checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: var(--yb-font-size-sm, 0.875rem);
+      color: var(--yb-color-text, #1e293b);
+      cursor: pointer;
+      user-select: none;
+    }
   `;
 
   @consume({ context: authContext, subscribe: true })
@@ -374,9 +404,21 @@ export class YbCardView extends LitElement {
   @state() private podcastFeedUrl = "";
   @state() private podcastLimit = 10;
   @state() private podcastMinDuration = 120;
+  @state() private podcastOrder: "newest" | "oldest" = "newest";
   @state() private podcastRawXml = "";
   @state() private podcastPreviewEpisodes: PodcastEpisode[] = [];
   @state() private isPreviewingPodcast = false;
+  @state() private podcastFeedImageUrl: string | undefined = undefined;
+  @state() private podcastApplyCoverArtwork = true;
+
+  // Podcast Sync Settings Dialog
+  @state() private syncSettingsDialogOpen = false;
+  @state() private editSyncFeedUrl = "";
+  @state() private editSyncLimit = 10;
+  @state() private editSyncMinDuration = 120;
+  @state() private editSyncOrder: "newest" | "oldest" = "newest";
+  @state() private editSyncLastSynced = "";
+  @state() private isSavingSyncSettings = false;
 
   private isFetching = false;
 
@@ -752,9 +794,14 @@ export class YbCardView extends LitElement {
         xml = await fetchFeedXml(this.podcastFeedUrl);
       }
       const feed = parsePodcastFeed(xml);
+      this.podcastFeedImageUrl = feed.imageUrl;
+      if (feed.imageUrl) {
+        this.podcastApplyCoverArtwork = true;
+      }
       const filtered = filterEpisodes(feed.episodes, {
         limit: this.podcastLimit,
         minDurationSeconds: this.podcastMinDuration,
+        order: this.podcastOrder,
       });
       this.podcastPreviewEpisodes = filtered;
     } catch (err) {
@@ -839,6 +886,7 @@ export class YbCardView extends LitElement {
         filter: {
           limit: this.podcastLimit,
           minDurationSeconds: this.podcastMinDuration,
+          order: this.podcastOrder,
         },
         lastSynced: new Date().toISOString(),
       };
@@ -848,11 +896,47 @@ export class YbCardView extends LitElement {
         syncMeta,
       );
 
+      let coverUpdate = {};
+      let coverObj: Cover | undefined;
+      if (this.podcastApplyCoverArtwork && this.podcastFeedImageUrl) {
+        let coverUrl = this.podcastFeedImageUrl;
+        try {
+          const imgResp = await fetch(this.podcastFeedImageUrl);
+          if (imgResp.ok) {
+            const blob = await imgResp.blob();
+            coverUrl = await yotoApi.uploadCoverImage(blob);
+          } else {
+            coverUrl = await yotoApi.uploadCoverImage(this.podcastFeedImageUrl);
+          }
+        } catch {
+          // If direct image fetch fails (e.g. CORS), fallback to uploadCoverImage with remote URL
+          try {
+            coverUrl = await yotoApi.uploadCoverImage(this.podcastFeedImageUrl);
+          } catch {
+            // fallback to original remote url
+          }
+        }
+
+        coverObj = {
+          ...(this.card.metadata?.cover || this.card.cover || {}),
+          imageL: coverUrl,
+          imageM: coverUrl,
+          imageS: coverUrl,
+        };
+
+        coverUpdate = {
+          customCoverArt: coverUrl,
+          cover: coverObj,
+        };
+      }
+
       this.card = {
         ...this.card,
+        ...coverUpdate,
         metadata: {
           ...this.card.metadata,
           description: updatedDescription,
+          ...(coverObj ? { cover: coverObj } : {}),
         },
         content: {
           ...this.card.content,
@@ -887,6 +971,7 @@ export class YbCardView extends LitElement {
       const filtered = filterEpisodes(feed.episodes, {
         limit: syncMeta.filter?.limit || 10,
         minDurationSeconds: syncMeta.filter?.minDurationSeconds || 120,
+        order: syncMeta.filter?.order,
       });
 
       // Existing titles set
@@ -926,6 +1011,9 @@ export class YbCardView extends LitElement {
   private getActiveCoverUrl(): string {
     if (!this.card) return "";
     return (
+      this.card.metadata?.cover?.imageL ||
+      this.card.metadata?.cover?.imageM ||
+      this.card.metadata?.cover?.imageS ||
       this.card.cover?.imageL ||
       this.card.cover?.imageM ||
       this.card.cover?.imageS ||
@@ -939,14 +1027,20 @@ export class YbCardView extends LitElement {
     const cleanUrl = url.trim();
     if (!cleanUrl) return;
 
+    const coverObj = {
+      ...(this.card.metadata?.cover || this.card.cover || {}),
+      imageL: cleanUrl,
+      imageM: cleanUrl,
+      imageS: cleanUrl,
+    };
+
     this.card = {
       ...this.card,
       customCoverArt: cleanUrl,
-      cover: {
-        ...(this.card.cover || {}),
-        imageL: cleanUrl,
-        imageM: cleanUrl,
-        imageS: cleanUrl,
+      cover: coverObj,
+      metadata: {
+        ...this.card.metadata,
+        cover: coverObj,
       },
     };
     this.coverUrlInput = "";
@@ -961,6 +1055,11 @@ export class YbCardView extends LitElement {
     const updated = { ...this.card };
     delete updated.customCoverArt;
     delete updated.cover;
+    if (updated.metadata) {
+      const updatedMeta = { ...updated.metadata };
+      delete updatedMeta.cover;
+      updated.metadata = updatedMeta;
+    }
     this.card = updated;
     dispatchToast(this, {
       type: "info",
@@ -1024,6 +1123,71 @@ export class YbCardView extends LitElement {
     }
   }
 
+  // --- Podcast Sync Settings ---
+
+  private openSyncSettingsDialog() {
+    const syncMeta = extractSyncMetadata(this.card?.metadata?.description);
+    if (!syncMeta) return;
+    this.editSyncFeedUrl = syncMeta.feedUrl;
+    this.editSyncLimit = syncMeta.filter?.limit ?? 10;
+    this.editSyncMinDuration = syncMeta.filter?.minDurationSeconds ?? 120;
+    this.editSyncOrder = syncMeta.filter?.order ?? "newest";
+    this.editSyncLastSynced = syncMeta.lastSynced ?? "";
+    this.syncSettingsDialogOpen = true;
+  }
+
+  private async saveSyncSettings() {
+    if (!this.card) return;
+    const currentSyncMeta = extractSyncMetadata(
+      this.card.metadata?.description,
+    );
+    if (!currentSyncMeta) return;
+
+    const updatedMeta: CardSyncMetadata = {
+      ...currentSyncMeta,
+      feedUrl: this.editSyncFeedUrl.trim(),
+      filter: {
+        ...currentSyncMeta.filter,
+        limit: this.editSyncLimit,
+        minDurationSeconds: this.editSyncMinDuration,
+        order: this.editSyncOrder,
+      },
+    };
+
+    const updatedDescription = embedSyncMetadata(
+      this.card.metadata?.description,
+      updatedMeta,
+    );
+
+    this.card = {
+      ...this.card,
+      metadata: {
+        ...this.card.metadata,
+        description: updatedDescription,
+      },
+    };
+
+    this.isSavingSyncSettings = true;
+    try {
+      await yotoApi.updateCard(this.card);
+      this.syncSettingsDialogOpen = false;
+      dispatchToast(this, {
+        type: "success",
+        message: "Podcast sync settings updated and saved to Yoto!",
+      });
+    } catch (err) {
+      dispatchToast(this, {
+        type: "error",
+        message: "Failed to save sync settings.",
+        errorDetail: err,
+      });
+    } finally {
+      this.isSavingSyncSettings = false;
+    }
+  }
+    }
+  }
+
   // --- Save Card ---
 
   private async saveCardChanges() {
@@ -1080,8 +1244,13 @@ export class YbCardView extends LitElement {
               ${
                 syncMeta
                   ? html`
-                      <yb-badge variant="neutral">
-                        Podcast Sync Active
+                      <yb-badge
+                        variant="neutral"
+                        style="cursor: pointer;"
+                        title="Click to view sync settings"
+                        @click=${this.openSyncSettingsDialog}
+                      >
+                        Podcast Sync Active ⚙️
                       </yb-badge>
                     `
                   : null
@@ -1093,6 +1262,12 @@ export class YbCardView extends LitElement {
             ${
               syncMeta
                 ? html`
+                    <yb-button
+                      variant="secondary"
+                      @click=${this.openSyncSettingsDialog}
+                    >
+                      ⚙️ Sync Settings
+                    </yb-button>
                     <yb-button
                       variant="secondary"
                       ?loading=${this.isSyncingPodcast}
@@ -1430,6 +1605,44 @@ export class YbCardView extends LitElement {
             ></yb-number-input>
           </div>
 
+          <div class="podcast-order-group">
+            <label
+              style="font-size: var(--yb-font-size-sm, 0.875rem); font-weight: 500; color: var(--yb-color-text, #1e293b);"
+            >
+              Episode Ordering
+            </label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="podcastOrder"
+                  value="newest"
+                  .checked=${this.podcastOrder === "newest"}
+                  @change=${() => {
+                    this.podcastOrder = "newest";
+                  }}
+                />
+                Newest First
+              </label>
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="podcastOrder"
+                  value="oldest"
+                  .checked=${this.podcastOrder === "oldest"}
+                  @change=${() => {
+                    this.podcastOrder = "oldest";
+                  }}
+                />
+                Oldest First (Chronological)
+              </label>
+            </div>
+          </div>
+
           <yb-button
             variant="secondary"
             ?loading=${this.isPreviewingPodcast}
@@ -1437,6 +1650,32 @@ export class YbCardView extends LitElement {
           >
             Fetch & Preview Episodes
           </yb-button>
+
+          ${
+            this.podcastFeedImageUrl
+              ? html`
+                  <div class="podcast-artwork-preview">
+                    <img
+                      class="podcast-artwork-thumbnail"
+                      src=${this.podcastFeedImageUrl}
+                      alt="Podcast Artwork"
+                    />
+                    <label class="podcast-artwork-checkbox-label">
+                      <input
+                        type="checkbox"
+                        .checked=${this.podcastApplyCoverArtwork}
+                        @change=${(e: Event) => {
+                          this.podcastApplyCoverArtwork = (
+                            e.target as HTMLInputElement
+                          ).checked;
+                        }}
+                      />
+                      Set card cover image from podcast artwork
+                    </label>
+                  </div>
+                `
+              : null
+          }
 
           ${
             this.podcastPreviewEpisodes.length > 0
@@ -1487,6 +1726,141 @@ export class YbCardView extends LitElement {
             @click=${this.importPodcastEpisodes}
           >
             Import ${this.podcastPreviewEpisodes.length} Episodes
+          </yb-button>
+        </div>
+      </yb-dialog>
+
+      <!-- Podcast Sync Settings Dialog -->
+      <yb-dialog
+        class="sync-settings-dialog"
+        ?open=${this.syncSettingsDialogOpen}
+        @close=${() => {
+          this.syncSettingsDialogOpen = false;
+        }}
+      >
+        <span slot="header">Podcast Sync Settings</span>
+
+        <div class="podcast-form">
+          <yb-text-input
+            class="sync-feed-url-input"
+            label="Podcast RSS Feed URL"
+            .value=${this.editSyncFeedUrl}
+            @input=${(e: Event) => {
+              const detail = (e as CustomEvent<{ value: string }>).detail;
+              const target = e.target as HTMLInputElement | { value: string };
+              this.editSyncFeedUrl =
+                detail?.value !== undefined
+                  ? detail.value
+                  : (target?.value ?? "");
+            }}
+            @yb-input=${(e: CustomEvent<{ value: string }>) => {
+              if (e.detail?.value !== undefined) {
+                this.editSyncFeedUrl = e.detail.value;
+              }
+            }}
+          ></yb-text-input>
+
+          <div style="display: flex; gap: 1rem;">
+            <yb-number-input
+              class="sync-limit-input"
+              label="Episode Limit"
+              .value=${this.editSyncLimit}
+              .min=${1}
+              .max=${100}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncLimit = e.detail.value;
+                }
+              }}
+              @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncLimit = e.detail.value;
+                }
+              }}
+            ></yb-number-input>
+
+            <yb-number-input
+              class="sync-min-duration-input"
+              label="Min Duration (s)"
+              .value=${this.editSyncMinDuration}
+              .min=${0}
+              @change=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncMinDuration = e.detail.value;
+                }
+              }}
+              @yb-input=${(e: CustomEvent<{ value: number }>) => {
+                if (e.detail?.value !== undefined) {
+                  this.editSyncMinDuration = e.detail.value;
+                }
+              }}
+            ></yb-number-input>
+          </div>
+
+          <div class="sync-order-group">
+            <label
+              style="font-size: var(--yb-font-size-sm, 0.875rem); font-weight: 500; color: var(--yb-color-text, #1e293b);"
+            >
+              Episode Ordering
+            </label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.25rem;">
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="editSyncOrder"
+                  value="newest"
+                  .checked=${this.editSyncOrder === "newest"}
+                  @change=${() => {
+                    this.editSyncOrder = "newest";
+                  }}
+                />
+                Newest First
+              </label>
+              <label
+                style="display: flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; cursor: pointer;"
+              >
+                <input
+                  type="radio"
+                  name="editSyncOrder"
+                  value="oldest"
+                  .checked=${this.editSyncOrder === "oldest"}
+                  @change=${() => {
+                    this.editSyncOrder = "oldest";
+                  }}
+                />
+                Oldest First (Chronological)
+              </label>
+            </div>
+          </div>
+
+          <div
+            class="sync-meta-info"
+            style="font-size: 0.8rem; color: var(--yb-color-text-muted, #718096); padding: 0.5rem; background: var(--yb-color-surface-subtle, #f8fafc); border-radius: var(--yb-radius-sm, 6px);"
+          >
+            ${this.editSyncLastSynced
+              ? `Last synced: ${new Date(this.editSyncLastSynced).toLocaleString()}`
+              : "Last synced: Never"}
+          </div>
+        </div>
+
+        <div slot="footer">
+          <yb-button
+            variant="subtle"
+            @click=${() => {
+              this.syncSettingsDialogOpen = false;
+            }}
+          >
+            Cancel
+          </yb-button>
+          <yb-button
+            class="sync-save-settings-btn"
+            variant="primary"
+            ?loading=${this.isSavingSyncSettings}
+            @click=${this.saveSyncSettings}
+          >
+            Save Settings
           </yb-button>
         </div>
       </yb-dialog>

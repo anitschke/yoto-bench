@@ -68,7 +68,7 @@ describe("sanitizeCardForApi", () => {
     );
   });
 
-  it("preserves dynamic and unrecognized card metadata fields (Rule 6: Passthrough)", () => {
+  it("preserves dynamic and unrecognized card metadata fields (Rule 6: Passthrough) while sanitizing root cover keys", () => {
     const card: Card = {
       cardId: "card_3",
       title: "Passthrough Card",
@@ -87,17 +87,35 @@ describe("sanitizeCardForApi", () => {
     };
 
     const sanitized = sanitizeCardForApi(card);
-    expect(sanitized.customCoverArt).to.equal("https://example.com/cover.png");
+    // Unrecognized top-level cover keys should be stripped and moved to metadata.cover
+    expect(sanitized.customCoverArt).to.be.undefined;
+    expect(sanitized.metadata?.cover?.imageL).to.equal("https://example.com/cover.png");
     expect(sanitized.ambientLighting).to.deep.equal({ color: "#ff00ff" });
     expect(sanitized.content?.chapters[0]?.customChapterField).to.equal(42);
   });
 
-  describe("uploadCoverImage", () => {
-    it("encodes blob as base64 data URL", async () => {
-      const blob = new Blob(["fake-image-bytes"], { type: "image/png" });
-      const dataUrl = await yotoApi.uploadCoverImage(blob);
-      expect(dataUrl).to.be.a("string");
-      expect(dataUrl).to.match(/^data:image\/png;base64,/);
-    });
+  it("moves top-level cover object to metadata.cover and removes it from root", () => {
+    const card: Card = {
+      cardId: "card_4",
+      title: "Cover Card",
+      cover: {
+        imageL: "https://example.com/coverL.png",
+        imageM: "https://example.com/coverM.png",
+      },
+    };
+
+    const sanitized = sanitizeCardForApi(card);
+    expect(sanitized.cover).to.be.undefined;
+    expect(sanitized.metadata?.cover?.imageL).to.equal("https://example.com/coverL.png");
+    expect(sanitized.metadata?.cover?.imageM).to.equal("https://example.com/coverM.png");
+  });
+});
+
+describe("uploadCoverImage", () => {
+  it("encodes blob as base64 data URL", async () => {
+    const blob = new Blob(["fake-image-bytes"], { type: "image/png" });
+    const dataUrl = await yotoApi.uploadCoverImage(blob);
+    expect(dataUrl).to.be.a("string");
+    expect(dataUrl).to.match(/^data:image\/png;base64,/);
   });
 });

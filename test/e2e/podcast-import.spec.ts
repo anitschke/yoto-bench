@@ -24,6 +24,7 @@ test.describe("Podcast RSS Feed Importer (E2E)", () => {
 
     await yoto.mockPodcastFeed(FEED_URL, {
       title: "Bedtime Stories for Kids",
+      imageUrl: "https://example.com/podcast-art.jpg",
       episodes: [
         {
           title: "Episode 1: The Magic Tree",
@@ -109,5 +110,9 @@ test.describe("Podcast RSS Feed Importer (E2E)", () => {
     expect(savedCard).toBeDefined();
     expect(savedCard?.content?.chapters).toHaveLength(2);
     expect(savedCard?.metadata?.description).toContain("<!-- yoto-bench:sync");
+    // Verify cover is stored in metadata.cover and stripped from unrecognized root keys
+    expect(savedCard?.metadata?.cover?.imageL).toBeDefined();
+    expect((savedCard as Record<string, unknown>).customCoverArt).toBeUndefined();
+    expect((savedCard as Record<string, unknown>).cover).toBeUndefined();
   });
 });

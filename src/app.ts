@@ -10,6 +10,8 @@ import "./widgets/index.js";
 import "./views/library-view.js";
 import "./views/card-view.js";
 import "./views/device-view.js";
+import "./views/about-view.js";
+import "./views/about-icons-view.js";
 import "./views/privacy-view.js";
 import "./views/callback-view.js";
 import "./views/devtools-view.js";
@@ -169,6 +171,18 @@ export class YbApp extends LitElement {
       render: () => html`<yb-device-view></yb-device-view>`,
     },
     {
+      path: "/about",
+      render: () => html`<yb-about-view></yb-about-view>`,
+    },
+    {
+      path: "/about-icons",
+      render: () => html`<yb-about-icons-view></yb-about-icons-view>`,
+    },
+    {
+      path: "/about/icons",
+      render: () => html`<yb-about-icons-view></yb-about-icons-view>`,
+    },
+    {
       path: "/privacy",
       render: () => html`<yb-privacy-view></yb-privacy-view>`,
     },
@@ -248,6 +262,9 @@ export class YbApp extends LitElement {
           <a href="/device" @click=${(e: Event) => this.navigate("/device", e)}
             >Players</a
           >
+          <a href="/about" @click=${(e: Event) => this.navigate("/about", e)}
+            >About</a
+          >
           <a
             href="/privacy"
             @click=${(e: Event) => this.navigate("/privacy", e)}
@@ -270,6 +287,14 @@ export class YbApp extends LitElement {
       <footer>
         <p>
           YotoBench — A modern web client for Yoto Players.
+          <a href="/about" @click=${(e: Event) => this.navigate("/about", e)}
+            >About</a
+          >
+          <a
+            href="/about-icons"
+            @click=${(e: Event) => this.navigate("/about-icons", e)}
+            >Icon Sources &amp; Licensing</a
+          >
           <a
             href="/privacy"
             @click=${(e: Event) => this.navigate("/privacy", e)}
