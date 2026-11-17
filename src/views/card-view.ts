@@ -1185,8 +1185,6 @@ export class YbCardView extends LitElement {
       this.isSavingSyncSettings = false;
     }
   }
-    }
-  }
 
   // --- Save Card ---
 
