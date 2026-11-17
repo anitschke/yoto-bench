@@ -9,6 +9,7 @@ import { Card, Device } from "../../../src/models/index.js";
 export interface MockPodcastFeedOptions {
   title?: string;
   description?: string;
+  imageUrl?: string;
   episodes: Array<{
     title: string;
     duration?: number;
@@ -87,9 +88,33 @@ export class MockYotoHarness {
       /https:\/\/api\.yotoplay\.com\/content(\/.*)?$/,
       async (route) => {
         if (route.request().method() === "POST") {
-          const postData = route.request().postDataJSON() as Card | null;
+          const postData = route.request().postDataJSON() as Record<
+            string,
+            unknown
+          > | null;
+          // Yoto API strictly rejects unrecognized root-level cover keys
+          if (
+            postData &&
+            ("customCoverArt" in postData || "cover" in postData)
+          ) {
+            await route.fulfill({
+              status: 400,
+              contentType: "application/json",
+              body: JSON.stringify({
+                error: {
+                  code: "bad-request",
+                  message:
+                    'body: Unrecognized keys: "customCoverArt", "cover"',
+                },
+              }),
+            });
+            return;
+          }
           if (postData && postData.cardId) {
-            this.cards.set(postData.cardId, postData);
+            this.cards.set(
+              postData.cardId as string,
+              postData as unknown as Card,
+            );
           }
           await route.fulfill({
             status: 200,
@@ -163,6 +188,23 @@ export class MockYotoHarness {
         });
       },
     );
+
+    // Intercept Cover Image Upload: https://api.yotoplay.com/media/coverImage/user/me/upload*
+    await this.page.route(
+      /https:\/\/api\.yotoplay\.com\/media\/coverImage\/user\/me\/upload.*/,
+      async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            coverImage: {
+              mediaId: "mock_cover_media_id",
+              mediaUrl: "https://media.yotoplay.com/mock-cover.jpg",
+            },
+          }),
+        });
+      },
+    );
   }
 
   /**
@@ -206,14 +248,29 @@ export class MockYotoHarness {
       })
       .join("\n");
 
+    const imageTag = options.imageUrl
+      ? `<itunes:image href="${options.imageUrl}"/>`
+      : "";
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
   <channel>
     <title>${title}</title>
     <description>${description}</description>
+    ${imageTag}
     ${itemsXml}
   </channel>
 </rss>`;
+
+    if (options.imageUrl) {
+      await this.page.route(options.imageUrl, async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "image/jpeg",
+          body: Buffer.from("mock-jpeg-bytes"),
+        });
+      });
+    }
 
     // Route direct feed URL
     await this.page.route(feedUrl, async (route) => {

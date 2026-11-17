@@ -10,7 +10,16 @@ export interface Card {
   updatedAt?: string;
   content?: Content;
   metadata?: Metadata;
+  cover?: Cover;
+  customCoverArt?: string;
   [key: string]: unknown; // Preserve unrecognized passthrough fields per AGENTS.md
+}
+
+export interface Cover {
+  imageL?: string;
+  imageM?: string;
+  imageS?: string;
+  [key: string]: unknown;
 }
 
 export interface Content {
@@ -49,6 +58,7 @@ export interface Display {
 export interface Metadata {
   author?: string;
   description?: string;
+  cover?: Cover;
   media?: Media;
   [key: string]: unknown;
 }

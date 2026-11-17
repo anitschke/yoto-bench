@@ -128,15 +128,27 @@ export function parsePodcastFeed(xmlText: string): ParsedPodcastFeed {
     channel.querySelector("title")?.textContent?.trim() || "Untitled Podcast";
   const description = channel.querySelector("description")?.textContent?.trim();
 
-  // Cover image: either <itunes:image href="..."> or <image><url>...</url></image>
+  // Cover image: either <itunes:image href="...">, <image><url>...</url></image>, or <image href="...">
   let imageUrl: string | undefined = undefined;
-  const itunesImage = channel.getElementsByTagName("itunes:image")[0];
+  const itunesImage =
+    channel.getElementsByTagName("itunes:image")[0] ||
+    channel.getElementsByTagNameNS(
+      "http://www.itunes.com/dtds/podcast-1.0.dtd",
+      "image",
+    )[0];
   if (itunesImage && itunesImage.getAttribute("href")) {
     imageUrl = itunesImage.getAttribute("href") || undefined;
   } else {
-    const imgUrlEl = channel.querySelector("image > url");
+    const imgUrlEl = channel.querySelector("image > url, image url");
     if (imgUrlEl && imgUrlEl.textContent) {
       imageUrl = imgUrlEl.textContent.trim();
+    } else {
+      const imgHref = channel
+        .querySelector("image[href]")
+        ?.getAttribute("href");
+      if (imgHref) {
+        imageUrl = imgHref;
+      }
     }
   }
 
