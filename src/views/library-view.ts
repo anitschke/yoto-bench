@@ -78,6 +78,28 @@ export class YbLibraryView extends LitElement {
       gap: 1rem;
     }
 
+    .card-cover-thumbnail {
+      width: 44px;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
+      border-radius: var(--yb-radius-sm, 6px);
+      overflow: hidden;
+      background: var(--yb-color-surface-dark, #12161a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+      box-shadow: var(--yb-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
+    }
+
+    .card-cover-thumbnail img {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
+      object-fit: cover;
+      display: block;
+    }
+
     .card-title {
       font-size: var(--yb-font-size-md, 1rem);
       font-weight: 600;
@@ -258,16 +280,29 @@ export class YbLibraryView extends LitElement {
                   ${filtered.map((card) => {
                     const firstChapter = card.content?.chapters?.[0];
                     const iconUrl = firstChapter?.display?.icon16x16 || "";
+                    const coverUrl =
+                      card.metadata?.cover?.imageL ||
+                      card.metadata?.cover?.imageM ||
+                      card.cover?.imageL ||
+                      card.cover?.imageM ||
+                      card.customCoverArt;
                     const trackCount = card.content?.chapters?.length || 0;
 
                     return html`
                       <div class="card-item">
                         <div class="card-top">
-                          <yb-pixel-icon
-                            src=${iconUrl}
-                            alt=${card.title}
-                            size="md"
-                          ></yb-pixel-icon>
+                          <div class="card-cover-thumbnail">
+                            ${coverUrl
+                              ? html`<img
+                                  src=${coverUrl}
+                                  alt="${card.title} cover"
+                                />`
+                              : html`<yb-pixel-icon
+                                  src=${iconUrl}
+                                  alt=${card.title}
+                                  size="sm"
+                                ></yb-pixel-icon>`}
+                          </div>
                           <div style="flex: 1; min-width: 0;">
                             <h4 class="card-title">${card.title}</h4>
                             <span class="card-meta"

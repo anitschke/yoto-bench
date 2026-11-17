@@ -153,5 +153,54 @@ describe("yb-library-view", () => {
       expect(nativeInput.value).to.equal("Bedtime Stories Podcast");
       expect(textInput.value).to.equal("Bedtime Stories Podcast");
     });
+
+    it("renders card cover thumbnail in credit / NFC card aspect ratio", async () => {
+      const cardsWithCover: Card[] = [
+        {
+          cardId: "card_cover",
+          title: "Cover Card",
+          cover: { imageL: "https://example.com/cover.jpg" },
+        },
+        {
+          cardId: "card_icon",
+          title: "Icon Card",
+          content: {
+            chapters: [
+              {
+                key: "01",
+                title: "Track 1",
+                tracks: [],
+                display: { icon16x16: "icons/music.png" },
+              },
+            ],
+          },
+        },
+      ];
+      yotoApi.listCards = async () => Promise.resolve(cardsWithCover);
+
+      const el = await fixture<YbLibraryView>(
+        html`<yb-library-view></yb-library-view>`,
+      );
+      el.authSession = {
+        accessToken: "mock",
+        refreshToken: "mock",
+        expiresAt: Date.now() + 10000,
+      };
+      await el.updateComplete;
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await el.updateComplete;
+
+      const thumbnails = el.shadowRoot?.querySelectorAll(".card-cover-thumbnail");
+      expect(thumbnails?.length).to.equal(2);
+
+      // First card has cover artwork img
+      const img = thumbnails?.[0]?.querySelector("img");
+      expect(img).to.exist;
+      expect(img?.src).to.equal("https://example.com/cover.jpg");
+
+      // Second card falls back to yb-pixel-icon inside card thumbnail container
+      const pixelIcon = thumbnails?.[1]?.querySelector("yb-pixel-icon");
+      expect(pixelIcon).to.exist;
+    });
   });
 });

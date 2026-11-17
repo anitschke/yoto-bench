@@ -227,6 +227,27 @@ export class YbDeviceView extends LitElement {
       transition: background-color var(--yb-transition-fast, 150ms);
     }
 
+    .card-picker-thumbnail {
+      width: 32px;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
+      border-radius: var(--yb-radius-sm, 4px);
+      overflow: hidden;
+      background: var(--yb-color-surface-dark, #12161a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid var(--yb-color-border, #e2e8f0);
+    }
+
+    .card-picker-thumbnail img {
+      width: 100%;
+      height: 100%;
+      aspect-ratio: var(--yb-aspect-ratio-card, 54 / 85.6);
+      object-fit: cover;
+      display: block;
+    }
+
     .card-picker-item:hover {
       background: var(--yb-color-surface, #ffffff);
     }
@@ -933,15 +954,28 @@ export class YbDeviceView extends LitElement {
                   : filteredCards.map((card) => {
                       const firstChapter = card.content?.chapters?.[0];
                       const iconUrl = firstChapter?.display?.icon16x16 || "";
+                      const coverUrl =
+                        card.metadata?.cover?.imageL ||
+                        card.metadata?.cover?.imageM ||
+                        card.cover?.imageL ||
+                        card.cover?.imageM ||
+                        card.customCoverArt;
                       const trackCount = card.content?.chapters?.length || 0;
 
                       return html`
                         <div class="card-picker-item">
-                          <yb-pixel-icon
-                            src=${iconUrl}
-                            alt=${card.title}
-                            size="sm"
-                          ></yb-pixel-icon>
+                          <div class="card-picker-thumbnail">
+                            ${coverUrl
+                              ? html`<img
+                                  src=${coverUrl}
+                                  alt="${card.title} cover"
+                                />`
+                              : html`<yb-pixel-icon
+                                  src=${iconUrl}
+                                  alt=${card.title}
+                                  size="sm"
+                                ></yb-pixel-icon>`}
+                          </div>
                           <div class="card-picker-info">
                             <span class="card-picker-title">${card.title}</span>
                             <span class="card-picker-tracks"
