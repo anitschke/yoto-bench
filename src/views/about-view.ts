@@ -79,6 +79,16 @@ export class YbAboutView extends LitElement {
       padding: 0;
     }
 
+    a {
+      color: var(--yb-color-primary, #ff5500);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
     .actions-row {
       margin-top: 2rem;
       display: flex;
@@ -144,6 +154,20 @@ export class YbAboutView extends LitElement {
               format.
             </li>
           </ul>
+          <p>
+            For complete details on artist credits, icon origins, and open-source licenses, visit our
+            <a
+              href="/about-icons"
+              class="about-icons-link"
+              @click=${(e: Event) => {
+                e.preventDefault();
+                window.history.pushState(null, "", "/about-icons");
+                window.dispatchEvent(new PopStateEvent("popstate"));
+              }}
+              >Icon Sources &amp; Licensing</a
+            >
+            page.
+          </p>
         </section>
 
         <section class="feature-card">
@@ -186,6 +210,15 @@ export class YbAboutView extends LitElement {
           </yb-button>
           <yb-button
             variant="secondary"
+            @click=${() => {
+              window.history.pushState(null, "", "/about-icons");
+              window.dispatchEvent(new PopStateEvent("popstate"));
+            }}
+          >
+            Icon Sources &amp; Licensing
+          </yb-button>
+          <yb-button
+            variant="subtle"
             @click=${() => {
               window.history.pushState(null, "", "/privacy");
               window.dispatchEvent(new PopStateEvent("popstate"));

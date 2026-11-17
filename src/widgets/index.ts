@@ -12,3 +12,4 @@ export * from "./yb-dialog.js";
 export * from "./yb-toast.js";
 export * from "./yb-toast-manager.js";
 export * from "./yb-please-sign-in.js";
+export * from "./yb-icon-attribution-popover.js";

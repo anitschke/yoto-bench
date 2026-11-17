@@ -26,6 +26,9 @@ describe("yb-about-view", () => {
       "Instant & Searchable Icon Discovery",
     );
     expect(featureCards?.[1]?.textContent).to.include("3,700 pixel icons");
+    const aboutIconsLink = featureCards?.[1]?.querySelector("a.about-icons-link");
+    expect(aboutIconsLink).to.exist;
+    expect(aboutIconsLink?.getAttribute("href")).to.equal("/about-icons");
 
     // 3. Privacy-First & Serverless
     expect(featureCards?.[2]?.textContent).to.include(
@@ -36,14 +39,15 @@ describe("yb-about-view", () => {
     );
   });
 
-  it("renders navigation buttons for Explore My Cards and Read Privacy Policy", async () => {
+  it("renders navigation buttons for Explore My Cards, Icon Sources, and Read Privacy Policy", async () => {
     const el = await fixture<YbAboutView>(
       html`<yb-about-view></yb-about-view>`,
     );
 
     const buttons = el.shadowRoot?.querySelectorAll(".actions-row yb-button");
-    expect(buttons?.length).to.equal(2);
+    expect(buttons?.length).to.equal(3);
     expect(buttons?.[0]?.textContent).to.include("Explore My Cards");
-    expect(buttons?.[1]?.textContent).to.include("Read Privacy Policy");
+    expect(buttons?.[1]?.textContent).to.include("Icon Sources & Licensing");
+    expect(buttons?.[2]?.textContent).to.include("Read Privacy Policy");
   });
 });
